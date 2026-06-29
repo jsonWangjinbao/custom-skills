@@ -1,0 +1,79 @@
+[
+  {
+    "file": "2026-06-24-ocr-no-customupload.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-24",
+    "tags": [
+      "XlbUpload",
+      "OCR",
+      "身份证识别",
+      "customUpload",
+      "onChange"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx"
+    ],
+    "symptoms": "上传身份证图片后，身份证号没有回填到表单",
+    "title": "XlbUpload OCR 上传缺少 customUpload 导致 onChange 无 URL"
+  },
+  {
+    "file": "2026-06-24-dynamic-form-sync-upload.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-24",
+    "tags": [
+      "XlbUpload",
+      "customUpload",
+      "SafeUpload",
+      "计量秤证件",
+      "健康证",
+      "表单回填",
+      "useWatch",
+      "setFieldsValue",
+      "rc-field-form"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/chunks/WeighingCert.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx"
+    ],
+    "symptoms": "新增多条动态表单项后保存，重新进入只显示1条；上传图片保存后重新进入不显示",
+    "title": "动态表单项回填失败 + 图片上传显示失败"
+  },
+  {
+    "file": "2026-06-24-healthcert-validate-hidden-field.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-24",
+    "tags": [
+      "HealthCert",
+      "员工健康证",
+      "validateFields",
+      "TAB_FIELDS",
+      "shuomingfiles",
+      "校验失败",
+      "静默错误"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/index.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx"
+    ],
+    "symptoms": "员工健康证模式下点击更新无反应，不报错也不提示成功",
+    "title": "员工健康证更新无反应 — TAB_FIELDS 校验了隐藏字段"
+  },
+  {
+    "file": "2026-06-25-validatefields-nested-array.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-25",
+    "tags": [
+      "validateFields",
+      "嵌套数组校验",
+      "rc-field-form",
+      "表单校验",
+      "内联错误"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/index.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx"
+    ],
+    "symptoms": "必填字段不填直接点更新，不显示错误提示直接提交成功",
+    "title": "validateFields 传数组名不递归校验嵌套子字段"
+  }
+]
