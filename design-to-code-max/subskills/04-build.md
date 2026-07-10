@@ -64,6 +64,32 @@
 - **API 响应取值**：生成数据请求代码前，先确认目标接口的响应结构（读现有代码或接口文档）。`response.data` 可能就是顶层，不要再解一层 `.data`。引用 `reference/gotchas/api-patterns/fsms-response-structure.md`。
 - **XlbForm 水平内边距**：如果 ui-audit.md / parsed-styles 中记录了表单项存在水平 padding（如 `padding: 0 12px`），必须通过 `XlbForm` 的 `cellTheme` prop 全局设置，而不是加到每个 Item 的 style 上。引用 `reference/gotchas/component-library/xlbform-celltheme-horizontal-padding.md`。
 
+##### UI 结构变更时的字段分配表（当 features.md 的分区结构与新 UI 不匹配时必须执行）
+
+当 `ui-audit.md` 记录了 UI 结构调整（如 4 Tab → 5 锚点、字段重新分区）时，**在写代码之前必须**：
+
+1. 从 `features.md` 提取本分组所有功能点涉及的**每个字段**
+2. 从 `tech-design.md` / `parsed-styles` 提取新 UI 的 section/锚点列表
+3. **输出字段分配表到 execution.md**，格式如下。**未经此步骤不得生成代码**：
+
+```markdown
+#### 字段分配表 — 分组 N
+
+| 功能点 ID | 字段 | features.md 原归属 | → 新 UI section | 条件显示 |
+|-----------|------|-------------------|----------------|----------|
+| F-41     | item_code | 商品信息(Tab1) | Section 0 商品信息 | — |
+| F-45     | find_name | 问题处理(Tab3) | Section 3 问题处理 | quality_type=SELF |
+| F-45     | handle_type | 问题处理(Tab3) | Section 3 问题处理 | — |
+...
+```
+
+4. 对照此表逐字段生成代码，每完成一个字段在表中标记 ✅
+5. **零遗漏规则**：正反两方向验证——
+   - **正向**：`features.md` 中属于本页面的每个字段都必须在表中有一行（不允许"我认为不需要"）
+   - **反向**：表中的每个字段都必须在代码中出现（表中有而代码中没有 = 遗漏 bug）
+6. **条件显示**：表中"条件显示"列非空的字段，代码中必须实现对应的条件渲染（`useWatch` + 三元/&&）
+7. **parsed-styles 元素全覆盖**：parsed-styles JSON 中每个 `semanticType === "容器"` 且 `tag !== "div"`（有业务语义）的元素，必须在分配表中有一行，标记其代码对应关系
+
 ##### 必须添加注释的场景
 
 Step 4 生成代码时，以下场景**必须**加 JSDoc 或行内注释：
@@ -206,6 +232,7 @@ build 阶段的每个分组开始时，**增量加载**而非全量加载：
 8. **defer/待处理项消费检查**：扫描 `execution.md` 中所有标注为 `defer`、`待处理`、`verify 处理`、`后续处理` 的条目，为每条生成对应的修复动作项。所有 defer 项必须在进入 Phase 05 前闭环（已修复 或 明确标注「设计不可实现-原因」）→ 有未消费的 defer 项则**禁止进入 Phase 05**
 9. **偏差库同步检查**（新增）：扫描 `design-deviation-db.json` 中当前需求关联的偏差条目，确认所有 `severity === "critical"` 的条目已有 `处理方案` 或已 `resolved` — 有未处理的 critical 偏差则**禁止进入 Phase 05**
 10. **API 响应取值检查**（新增）：对本次新增/修改的 `.ts/.tsx` 文件搜索 `?.data?.data` 模式。如果取到的是 `content`、`total_elements` 等顶层字段的子属性，说明多解了一层 → 按 `reference/gotchas/api-patterns/fsms-response-structure.md` 修正为 `res?.data` 取值，修正后重新校验
+11. **UI 结构变更字段完整性检查**（新增）：当 `ui-audit.md` 记录了 UI 分区结构调整（如 Tab 数变更、字段重新分区），检查 `execution.md` 中是否每个涉及的分组都输出了「字段分配表」。若存在分配表但表中字段数 < `features.md` 同页面字段总数，说明有遗漏 → **禁止进入 Phase 05**，参考 `reference/gotchas/build-phase/ui-structure-remap-field-loss.md` 补全字段后再校验。同时检查分配表中的"条件显示"列非空字段是否在代码中有对应的条件渲染。
 
 **全部通过后**：
 

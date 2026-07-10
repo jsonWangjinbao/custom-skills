@@ -131,6 +131,8 @@ description: >-
 | `reference/gotchas/api-patterns/fsms-response-structure.md`       | **FSMS API 响应格式（`res?.data` 即顶层）** | build Step 4 取值约束 / 出口门禁 item 10 扫描依据   |
 | `reference/gotchas/component-library/dependencies-kills-label.md` | **XlbForm.Item dependencies 致 label 消失** | build Step 4/5 + verify 阶段（**高优先级**）        |
 | `reference/gotchas/component-library/xlbform-celltheme-horizontal-padding.md` | **XlbForm cellTheme 控制水平内边距（两个 key 都要设）** | audit 三要素表标注引用 / build Step 4 cellTheme 映射约束 |
+| `reference/gotchas/build-phase/ui-structure-remap-field-loss.md`  | **UI 结构变更时字段映射遗漏（子区块字段丢失）** | build Step 4 字段分配表 + 出口门禁 item 11 必读 |
+| `reference/gotchas/rn-quirks/absolute-position-to-rn-layout.md`    | **HTML absolute/sticky → RN 布局翻译错误** | design 阶段组件架构图必读 |
 
 ## 状态机 Schema
 
