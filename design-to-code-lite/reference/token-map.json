@@ -1,0 +1,87 @@
+{
+  "version": "v1",
+  "sources": [
+    "node_modules/@xlb/components-react-native/src/theme/theme.ts",
+    "packages/common/src/config/theme.ts"
+  ],
+  "themeTokens": {
+    "#111425": "theme['color-text-icon-0']",
+    "#434955": "theme['color-text-icon-1']",
+    "#6E7B8C": "theme['color-text-icon-2']",
+    "#C9CDD4": "theme['color-text-icon-3']",
+    "#DCDEEA": "theme['color-line-1']",
+    "#E5E6EB": "theme['color-line-2']",
+    "#F4F5F7": "theme['color-background-page']",
+    "#F8F9FA": "theme['color-background-module']",
+    "#FFFFFF": "theme['color-background-frame']",
+    "#0080FF": "theme['color-primary-brand']",
+    "#0064DE": "theme['color-primary-active']",
+    "#01A1FF": "theme['color-primary-secondary']",
+    "#8CC6FF": "theme['color-primary-disable']",
+    "#E5F2FF": "theme['color-primary-bright']",
+    "#F2F9FF": "theme['color-primary-highlight']",
+    "#FF3B52": "theme['color-function-error-main']",
+    "#FF5C00": "theme['color-function-warning-main']",
+    "#00C87F": "theme['color-function-success-main']"
+  },
+  "commonColors": {
+    "#1A6AFF": "colors.primary",
+    "#1D2129": "colors.black",
+    "#4E5969": "colors.blackGray",
+    "#666666": "colors.font666",
+    "#999999": "colors.font999",
+    "#86909C": "colors.textGrey",
+    "#C9CDD4": "colors.placeholderGrey",
+    "#E5E6EA": "colors.lineGrey",
+    "#F2F3F5": "colors.btnGrey",
+    "#F7F8FA": "colors.greyBg",
+    "#FF7D01": "colors.warning",
+    "#F53F3F": "colors.danger",
+    "#00B42B": "colors.success"
+  },
+  "fonts": {
+    "10": "fonts.size10",
+    "12": "fonts.size12",
+    "14": "fonts.size14",
+    "15": "fonts.size15",
+    "16": "fonts.size16",
+    "18": "fonts.size18"
+  },
+  "fontWeights": {
+    "normal": "fontWeights.normal",
+    "medium": "fontWeights.medium",
+    "bold": "fontWeights.bold"
+  }
+}
+{
+  "version": "v1",
+  "source": "packages/common/src/config/theme.ts",
+  "colors": {
+    "#1A6AFF": "colors.primary",
+    "#1D2129": "colors.black",
+    "#4E5969": "colors.blackGray",
+    "#666666": "colors.font666",
+    "#999999": "colors.font999",
+    "#86909C": "colors.textGrey",
+    "#C9CDD4": "colors.placeholderGrey",
+    "#E5E6EA": "colors.lineGrey",
+    "#F2F3F5": "colors.btnGrey",
+    "#F7F8FA": "colors.greyBg",
+    "#FF7D01": "colors.warning",
+    "#F53F3F": "colors.danger",
+    "#00B42B": "colors.success"
+  },
+  "fonts": {
+    "10": "fonts.size10",
+    "12": "fonts.size12",
+    "14": "fonts.size14",
+    "15": "fonts.size15",
+    "16": "fonts.size16",
+    "18": "fonts.size18"
+  },
+  "fontWeights": {
+    "normal": "fontWeights.normal",
+    "medium": "fontWeights.medium",
+    "bold": "fontWeights.bold"
+  }
+}

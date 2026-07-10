@@ -1,132 +1,270 @@
 ---
 name: design-to-code
-description: Convert MasterGo/Figma exported HTML into pixel-perfect React Native or Web React components. Optionally accepts a design screenshot for cross-validation. Use when users provide HTML files and want high-fidelity style and layout restoration without interaction logic.
+description: >-
+  用于将产品需求、设计稿（HTML/截图）转换为生产代码的全链路交付。
+  支持功能点分析 → UI 审计 → 技术设计 → 分步执行 → 自测验证的完整流程。
+  涵盖增量需求（H5/Web/RN 上加功能）和重构需求（H5→RN、RN→Web 等）。
+  仅提供 HTML+截图（无需求名称）时回退到 v1 直接代码生成模式。
 ---
 
-# design-to-code
+# design-to-code v2
 
-将 MasterGo/Figma 导出的 HTML 文件精准还原为 React Native 或 Web React 组件代码。**聚焦样式和布局双精准还原**，不处理交互逻辑。
+将产品需求/设计稿/截图转换为生产代码的全链路交付管道。**功能点列表是一切行动的真理源**。
 
-## 输入要求
+## 工作模式
 
-1. **HTML 文件**（必需） — MasterGo 导出的 HTML，含内联 style 属性
-2. **assets 目录**（可选） — 与 HTML 同级，包含图片/SVG 资源
-3. **设计截图**（可选） — PNG/JPG，本地文件路径或粘贴到对话中。提供时会与 HTML 交叉验证，不提供则以 HTML 为准
-4. **目标平台**（可选） — `rn` 或 `web`，不指定则提问确认
+- **增量需求** — 在现有 Web/RN/H5 上加功能，需求描述 + HTML+截图 → 实现
+- **重构需求** — H5→RN、RN→RN、Web→Web 重构，功能与样式在同一执行轮次中交付
 
-## 工作流
+## 核心原则
 
-### 步骤 1：收集输入
+- 功能点列表是一切行动的真理源
+- UI 材料齐全时，功能与样式同等重要，必须在同轮交付中还原；UI 材料缺失时才允许降级为通用样式
+- **功能完整性优先**：不要为了通过样式合规扫描而简化功能、裁剪字段、删除共享组件或改变数据流。图标/颜色问题应在功能完整后再修复
+- 所有状态由文档持久化，天然支持中断恢复
+- 每一步完成双向更新：执行步骤 ✅ → 对应功能点 ✅
+- 后续修改从功能点列表开始，同步更新技术文档
+- 不确定就提问，绝不猜测
+- 所有用户交互使用中文
+- RN 项目样式必须遵循 `references/xlb-style-system.md`：组件库优先、图标用 XlbIcon、颜色走 theme、间距/圆角/字号/阴影走 SPACE/BORDER/FONT/SHADOW 常量
+- RN 项目图标/图片映射参考 `references/rn-guidelines.md` 和 `references/icon-map.md`：图标走 `@xlb/icon-rn` 的 `XlbIcon`，真实图片走 `Image` / `XlbImage`，禁止直接 `require` SVG
+- **样式合规是终检门禁，不是执行中途的改写指令**：先生成功能完整、接口正确的代码，最后统一扫描修复样式/图标问题
+- **所有需要用户做选择或提供信息的提问，必须通过 `AskUserQuestion` 工具生成结构化问题卡片完成，禁止以普通文本方式直接询问**
 
-- 确认用户已提供 HTML 文件路径
-- 检查是否提供了设计截图 → 决定后续是否走交叉验证分支
-- 如果用户未指定目标平台，提问：「目标平台是 React Native 还是 Web？」
-- 如果有图片引用但未提供 assets 目录，提醒用户确认图片资源路径
+## 管道总览
 
-### 步骤 2：解析 HTML
+```
+[STEP 0: 启动&初始化] → [STEP 1: 功能点分析] → [STEP 2: UI审计] → [STEP 3: 技术设计] → [STEP 4: 执行&勾选] → [STEP 5: 自测验证]
+```
 
-读取 HTML 文件，提取以下信息的结构化表示：
+状态文档位置：`ai-wiki/【需求名称】/.design-to-code/{features.md, ui-audit.md, tech-design.md, execution.md}`
 
-1. **元素树**：DOM 层级结构，每个节点记录标签名和文本内容
-2. **布局属性**：每个节点的 `display`, `flex-direction`, `justify-content`, `align-items`, `gap`, `flex-wrap`, `flex`, `position`, `z-index`
-3. **盒模型**：`width`, `height`, `padding-*`, `margin`
-4. **视觉样式**：`background`, `border-radius`, `border`, `box-shadow`, `overflow`
-5. **文字样式**：`color`, `font-size`, `font-family`, `font-weight`, `line-height`, `text-align`
-6. **CSS 变量列表**：所有 `var(--*)` 引用
-7. **图片引用**：所有 `<img src="...">` 路径
+## 性能计时（定位耗时瓶颈）
 
-### 步骤 3：解析 CSS 变量
+为了定位整体流程中哪里耗时最长，每个 STEP 和每个执行分组**必须记录起止时间**。计时数据写入 `features.md` 的「性能计时日志」章节：
 
-对 HTML 中出现的每个 `var(--*)`：
+- STEP 0~3：在文档头部标注生成时间，完成后追加一行 `STEP X 完成耗时: MM 分钟`
+- STEP 4：每个分组开始执行时记录 `分组 N 开始: HH:MM`，完成后记录 `分组 N 完成: HH:MM (实际 MM 分钟)`；分组内的编译/测试等长耗时操作单独记录
+- STEP 5：自测阶段记录 `自测开始/完成` 及总耗时
+- 如某阶段超过预估 50% 或单次编译超过 5 分钟，在备注中标注瓶颈（如"HTML 样式提取慢"、"TypeScript 编译慢"）
 
-1. 查阅 `references/token-map.json` 的 `colors` 映射表
-2. 命中 → 记录主题 key（如 `color-text-icon-0`），后续代码中直接使用 `getColor('color-text-icon-0')`
-3. 未命中：
-   - 如果有截图 → 尝试从截图中推断颜色
-   - 如果无截图或无法推断 → 触发提问，向用户确认色值
+---
 
-> `token-map.json` 的 `colors` 字段已将 MasterGo 调色板（Gray-1、Blue-2 等）直接映射到主题 key，无需中间 hex 步骤。
+### STEP 0: 启动 & 初始化
 
-### 步骤 4：歧义检测与交叉验证
+1. 使用 `AskUserQuestion` 询问：「请为这次需求输入一个名称：」
+2. 用户输入需求名称（如 "FSMS-证件管理 APP交互体验优化"）
+3. 检查是否已有 `.design-to-code/execution.md` 且存在未完成步骤：
+   - **有未完成** → 提示恢复进度或开始新需求
+   - **无** → 创建 `【需求名】/` 及其 `.design-to-code/` 子目录
+4. ai-wiki 路径：优先使用 `/Users/wangjinbao/wanchen-code/ai-wiki/`，不存在则回退到当前工作目录
+5. 记录 STEP 0 完成时间（格式：`STEP 0 完成: HH:MM`，写入 `features.md`「性能计时日志」）
 
-**通用歧义检测**（始终生效）→ `references/ambiguity-rules.md` 基础规则：
-- CSS 变量未解析 → 提问
-- 字体目标平台不可用 → 提问
-- 复杂定位语义不清 → 提问
-- 元素用途不明确 → 提问
+---
 
-**场景化检索** → 按需检索 `references/gotchas/`：
-- 目标平台为 RN → 检索 `gotchas/rn-quirks/` 全部文件
-- 代码使用了 XlbForm/XlbDatePicker/XlbUpload 等组件 → 检索 `gotchas/component-library/` 对应文件
-- HTML 中有 `<img>` 且尺寸为 0 → 检索 `gotchas/html-parsing/img-zero-size-svg-fallback.md`
-- HTML 中有 `gap` 属性 → 检索 `gotchas/html-parsing/flex-gap-exact-token.md`
-- 所有场景 → 检索 `gotchas/html-parsing/force-full-element-mapping.md`
+### STEP 1: 功能点分析（核心步骤）
 
-**截图交叉验证**（仅当提供了截图）→ `references/ambiguity-rules.md` 截图规则：
-- 调用 `image-recognize` skill 分析截图
-- 偏差 ≤ 5px / 颜色偏差 ≤ 3% → 自动以截图为准
-- 偏差超阈值 → 提问确认
+#### 1.1 选择模式
 
-### 步骤 4.5：主题环境检测（RN 专属）
+使用 `AskUserQuestion` 询问：「这次是增量需求还是重构需求？」
 
-生成代码前，检测目标项目是否已有主题基础设施：
+- **增量** → 在当前代码仓库分析相关模块 + 需求描述 → 生成功能点
+- **重构** → 先分析原始代码功能点 + 需求描述 → 生成功能点
 
-1. 搜索已有 hook：
-   - `grep -r "useThemeColor" <目标页面目录>/`
-2. **已存在** → 记录其 import 路径（如 `src/hooks/useThemeColor` 或 `../../hooks/useThemeColor`），跳过创建
-3. **不存在** → 从 `references/theme-templates/` 读取模板，在目标目录下创建：
-   - `<pageDir>/theme/fallback.ts`
-   - `<pageDir>/theme/keys.ts`
-   - `<pageDir>/theme/resolveThemeColor.ts`
-   - `<pageDir>/theme/index.ts`
-   - `<pageDir>/hooks/useThemeColor.ts`
-4. 创建后确认所有文件落盘，计算正确的 import 相对路径
+#### 1.2a 增量模式
 
-### 步骤 5：生成代码
+1. 读取需求描述或产品文档路径
+2. 提问涉及哪些现有模块 → 读取相关代码理解现有结构
+3. 结合需求 + 现有代码 → 生成 `features.md`
+4. 展示给用户确认
 
-根据确认后的样式数据，生成目标平台代码。生成前先读取对应平台的规范文件。
+#### 1.2b 重构模式
 
-**React Native** → 读 `references/rn-guidelines.md`：
-- 组件使用 `View`、`Text`、`Image` 等 RN 核心组件
-- 样式使用 `createStyles(getColor)` 工厂函数 + `useMemo` 模式，所有属性 camelCase
-- **所有颜色通过 `getColor('color-xxx')` 获取，禁止硬编码 hex 值**
-- **导入主题**：`import { useThemeColor } from '<相对路径>/hooks/useThemeColor';`
-- **共享样式**：使用 `createSharedStyles(getColor)` 工厂函数
-- `flexDirection` 默认值处理：HTML 未声明则显式设置 `flexDirection: 'row'`
-- `box-shadow` 转为 `shadowColor/shadowOffset/shadowOpacity/shadowRadius/elevation`
-- 图片引用使用 `require('./asset/...')` 或远程 URL
-- `gap` 优先使用，标注依赖 RN 0.71+
-- **XlbDatePicker**：必须用 Pressable + visible/onClose + useWatch，不能裸放在 Form.Item 里
-- **动态数组表单**：每项抽独立子组件管理 hooks，XlbUpload 加 `initialValue={[]}`
-- **模块级子组件**：styles 通过 props 传递，不能直接引用 useMemo 创建的变量
+1. 读取需求描述或产品文档路径
+2. 提问原始代码路径 → 深入分析原始代码
+3. 尤其关注组件联动关系：
+   - 组件 A 值变化 → 组件 B 状态/数据变化
+   - 跨表单字段联动：字段 A 选中值 → 字段 B 选项列表更新
+   - 校验规则联动：字段 A 值范围 → 字段 B 校验规则动态变化
+   - 组件显隐联动：组件 A 状态 → 组件 B 显示/隐藏/禁用
+   - 表单之间联动：表单 A 提交成功 → 表单 B 刷新或预填充
+4. 结合需求 + 原代码分析 → 生成 `features.md`（标注 "来自原代码" / "需求新增"）
+5. 展示给用户确认
 
-**Web React** → 读 `references/web-guidelines.md`：
-- 组件使用 HTML 原生元素（div、span、img）
-- 样式使用 CSS Module（`Component.module.css`）
-- 保留 CSS 原生属性名
-- 图片引用使用 `import ... from '...'`
-- 字体加系统 fallback
+#### 1.3 输出：features.md
 
-**通用规则：**
-- 每个元素添加 `data-design-id` 属性，标注来源层级
-- 文本内容从 HTML 提取，用变量名包裹（如 `{titleText}`）
-- 代码注释标注关键样式值的来源（📐HTML / 📸截图修正 / 👤用户确认）
+使用 `templates/features.md.tpl` 格式，八列：ID、模块、功能描述、来源、UI 完整度、联动/依赖、状态、备注。生成完成后记录 `STEP 1 完成: HH:MM (耗时 MM 分钟)` 到「性能计时日志」。
 
-### 步骤 6：输出结果
+每项依赖描述**当被依赖功能点变化/完成时，当前功能点需如何响应**。联动关系独立子项记录，确保实现时不遗漏。
 
-最终交付：
+---
 
-1. **组件代码**：完整的 JSX/TSX 文件（直接修改现有代码）
-2. **样式文件**：`StyleSheet.create()` 或 `Component.module.css`（内联在组件文件中）
-3. **对话中输出样式差异总结**：标注每项修改的来源（📐HTML / 👤用户确认），**不写入文件到代码仓库**
+### STEP 2: UI 材料收集 & 审计
 
-## 关键原则
+用户确认功能点后进入。当用户主动提供 UI 材料时，此步骤为**强制步骤**，产出的 `ui-audit.md` 将作为 STEP 4 执行阶段的样式规格依据。
 
-- **HTML 是基础数据源**，截图是可选校对，没有截图就以 HTML 为准不纠结
-- **不确定就提问**，绝不猜测
-- **样式和布局同样重要**，不因布局复杂而降级处理
-- **对齐属性不可跨 DOM 层级平移**：HTML 的嵌套结构可能与 RN 的扁平结构不同，翻译前必须先对齐层级
-- **组件库默认样式不可信**：XlbButton 等三方组件的内置样式可能与设计稿值不同，必须用 `style` / `textStyle` 显式覆盖
-- **font-weight 在 RN 中偏细**：HTML 的 500 在 RN PingFang SC 中几乎看不出加粗，通常需 600~700
-- **生成代码可以直接用**，不是伪代码
-- **所有用户交互使用中文**
+1. 使用 `AskUserQuestion` 询问：「请提供 HTML 文件 + 对应截图的目录路径，我会自动扫描并对照功能点生成 UI 完整性报告」
+2. 自动扫描目录，按文件名模式匹配 HTML 和截图，列出配对清单
+3. 使用 `templates/ui-audit.md.tpl` 格式生成 `ui-audit.md`，**必须提取每个组件的关键样式规格**（主色、间距、圆角、字体层级、布局方式等）
+4. **【组件库渲染差异分析】**：对每个 UI 元素，检查项目组件库（如 `CommonFormItem`、`XlbUploadFile`、`XlbCard`）的默认渲染输出，与 HTML 目标的差异。具体回答：
+   - 该 UI 元素如果用组件库的 XX 组件渲染，默认输出是什么？
+   - 与 HTML 目标的关键差异在哪（行高、分隔线、对齐方式、尺寸等）？
+   - 是否需要额外定制（插入分隔线、自定义行高、覆写样式）？
+   - 差异分析结果写入 `ui-audit.md` 的「组件库渲染差异」章节
+   - 引用 `references/gotchas/component-library/blackbox-wrapper-component.md` 识别黑盒封装组件风险
+5. 根据 UI 材料齐全程度确定执行策略：
+   - **全部齐全** → 后续执行阶段必须按 `ui-audit.md` 还原样式
+   - **部分缺失** → 已覆盖的组件必须还原样式，未覆盖的按项目通用样式实现并标记「UI 待补充」
+   - **用户明确跳过** → 全部标记「UI 待补充」，按项目通用样式实现
+6. 生成完成后记录 `STEP 2 完成: HH:MM (耗时 MM 分钟)` 到「性能计时日志」
+
+---
+
+### STEP 3: 技术设计文档
+
+输入 `features.md` + `ui-audit.md`，生成 `tech-design.md`。使用 `templates/tech-design.md.tpl` 格式：
+
+1. **概述**：改动范围、涉及模块、目标平台
+2. **组件架构**：树状结构图，标注每个组件对应的功能点 ID
+3. **数据流**：状态管理方案、API 接口定义、缓存策略
+4. **路由设计**：新增路由、路由参数
+5. **UI 样式规格**：有 UI 材料时，从 `ui-audit.md` 提取每个组件的关键样式决策（主色、间距、圆角、字体层级、布局方式）；无 UI 材料则写“使用项目通用样式，待 UI 材料补充后完善”
+6. **组件选择决策表**：对每个 UI 元素，明确选用哪个组件库组件或自定义实现，以及该组件默认渲染与 HTML 目标的差异和补偿方案（格式见 `templates/tech-design.md.tpl` 的「组件选择决策表」章节）。此表是 STEP 4 执行时样式还原的直接依据
+7. **功能点对照表**：ID → 组件 → 文件路径 → UI 参考文件 → 状态
+8. **关注点**：引用 `references/gotchas/` 下相关已知问题（组件库陷阱、跨平台差异等）
+   - **【动态表单强制检查】**：如果设计中使用了 `XlbForm.Item` + 数组 `name`（如 `name={['detail_infos', index, 'name']}`），**必须**在关注点中引用 `references/gotchas/component-library/safeinput-filter-id.md`，标注哪些字段的直接子组件需要 `SafeInput` / `SafeUploadFile` 包装
+
+用户审阅后通过或修改。定稿后记录 `STEP 3 完成: HH:MM (耗时 MM 分钟)` 到「性能计时日志」。
+
+---
+
+### STEP 4: 执行 & 勾选
+
+#### 4.1 生成 execution.md
+
+从 `tech-design.md` 拆解为分步执行步骤，使用 `templates/execution.md.tpl` 格式。每步标注关联功能点 ID 和预计耗时。
+
+#### 4.2 分步执行
+
+按顺序逐一执行每步。**每个分组开始执行前记录 `分组 N 开始: HH:MM`。每完成一个分组后，必须执行以下 8 步，缺一不可：**
+
+1. 读取 `tech-design.md` 对应部分，特别关注「组件选择决策表」
+2. **【UI 强制】读取 `ui-audit.md` 对应组件的样式规格 + 读取关联 HTML 文件获取精确样式值**（当 `ui-audit.md` 标记为“完整”时，此步不可跳过）；记录 `分组 N 读文档+HTML: MM 分钟`
+   - **【强制】在 `execution.md` 对应步骤后记录已读取的 HTML 文件路径**（格式：`HTML 已读: 文件路径1, 文件路径2`），作为执行日志
+   - 如果该分组涉及多个 HTML 文件，必须全部读取后再开始编码
+3. 读取项目代码风格（读取目标目录现有文件，匹配已有模式）
+4. 生成/修改代码（功能和样式在同一步完成）
+   - **按照「组件选择决策表」选择组件**，如果决策表标注了「需要额外定制」，必须在代码中实现补偿方案（如插入分隔线、自定义行高、覆写样式）
+5. 如运行编译/测试，记录 `分组 N 编译/测试: MM 分钟`
+6. **【强制】更新 `execution.md`**：将该分组标题标记为 ✅，在对应 Step 行末尾追加 `实际: MM 分钟`，并确认 `HTML 已读` 日志已填写
+7. **【强制】更新 `features.md`**：将关联功能点 ⬜ → ✅；在该分组完成后追加 `分组 N 完成: HH:MM (实际 MM 分钟)` 到「性能计时日志」
+8. 展示变更摘要
+
+**🚫 禁止**：未完成步骤 6 和步骤 7 就汇报分组完成或跳到下一分组。
+**🚫 禁止**：当 `ui-audit.md` 标记为“完整”时，跳过步骤 2 写出无样式的代码。
+**🚫 禁止**：步骤 2 中未记录 `HTML 已读` 日志就跳到步骤 3。
+
+#### 4.3 中断恢复
+
+下次启动时检测 `.design-to-code/execution.md`：
+
+- 有未完成步骤 → 展示进度并询问：「是否继续执行？如有新的变更需求请先说明变更内容」
+- 用户选择继续 → 跳到下一个未完成步骤
+  - **【上下文恢复检测】**检查上一个已完成分组的 `execution.md` 记录中是否有 `HTML 已读` 日志。如果缺失，提示：「检测到上一分组可能跳过了 HTML 文件读取步骤（无 `HTML 已读` 日志），建议重新执行该分组的样式还原部分」
+  - 如果用户选择重新执行，重新读取 HTML 文件并对比已生成的代码，修复样式偏差
+- 用户选择新需求 → 回到 STEP 0
+
+#### 4.4 出口门禁（必须通过才能进入 STEP 5）
+
+在所有分组执行完毕后，**强制执行以下校验**：
+
+1. 读取 `execution.md`，检查所有 `## 分组` 标题后是否均标记 ✅ — 有遗漏则列出，禁止进入 STEP 5
+2. 读取 `features.md`，检查是否仍有 `⬜` — 有则列出遗漏功能点，禁止进入 STEP 5
+3. **检查 `execution.md` 中每个分组的 `HTML 已读` 日志**是否已填写 — 有缺失则标记，提示该分组可能跳过了 HTML 读取步骤
+4. **样式合规终检**：对本次新增/修改的 `.ts/.tsx` 文件执行「样式合规扫描清单」，发现硬编码颜色、magic number、错误图标名等问题后统一修复。修复时**禁止**为改样式而简化功能
+5. **动态表单安全检查**：扫描本次新增/修改的 `.tsx` 文件中所有 `name={[` （数组 name）的 `XlbForm.Item`，检查其直接子组件：
+   - `XlbInput` → 必须替换为 `SafeInput`
+   - `XlbUploadFile` → 必须替换为 `SafeUploadFile`
+   - 未包装则**禁止进入 STEP 5**，修复后重新校验
+   - 引用 `references/gotchas/component-library/safeinput-filter-id.md`
+6. 五项均通过 → 汇报「全部 N 个分组已执行，M 个功能点已标记完成，样式合规终检通过，动态表单安全检查通过」→ 进入 STEP 5
+7. 任一项不通过 → 修正后重新校验
+
+---
+
+### STEP 5: 自测验证
+
+所有步骤完成后自动进入验证。开始自测前记录 `STEP 5 自测开始: HH:MM`，完成后记录 `STEP 5 自测完成: HH:MM (实际 MM 分钟)` 到「性能计时日志」。逐项检查 `features.md` 的功能点：
+
+- 组件是否存在
+- API 调用是否正常
+- 联动关系是否实现
+- **UI 样式是否按 `ui-audit.md` 规格还原**（当 UI 材料齐全时，此项为硬性条件）
+- **视觉还原度验证**：将实现结果与目标截图做逐项对比，检查以下内容：
+  - 卡片内部结构（标题→分隔线→字段行→分隔线）是否与 HTML 一致
+  - 表单行高、对齐方式是否与 `ui-audit.md` 规格一致
+  - 组件库控件的默认渲染是否与目标存在偏差（如 `CommonFormItem` 行高、`XlbUploadFile` 缩略图样式）
+  - 组件选择决策表中标注的「需要额外定制」项是否已实现
+- **样式合规终检**：执行「样式合规扫描清单」，重点检查硬编码颜色、magic number、错误图标名、`constants.ts` 等配置文件中的硬编码 hex
+- **动态表单安全检查**：确认所有数组 `name` 的 `XlbForm.Item` 子组件已使用 `SafeInput` / `SafeUploadFile` 包装
+
+全部通过 → 输出：「全部功能点已实现，自测通过」。未通过 → 标记失败项并修复。
+
+**UI 还原验证规则：**
+
+- `ui-audit.md` 状态为“完整”→ UI 样式必须对照还原，不通过则修复后再重新验证
+- `ui-audit.md` 状态为“部分缺失”→ 已覆盖的组件必须还原，未覆盖的标记「UI 待补充」
+- `ui-audit.md` 状态为“跳过”→ 输出提示：「UI 样式尚未还原（用户选择跳过），建议补充 UI 材料后再次启动 skill 进入样式完善模式」
+
+---
+
+### 样式合规扫描清单（STEP 4 出口 / STEP 5 强制执行）
+
+**执行时机**：所有功能点实现完成、所有分组标记 ✅ 之后，再执行本清单。**不要**在执行中途为了通过本清单而简化功能。
+
+对本次需求新增或修改的 `.ts/.tsx` 文件，必须逐条扫描以下内容。发现任一违规，统一修复：
+
+1. **硬编码颜色**：搜索 `#` 和 `rgba(` / `rgb(`。若命中，确认是否为必须保留的例外（如 SVG 属性、第三方组件透传），否则替换为 `theme['xxx']`
+2. **配置文件中的硬编码颜色**：重点扫描 `constants.ts`、`theme.ts`、`config.ts` 等常量文件中的 `color: '#...'`、`borderColor: '#...'` 等，统一替换为 theme key
+3. **magic number 间距/圆角**：搜索 `padding: \d+`、`margin: \d+`、`borderRadius: \d+`、`gap: \d+` 等，替换为 `SPACE.* / BORDER.*`
+4. **magic number 字号/行高/字重**：搜索 `fontSize: \d+`、`lineHeight: \d+`、`fontWeight: '\d+'`，替换为 `FONT.*`
+5. **normalize 滥用**：搜索 `normalize(\d+)` 出现在 padding/margin/borderRadius/fontSize/lineHeight 场景，优先替换为 `SPACE.* / BORDER.* / FONT.*`
+6. **emoji / 文字符号代替图标**：搜索 `'⚠'`、`'✕'`、`'+'`、`'✓'` 等作为 UI 图标使用，替换为 `@xlb/icon-rn` 的 `XlbIcon`
+7. **图标 name 错误**：搜索 `name="icon_` / `name='icon_` / `name={"icon_` 等错误前缀；搜索所有 `XlbIcon name=` 并对照 `iconfontGlyphMap` 校验，未命中则修正为最接近的 key
+8. **直接 require SVG 文件**：搜索 `require(.*\.svg)`，RN 项目中应替换为 `XlbIcon` 或标记「图标无映射」风险
+9. **深路径 import 组件库**：搜索 `from '@xlb/components-react-native/src/...'`，改为从包入口导入
+10. **自定义组件替代组件库**：确认新增 View/Text/Pressable 是否可用 `XlbCard/XlbText/XlbButton` 替代
+
+> 扫描工具：优先使用 `Grep` 工具在项目目录内搜索上述模式；不要仅凭肉眼检查。
+> 修复原则：**只改样式表达，不改功能逻辑**。例如：不要把 `validationErrorsStore` 删掉来通过扫描；不要把复杂的 `SafeUpload` 简化为 `XlbUploadFile`。
+> **项目约定例外**：如果项目已建立某种约定模式（如全项目使用 `normalize()` 而非 `SPACE.*` 常量，或 `fontWeight: '500'` 而非 `fontWeights` 常量），则遵循项目约定，不强制替换。在扫描报告中标注「项目约定模式，跳过」。
+
+---
+
+### 后续修改
+
+用户提出变更时的处理流程：
+
+1. 检查 `features.md` → 使用 `AskUserQuestion` 询问：「是否更新功能点列表？」
+2. 确认后在 `features.md` 上新增/修改功能点（标记「需求变更」）
+3. 同步更新 `tech-design.md`（受影响的设计部分）
+4. 更新 `execution.md` 插入新步骤
+5. 按更新后的执行文档继续执行
+
+---
+
+## v1 兼容模式
+
+当用户直接提供 HTML 文件路径、未输入需求名称时，回退到 v1 线性流程：
+
+**收集输入 → 解析 HTML → 解析 CSS 变量 → 歧义检测与交叉验证 → 主题环境检测（RN）→ 生成代码 → 输出结果**
+
+此模式下所有 v1 参考文件保持不动：
+
+- `references/ambiguity-rules.md` — 歧义规则
+- `references/rn-guidelines.md` / `references/web-guidelines.md` — 平台规范
+- `references/token-map.json` — CSS 变量映射
+- `references/theme-templates/` — 主题基础设施模板
+- `references/gotchas/` — 平台/组件库/H5 解析已知问题
+
+v1 模式聚焦样式和布局双精准还原，不处理需求分析和功能点跟踪。

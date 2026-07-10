@@ -75,5 +75,155 @@
     ],
     "symptoms": "必填字段不填直接点更新，不显示错误提示直接提交成功",
     "title": "validateFields 传数组名不递归校验嵌套子字段"
+  },
+  {
+    "file": "2026-06-29-dynamic-form-delete-sync-and-idcard-encrypted.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-29",
+    "tags": [
+      "WeighingCert",
+      "HealthCert",
+      "id_card_encrypted",
+      "setFieldsValue",
+      "rc-field-form",
+      "useWatch",
+      "动态表单增删",
+      "身份证号查看",
+      "敏感数据解密",
+      "保存污染"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/chunks/WeighingCert.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx",
+      "src/pages/storeInformationRN/Detail/index.tsx"
+    ],
+    "symptoms": "计量秤证件和员工健康证新增后删除失败；员工健康证点击查看身份证号后仍显示加密值",
+    "title": "动态表单增删状态不同步 + 保存时 id_card_encrypted 丢失"
+  },
+  {
+    "file": "2026-06-29-unifiedinput-bypasses-form-callbacks.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-29",
+    "tags": [
+      "UnifiedInput",
+      "form.setFields",
+      "onValuesChange",
+      "onFieldsChange",
+      "useWatch",
+      "rc-field-form",
+      "校验错误清除",
+      "红色提示词",
+      "表单校验",
+      "iOS shadow value"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/components/shared/UnifiedInput.tsx",
+      "src/pages/storeInformationRN/Detail/index.tsx",
+      "src/pages/storeInformationRN/Detail/validationErrorsStore.ts"
+    ],
+    "symptoms": "必填项未填点更新出现红色校验提示后，重新输入内容红色提示不消失；再次点更新直接成功",
+    "title": "UnifiedInput 绕过 form 回调导致校验错误无法清除"
+  },
+  {
+    "file": "2026-06-29-lackconfirm-store-id.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-29",
+    "tags": [
+      "lackConfirm",
+      "缺项确认",
+      "authModel",
+      "store_id",
+      "门店不存在",
+      "userInfos"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/index.tsx"
+    ],
+    "symptoms": "RN端点击缺项确认提示当前门店不存在，PC端同样操作正常成功",
+    "title": "缺项确认 store_id 误用 authModel 用户门店 ID"
+  },
+  {
+    "file": "2026-06-29-rc-util-set-deep-merge-array.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-29",
+    "tags": [
+      "rc-util/set",
+      "deep merge",
+      "setFields",
+      "setFieldsValue",
+      "rc-field-form",
+      "动态表单增删",
+      "数组字段",
+      "数据串扰",
+      "key=index"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/WeighingCert.tsx"
+    ],
+    "symptoms": "新增员工2后删除员工1，员工2的表单项显示了员工1的姓名/身份证号/工种",
+    "title": "rc-util/set 对数组元素也做 deep merge 导致删除后数据残留"
+  },
+  {
+    "file": "2026-06-30-xlbselector-single-returns-array.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-30",
+    "tags": [
+      "XlbSelector",
+      "card_type",
+      "getValueFromEvent",
+      "rc-field-form",
+      "食品经营许可证",
+      "单选返回数组"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/chunks/FoodLicense.tsx"
+    ],
+    "symptoms": "食品经营许可证 OCR 失败后手动填写表单，点击更新保存失败（后端静默无响应）",
+    "title": "XlbSelector 单选模式返回数组导致 form 字段值格式不一致"
+  },
+  {
+    "file": "2026-06-30-number-input-type-and-certtype-clear.md",
+    "project": "remote-app-fsms",
+    "date": "2026-06-30",
+    "tags": [
+      "UnifiedInput",
+      "XlbInput",
+      "number类型",
+      "TextInput",
+      "STORE_DESCRIPTION",
+      "shuomingfiles",
+      "表单回填",
+      "certType切换",
+      "measuring_scale_quantity",
+      "useWatch"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/components/shared/UnifiedInput.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx"
+    ],
+    "symptoms": "计量秤数量保存后回到详情页不回填；切换为店铺说明文件保存后图片不回填",
+    "title": "计量秤数量number类型不渲染 + certType切换清空shuomingfiles"
+  },
+  {
+    "file": "2026-07-02-shuomingfiles-conditional-backfill.md",
+    "project": "remote-app-fsms",
+    "date": "2026-07-02",
+    "tags": [
+      "证件类型切换",
+      "shuomingfiles",
+      "API回填",
+      "certType",
+      "healthy_card_type",
+      "STORE_DESCRIPTION",
+      "EMPLOYEE_HEALTH",
+      "表单回填条件化"
+    ],
+    "files": [
+      "src/pages/storeInformationRN/Detail/index.tsx",
+      "src/pages/storeInformationRN/Detail/chunks/HealthCert.tsx"
+    ],
+    "symptoms": "店铺说明文件上传更新后，切到员工健康证添加员工再切回，旧文件仍显示，需再切换一次才清空",
+    "title": "API回填shuomingfiles未按certType条件化，导致切回店铺说明文件时旧文件残留"
   }
 ]
