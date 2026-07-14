@@ -46,6 +46,7 @@
   },
   "docPaths": {
     "features": ".ai-wiki/企业认证/features.md",
+    "apiSpec": ".ai-wiki/企业认证/api-spec.md",
     "uiAudit": ".ai-wiki/企业认证/ui-audit.md",
     "techDesign": ".ai-wiki/企业认证/tech-design.md",
     "execution": ".ai-wiki/企业认证/execution.md",
@@ -65,7 +66,7 @@
 | `requirementName` | string | 是 | 需求名称，init 阶段由用户输入 |
 | `requirementType` | string | 是 | `"incremental"` | `"refactor"` |
 | `status` | string | 是 | `"in-progress"` | `"done"` |
-| `currentPhase` | string | 是 | `"init"` | `"analyze"` | `"audit"` | `"design"` | `"build"` | `"verify"` | `"done"` |
+| `currentPhase` | string | 是 | `"init"` | `"analyze"` | `"feature-spec"` | `"api-spec"` | `"audit"` | `"design"` | `"build"` | `"verify"` | `"done"` |
 | `inputs` | object | 是 | 输入材料路径 |
 | `docPaths` | object | 是 | 各阶段生成的文档路径 |
 | `phaseOutputs` | object | 是 | 各阶段输出状态 |
@@ -87,6 +88,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `features` | string | features.md 路径 |
+| `apiSpec` | string | api-spec.md 路径 |
 | `uiAudit` | string | ui-audit.md 路径 |
 | `techDesign` | string | tech-design.md 路径 |
 | `execution` | string | execution.md 路径 |
@@ -130,7 +132,37 @@
 | `checklistPassed` | boolean | 阶段 checklist 是否通过 |
 | `userConfirmed` | boolean | 用户是否确认 |
 
-### 3.2 audit
+### 3.2 api-spec
+
+```jsonc
+{
+  "api-spec": {
+    "apiCount": 19,
+    "availableCount": 15,
+    "specOnlyCount": 2,
+    "pendingBackendCount": 2,
+    "hasMockTemplates": true,
+    "source": "source-code-reverse",
+    "docPath": ".ai-wiki/【需求名】/api-spec.md",
+    "checklistPassed": false,
+    "userConfirmed": false
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `apiCount` | number | API 总数 |
+| `availableCount` | number | 可用接口数 |
+| `specOnlyCount` | number | 仅文档接口数 |
+| `pendingBackendCount` | number | 待后端接口数 |
+| `hasMockTemplates` | boolean | 是否生成了 mock 模板 |
+| `source` | string | `"source-code-reverse"`（重构）/ `"api-doc"`（增量） |
+| `docPath` | string | api-spec.md 路径 |
+| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
+| `userConfirmed` | boolean | 用户是否确认 |
+
+### 3.3 audit
 
 ```jsonc
 {
@@ -283,11 +315,11 @@
 ## 5. 状态迁移规则
 
 ```text
-[init] → analyze ──✅+确认──→ audit ──✅+确认──→ design ──✅+确认──→ build ──出口门禁──→ verify ──✅──→ done
+[init] → analyze ──✅+确认──→ feature-spec ──✅+确认──→ api-spec ──✅+确认──→ audit ──✅+确认──→ design ──✅+确认──→ build ──出口门禁──→ verify ──✅──→ done
 ```
 
 - 每个阶段必须 `checklistPassed === true` 才能推进
-- analyze / audit / design 三个阶段还需 `userConfirmed === true`
+- analyze / api-spec / audit / design 四个阶段还需 `userConfirmed === true`
 - build 阶段还需 `exitGatePassed === true`
 - 任何阶段不满足条件 → 停止并告知用户
 - 用户提出修改时，从 done 或 verify 回退到 build，追加 changeLog 条目

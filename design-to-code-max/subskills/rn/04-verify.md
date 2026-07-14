@@ -21,6 +21,7 @@ verify 阶段的每个检查项必须单独记录耗时：
 - 动态表单安全检查：X 分钟
 - 图标清单完整性检查：X 分钟
 - dependencies 禁用检查：X 分钟
+- API 合规检查：X 分钟
 - defer 项闭环检查：X 分钟
 - label 可见性逐字段核验：X 分钟
 - 偏差库同步：X 分钟（新增）
@@ -38,6 +39,19 @@ verify 阶段的每个检查项必须单独记录耗时：
 - API 调用是否正常（请求参数 + 响应字段完整）
 - 联动关系是否实现（analyze 阶段标注的联动/依赖）
 - 校验规则、事件处理、OCR、上传回调是否保留
+
+### 1.1 API 合规检查
+
+对照 `api-spec.md` 执行以下 4 项检查：
+
+| # | 检查项 | 检查内容 | 违反后果 |
+|---|--------|---------|---------|
+| 1 | 字段完整性 | 遍历 api-spec.md 中所有 `status !== "spec-only"` 的接口，对照「字段综合映射表」中标注 ✅ 的字段，检查代码中是否均已使用（列表页/详情页/表单页逐项比对） | 禁止进入下一阶段 |
+| 2 | 取值路径 | 对照 api-spec.md 的取值路径配置，扫描代码中每个 API 调用的数据提取方式（`res?.data?.content` vs `res.data`），确认未多解或少解一层 | 禁止进入下一阶段 |
+| 3 | 参数默认值 | 对照 api-spec.md 的请求参数表中标注了默认值的参数，检查代码是否实现了该默认值（如列表页默认当月日期范围） | 标记需修复 |
+| 4 | mock 残留 | 检查 `status === "available"` 的接口，代码中是否还残留 mock 数据 | 标记需清理 |
+
+**计时规则**：API 合规检查作为一个独立计时项记录：`API 合规检查：X 分钟`
 
 ### 2. 视觉还原验证
 
@@ -63,11 +77,11 @@ verify 阶段的每个检查项必须单独记录耗时：
 3. 核验范围：所有新增/修改的 `.tsx` 文件中的每个表单字段。
 4. 对比来源：`ui-audit.md` 中列出的字段 label 列表。每个字段 label 必须在运行时可见。
 
-**未通过处理**：列出 label 缺失的字段，按 `reference/gotchas/component-library/dependencies-kills-label.md` 修复后重新验证。
+**未通过处理**：列出 label 缺失的字段，按 `../reference/rn/gotchas/component-library/dependencies-kills-label.md` 修复后重新验证。
 
 ### 3. 样式合规扫描
 
-执行 `reference/style-scan-checklist.md` 的完整扫描，对本次新增/修改的所有 `.ts/.tsx` 文件逐条检查。
+执行 `../reference/rn/style-scan-checklist.md` 的完整扫描，对本次新增/修改的所有 `.ts/.tsx` 文件逐条检查。
 
 **使用 `Grep` 工具在项目目录内搜索**，不要仅凭肉眼检查。
 
@@ -81,7 +95,7 @@ verify 阶段的每个检查项必须单独记录耗时：
 
 - 搜索 `name={[` 确认无数组 name 的 `XlbForm.Item`
 - 如有数组 name，检查直接子组件是否为 `SafeInput` / `SafeUploadFile`
-- 引用 `reference/gotchas/component-library/safeinput-filter-id.md`
+- 引用 `../reference/rn/gotchas/component-library/safeinput-filter-id.md`
 
 ### 5. dependencies 禁用终检
 
@@ -91,7 +105,7 @@ verify 阶段的每个检查项必须单独记录耗时：
 grep -rn "dependencies" --include="*.tsx" src/pages/
 ```
 
-- 出现任何 `XlbForm.Item` / `CommonFormItem` 传入 `dependencies` → 按 `reference/gotchas/component-library/dependencies-kills-label.md` 修复
+- 出现任何 `XlbForm.Item` / `CommonFormItem` 传入 `dependencies` → 按 `../reference/rn/gotchas/component-library/dependencies-kills-label.md` 修复
 - 此检查项必须通过才能标记 `checklistPassed: true`
 
 ### 6. defer/待处理项闭环消费
@@ -189,6 +203,7 @@ verify 阶段结束时执行偏差库同步：
 
 ### Checklist（必须全部满足才能标记 checklistPassed: true）
 
+- [ ] **API 合规检查通过**（字段完整性、取值路径、参数默认值、mock 残留 4 项全通过）
 - [ ] 所有功能点已逐项验证（组件存在 + API 完整 + 联动实现）
 - [ ] 视觉还原已通过 side-by-side 对比（或按 materialStatus 规则处理）
 - [ ] **label 可见性逐字段核验通过**（所有表单字段的 label 在运行时可见）
@@ -225,10 +240,11 @@ verify 阶段结束时执行偏差库同步：
 ## 完成阶段
 
 - [x] analyze (功能点: N 个)
+- [x] api-spec (接口: N 个, available: N, mock: N)
 - [x] audit (组件决策: N 个, 黑盒风险: N 个)
-- [x] design (文件: N 个, 路由: N 个, API: N 个)
+- [x] design (文件: N 个, 路由: N 个)
 - [x] build (分组: N/N, 功能点: N/N)
-- [x] verify (样式扫描: 通过, 动态表单: 通过, label核验: 通过, defer闭环: 通过, 偏差库: 通过)
+- [x] verify (样式扫描: 通过, 动态表单: 通过, API合规: 通过, label核验: 通过, defer闭环: 通过, 偏差库: 通过)
 
 ## 生成/修改文件
 

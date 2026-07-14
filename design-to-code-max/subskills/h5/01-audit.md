@@ -1,4 +1,4 @@
-# Phase 02 - UI 审计与组件映射
+# Phase 02 - H5 UI 审计与组件映射
 
 ## 进入条件
 
@@ -29,18 +29,21 @@
 
 ---
 
-### Step 2: 运行 HTML 结构化解析引擎（新增）
+### Step 2: 运行 HTML 结构化解析引擎
 
-对每个 HTML 文件，按 `reference/html-parser-rules.md` 执行结构化解析：
+对每个 HTML 文件，按 `../reference/common/html-parser-rules.md` 执行结构化解析：
 
-1. **读取解析规则**：`Read reference/html-parser-rules.md`，理解解析流程和输出格式
+1. **读取解析规则**：`Read ../reference/common/html-parser-rules.md`，理解解析流程和输出格式
 2. **拆分 HTML**：按页面/组件 DOM 边界拆分，排除非视觉元素
 3. **逐元素解析**：提取每个元素的标签、样式、文本、子元素，构建结构化数据
 4. **三要素归类**：按 layout / typography / spacingStyle 三要素归类各属性
 5. **Token 映射**：
-   - 查 `reference/token-map.json` 做颜色、间距、圆角、字号映射
-   - 查 `reference/icon-map.md` 做图标映射
-   - 查 `reference/xlb-style-system.md` 确认 token 语义
+   - 查 `../reference/h5/h5-guidelines.md` 做颜色、间距、圆角、字号的 CSS 变量映射
+   - 颜色 HTML hex → `var(--xlb-color-*)` CSS 变量
+   - 间距 HTML px → `var(--xlb-space-*)` CSS 变量
+   - 字号 HTML px → `var(--xlb-fontSize-*)` CSS 变量
+   - 圆角 HTML px → `var(--xlb-border-radius-*)` CSS 变量
+   - 图标 HTML → 查找 `@xlb/components-mobile` 中 `XlbIcon` 的 `type` 映射
    - 无法映射的值记录到 `unmappedTokens`
 6. **写入解析结果**：输出到 `.ai-wiki/【需求名】/parsed-styles/【page-name】.json`
 
@@ -49,6 +52,7 @@
 - 每个 HTML 文件生成一个 JSON 文件
 - 文件命名：`【HTML 文件名(去扩展名)】.json`
 - 输出符合 `html-parser-rules.md` 第 8 节的 Schema
+- Token 值使用 CSS 变量格式（`var(--xlb-*)`），非 RN 的 `theme['xxx']` 格式
 - 记录解析日志到 `phaseOutputs.audit.parsedStyleCount`
 
 ---
@@ -117,49 +121,47 @@
 
 从 parsed JSON 中 `element.layout` 字段读取：
 
-| 属性           | HTML 值       | token 映射     | 确认 |
-| -------------- | ------------- | -------------- | ---- |
-| display        | flex          | —              | ✅   |
-| flexDirection  | row           | —              | ✅   |
-| height         | 48px          | SPACE.SPACE_12 | ✅   |
-| justifyContent | space-between | —              | ✅   |
-| alignItems     | center        | —              | ✅   |
-| padding        | 0 16px        | SPACE.SPACE_4  | ✅   |
-| gap            | 8px           | SPACE.SPACE_2  | ✅   |
+| 属性 | HTML 值 | CSS 变量映射 | 确认 |
+|------|---------|-------------|------|
+| display | flex | — | ✅ |
+| flexDirection | row | — | ✅ |
+| height | 48px | var(--xlb-space-48) | ✅ |
+| justifyContent | space-between | — | ✅ |
+| alignItems | center | — | ✅ |
+| padding | 0 16px | 0 var(--xlb-space-16) | ✅ |
+| gap | 8px | var(--xlb-space-8) | ✅ |
 
 #### 4.2 Typography 字体表
 
 从 parsed JSON 中 `element.typography` 字段读取：
 
-| 属性       | HTML 值 | token 映射               | 确认 |
-| ---------- | ------- | ------------------------ | ---- |
-| fontSize   | 14px    | FONT.SIZE_14             | ✅   |
-| fontWeight | 500     | FONT.BOLD_500            | ✅   |
-| lineHeight | 20px    | FONT.LINE_HEIGHT_20      | ✅   |
-| color      | #333333 | theme['color-text-body'] | ✅   |
-| textAlign  | left    | —                        | ✅   |
+| 属性 | HTML 值 | CSS 变量映射 | 确认 |
+|------|---------|-------------|------|
+| fontSize | 14px | var(--xlb-fontSize-14) | ✅ |
+| fontWeight | 500 | font-weight: 500 | ✅ |
+| lineHeight | 20px | var(--xlb-lineHeight-20) | ✅ |
+| color | #333333 | var(--xlb-color-text-primary) | ✅ |
+| textAlign | left | — | ✅ |
 
 #### 4.3 Spacing & Style 间距与修饰表
 
 从 parsed JSON 中 `element.spacingStyle` 字段读取：
 
-| 属性            | HTML 值 | token 映射            | 确认 |
-| --------------- | ------- | --------------------- | ---- |
-| borderRadius    | 4px     | BORDER.RADIUS_4       | ✅   |
-| borderWidth     | 1px     | —                     | ✅   |
-| borderColor     | #dddddd | theme['color-border'] | ✅   |
-| backgroundColor | #ffffff | theme['color-bg']     | ✅   |
-| marginBottom    | 12px    | SPACE.SPACE_3         | ✅   |
+| 属性 | HTML 值 | CSS 变量映射 | 确认 |
+|------|---------|-------------|------|
+| borderRadius | 4px | var(--xlb-border-radius-4) | ✅ |
+| borderWidth | 1px | — | ✅ |
+| borderColor | #dddddd | var(--xlb-color-border) | ✅ |
+| backgroundColor | #ffffff | var(--xlb-color-bg) | ✅ |
+| marginBottom | 12px | var(--xlb-space-12) | ✅ |
 
 **填充规则：**
 
 - 优先从 parsed JSON 复制数据，模型只需逐项确认标注 ✅
-- 如果 parsed JSON 中某字段为 `{ "html": "...", "token": "—" }`，表示该值无对应 token，保持 `—` 标注
+- 如果 parsed JSON 中某字段为 `{ "html": "...", "token": "—" }`，表示该值无对应 CSS 变量，保持 `—` 标注
 - 如果 parsed JSON 数据缺失（如空对象 `{}`），则回退到读原始 HTML 补充
-- `unmappedTokens` 中有值的，在表格旁备注「无 token 映射」
-
-**⚠️ 设计值 → 组件 API 映射标记：** 当 `spacingStyle.padding` 或 `spacingStyle.marginHorizontal` 存在水平内边距值（如 `0 12px`）时，必须在三要素表旁标注：
-> **组件 API 映射提示**：此 padding 值需通过 `XlbForm` 的 `cellTheme` prop 全局设置（`cell_group_title_padding_horizontal`），不可加到单个 `XlbForm.Item` 的 style 上。详见 `reference/gotchas/component-library/xlbform-celltheme-horizontal-padding.md`。
+- `unmappedTokens` 中有值的，在表格旁备注「无 CSS 变量映射」
+- **Token 格式必须是 `var(--xlb-*)`，不是 RN 的 `theme['xxx']` 或 `SPACE.*`**
 
 ---
 
@@ -167,7 +169,30 @@
 
 #### 5.1 组件选择
 
-**先读 `reference/rn-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 XLB 组件，并说明理由。
+**先读 `../reference/h5/h5-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 `@xlb/components-mobile` 组件，并说明理由。
+
+**H5 组件映射规则：**
+
+| UI 块类型 | 候选组件 | 说明 |
+|-----------|---------|------|
+| 页面容器 | `ProPageContainer` | 每个页面顶层容器 |
+| 导航栏 | `XlbNavBar` | 作为 ProPageContainer 的 navBar prop |
+| 列表/无限滚动 | `XlbFlatList` | 通过 url + params 驱动 |
+| 表单/详情 | `XlbProDetail` | 声明式 formList，componentType 驱动 |
+| Tab 切换 | `XlbTabs` | 标签式切换 |
+| 搜索 | `XlbSearchBar` | 搜索栏 |
+| 文本输入 | `XlbInput` | componentType: 'input' |
+| 日期选择 | `XlbDatePicker` | componentType: 'datePicker' |
+| 图片上传 | `XlbUpload` | componentType: 'uploadImg' |
+| 选择器 | `XlbCascaderSelect` | componentType: 'cascader' |
+| 单选 | `XlbRadio` | componentType: 'radio' |
+| 多选 | `XlbCheckbox` | componentType: 'checkbox' |
+| 弹窗 | `XlbPopup` | 底部/居中弹出 |
+| 对话框 | `XlbDialog` | 模态确认 |
+| 图标 | `XlbIcon` | type prop 指定图标名 |
+| 筛选 | `XlbFilter` | 筛选栏 |
+| 按钮组 | `XlbButtonGroup` | 操作按钮分组 |
+| 标签 | `XlbTag` | 状态标签 |
 
 #### 5.2 表单布局方向识别
 
@@ -187,16 +212,16 @@
 
 #### 5.3 黑盒组件渲染差异分析
 
-对每个 UI 元素，检查项目组件库（如 `CommonFormItem`、`XlbUploadFile`、`XlbCard`）的默认渲染输出，与 HTML 目标的差异。具体回答：
+对每个 UI 元素，检查 `@xlb/components-mobile` 组件的默认渲染输出，与 HTML 目标的差异。具体回答：
 
 - 该 UI 元素如果用组件库的 XX 组件渲染，默认输出是什么？
 - 与 HTML 目标的关键差异在哪（行高、分隔线、对齐方式、尺寸等）？
-- 是否需要额外定制（插入分隔线、自定义行高、覆写样式）？
-- 引用 `reference/gotchas/component-library/blackbox-wrapper-component.md` 识别黑盒封装组件风险
+- 是否需要额外定制（覆写样式、调整间距等）？
+- 参考 `../reference/rn/gotchas/component-library/blackbox-wrapper-component.md`（黑盒组件识别方法通用，可跨平台参考）
 
 ---
 
-### Step 6: 偏差库预标注（新增）
+### Step 6: 偏差库预标注
 
 1. **读取偏差库**：`Read .ai-wiki/design-deviation-db.json`
 2. 如果文件不存在 → 跳过此步
@@ -207,7 +232,7 @@
 ```markdown
 | UI 元素    | 候选组件       | 默认渲染                | 差异       | 定制 | 补偿方案                                                                               |
 | ---------- | -------------- | ----------------------- | ---------- | ---- | -------------------------------------------------------------------------------------- |
-| 表单字段行 | CommonFormItem | XlbForm.Item 默认行布局 | 行高不可控 | 是   | 【来源：偏差库 DEV-001】自定义 View 包裹 height:SPACE.SPACE_12 + justifyContent:center |
+| 表单字段行 | XlbProDetail   | XlbProDetail formList 默认行布局 | 样式差异 | 是   | 【来源：偏差库 DEV-001】使用 className 覆写 ProPageContainer 内联样式 |
 ```
 
 6. 更新 `phaseOutputs.audit.deviationMatches` 为命中条目数
@@ -218,7 +243,7 @@
 
 ### 文档输出
 
-使用 `templates/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
+使用 `../templates/h5/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
 
 1. **扫描配对清单** — HTML + 截图配对状态
 2. **功能点 UI 覆盖检查** — 每个功能点的 UI 材料覆盖情况
@@ -231,16 +256,16 @@
 
    #### Layout 布局
 
-   | 属性 | HTML 值 | token 映射 | 确认 |
+   | 属性 | HTML 值 | CSS 变量映射 | 确认 |
    | display | flex | — | ✅ |
 
    #### Typography 字体
 
-   | fontSize | 14px | FONT.SIZE_14 | ✅ |
+   | fontSize | 14px | var(--xlb-fontSize-14) | ✅ |
 
    #### Spacing & Style 间距与修饰
 
-   | borderRadius | 4px | BORDER.RADIUS_4 | ✅ |
+   | borderRadius | 4px | var(--xlb-border-radius-4) | ✅ |
    ```
 
 4. **组件库渲染差异分析** — 含偏差库预标注
@@ -258,17 +283,17 @@
   "componentDecisionCount": 8,
   "blackBoxRisks": [
     {
-      "component": "XlbUploadFile",
-      "risk": "默认不显示删除按钮",
-      "compensation": "传入 showDelete=true",
+      "component": "XlbUpload",
+      "risk": "默认上传按钮样式与设计稿不匹配",
+      "compensation": "使用 extraProps 或 className 覆写样式",
     },
   ],
   "parsedStyleCount": 3,
   "unmappedTokens": [
     {
       "value": "14px",
-      "reason": "FONT.SIZE_14 不存在",
-      "action": "使用 FONT.SIZE_16 近似",
+      "reason": "var(--xlb-fontSize-14) 不存在于项目变量",
+      "action": "使用 var(--xlb-fontSize-16) 近似",
     },
   ],
   "deviationMatches": 2,
@@ -289,8 +314,9 @@
 - [ ] 每个 UI 块有组件选择 + 理由
 - [ ] 每个含交互的 UI 块，关键交互行为列出了 `screenshot` 来源证据
 - [ ] 黑盒组件差异分析已完成（不跳过"默认渲染差异"列）
-- [ ] 样式规格已 token 化（非原始 hex/px）
-- [ ] 图标已映射到 XlbIcon name（未映射的标注「图标无映射」）
+- [ ] 样式规格已使用 CSS 变量（`var(--xlb-*)` 格式，非原始 hex/px）
+- [ ] 三要素表的 token 使用 `var(--xlb-*)` 格式，非 `theme['xxx']` 或 `SPACE.*`
+- [ ] 图标已映射到 `@xlb/components-mobile` 的 `XlbIcon` 的 `type`（未映射的标注「图标无映射」）
 - [ ] 偏差库预标注已完成（如偏差库存在）
 - [ ] 性能计时日志已记录
 
@@ -301,7 +327,7 @@
 1. **必须停下来向用户确认**：输出组件选择决策表摘要和黑盒风险 summary，使用 `AskUserQuestion` 询问：
 
    ```
-   问题：Phase 02 UI 审计完成，共分析 N 个 UI 块、N 个黑盒风险项、解析 M 个 HTML 文件。
+   问题：Phase 02 H5 UI 审计完成，共分析 N 个 UI 块、N 个黑盒风险项、解析 M 个 HTML 文件。
    是否确认进入技术设计？
    选项：
    - 确认，进入技术设计
@@ -321,6 +347,7 @@
 - 不能对用户谎称「截图已看」；若实际未 Read 截图，必须诚实说明并立即补读
 - 不能跳过"默认渲染差异"列
 - 不能只写组件名不写理由
-- 不能在样式规格中写死 hex/px 而不用 token
+- 不能在样式规格中写死 hex/px 而不用 CSS 变量
 - 不能不读 HTML/截图/parsed-styles 就生成审计报告
 - 不能跳过三要素表
+- **不能使用 RN 的 `theme['xxx']`、`SPACE.*`、`FONT.*`、`BORDER.*` 格式——必须使用 `var(--xlb-*)` 格式**
