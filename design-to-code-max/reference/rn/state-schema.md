@@ -3,6 +3,7 @@
 > 本文件是 `.ai-wiki/.dtc-state.json` 的完整字段定义。
 > 从 SKILL.md 拆分而来，供所有 subskill 引用。
 > 版本: 2.0
+> 2026-07-19：对齐三平台流水线（`currentPhase` 新增 `collect-materials`，phaseOutputs 补齐 `collect-materials` / `feature-spec`，`inputs` 补齐 `platform` / `requirementDocPath`）
 
 ---
 
@@ -14,17 +15,17 @@
   "version": "2.0",
   "startedAt": "2026-07-09T10:00:00Z",
   "updatedAt": "2026-07-09T12:00:00Z",
-  "requirements": []
+  "requirements": [],
 }
 ```
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `skill` | string | 是 | 固定为 `"design-to-code-max"`，不匹配时拒绝执行 |
-| `version` | string | 是 | 状态版本号，当前 `"2.0"` |
-| `startedAt` | string | 是 | ISO 时间戳，首次创建时写入 |
-| `updatedAt` | string | 是 | ISO 时间戳，每次写文件时更新 |
-| `requirements` | array | 是 | 需求条目数组，至少含一个元素 |
+| 字段           | 类型   | 必填 | 说明                                            |
+| -------------- | ------ | ---- | ----------------------------------------------- |
+| `skill`        | string | 是   | 固定为 `"design-to-code-max"`，不匹配时拒绝执行 |
+| `version`      | string | 是   | 状态版本号，当前 `"2.0"`                        |
+| `startedAt`    | string | 是   | ISO 时间戳，首次创建时写入                      |
+| `updatedAt`    | string | 是   | ISO 时间戳，每次写文件时更新                    |
+| `requirements` | array  | 是   | 需求条目数组，至少含一个元素                    |
 
 ---
 
@@ -38,11 +39,13 @@
   "status": "in-progress",
   "currentPhase": "build",
   "inputs": {
+    "platform": "rn",
+    "requirementDocPath": "docs/requirement.md",
     "htmlPath": "src/cert-approve.html",
     "screenshotPath": "screenshots/cert.png",
     "apiDocPath": "docs/api.md",
     "description": "优化企业认证流程",
-    "originalCodePath": "src/pages/cert/"
+    "originalCodePath": "src/pages/cert/",
   },
   "docPaths": {
     "features": ".ai-wiki/企业认证/features.md",
@@ -50,48 +53,52 @@
     "uiAudit": ".ai-wiki/企业认证/ui-audit.md",
     "techDesign": ".ai-wiki/企业认证/tech-design.md",
     "execution": ".ai-wiki/企业认证/execution.md",
-    "parsedStylesDir": ".ai-wiki/企业认证/parsed-styles/"
+    "parsedStylesDir": ".ai-wiki/企业认证/parsed-styles/",
   },
-  "phaseOutputs": { /* 见第 3 节 */ },
+  "phaseOutputs": {
+    /* 见第 3 节 */
+  },
   "performanceLog": [],
-  "changeLog": []
+  "changeLog": [],
 }
 ```
 
 ### 顶层需求字段说明
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | string | 是 | 唯一标识，建议 `req-${Date.now()}` |
-| `requirementName` | string | 是 | 需求名称，init 阶段由用户输入 |
-| `requirementType` | string | 是 | `"incremental"` | `"refactor"` |
-| `status` | string | 是 | `"in-progress"` | `"done"` |
-| `currentPhase` | string | 是 | `"init"` | `"analyze"` | `"feature-spec"` | `"api-spec"` | `"audit"` | `"design"` | `"build"` | `"verify"` | `"done"` |
-| `inputs` | object | 是 | 输入材料路径 |
-| `docPaths` | object | 是 | 各阶段生成的文档路径 |
-| `phaseOutputs` | object | 是 | 各阶段输出状态 |
-| `performanceLog` | array | 是 | 性能计时日志数组 |
-| `changeLog` | array | 是 | 变更记录数组 |
+| 字段              | 类型   | 必填 | 说明                               |
+| ----------------- | ------ | ---- | ---------------------------------- | ------------ | --------------------- | ---------------- | ------------ | --------- | ---------- | --------- | ---------- | -------- |
+| `id`              | string | 是   | 唯一标识，建议 `req-${Date.now()}` |
+| `requirementName` | string | 是   | 需求名称，init 阶段由用户输入      |
+| `requirementType` | string | 是   | `"incremental"`                    | `"refactor"` |
+| `status`          | string | 是   | `"in-progress"`                    | `"done"`     |
+| `currentPhase`    | string | 是   | `"init"`                           | `"analyze"`  | `"collect-materials"` | `"feature-spec"` | `"api-spec"` | `"audit"` | `"design"` | `"build"` | `"verify"` | `"done"` |
+| `inputs`          | object | 是   | 输入材料路径                       |
+| `docPaths`        | object | 是   | 各阶段生成的文档路径               |
+| `phaseOutputs`    | object | 是   | 各阶段输出状态                     |
+| `performanceLog`  | array  | 是   | 性能计时日志数组                   |
+| `changeLog`       | array  | 是   | 变更记录数组                       |
 
 ### inputs 字段说明
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `htmlPath` | string | HTML 设计稿路径（可多个，逗号分隔） |
-| `screenshotPath` | string | 截图路径（可多个，逗号分隔） |
-| `apiDocPath` | string | 接口文档路径 |
-| `description` | string | 需求描述（口述需求时填入） |
-| `originalCodePath` | string | 原代码路径（重构模式必填） |
+| 字段                 | 类型   | 说明                                                         |
+| -------------------- | ------ | ------------------------------------------------------------ |
+| `platform`           | string | 目标平台：`"rn"` / `"h5"` / `"pc"`，平台路由与中断恢复的根据 |
+| `requirementDocPath` | string | 需求文档路径（飞书链接 / 本地文件）                          |
+| `htmlPath`           | string | HTML 设计稿路径（可多个，逗号分隔）                          |
+| `screenshotPath`     | string | 截图路径（可多个，逗号分隔）                                 |
+| `apiDocPath`         | string | 接口文档路径                                                 |
+| `description`        | string | 需求描述（口述需求时填入）                                   |
+| `originalCodePath`   | string | 原代码路径（重构模式必填；增量模式为增量模块目录）           |
 
 ### docPaths 字段说明
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `features` | string | features.md 路径 |
-| `apiSpec` | string | api-spec.md 路径 |
-| `uiAudit` | string | ui-audit.md 路径 |
-| `techDesign` | string | tech-design.md 路径 |
-| `execution` | string | execution.md 路径 |
+| 字段              | 类型   | 说明                                             |
+| ----------------- | ------ | ------------------------------------------------ |
+| `features`        | string | features.md 路径                                 |
+| `apiSpec`         | string | api-spec.md 路径                                 |
+| `uiAudit`         | string | ui-audit.md 路径                                 |
+| `techDesign`      | string | tech-design.md 路径                              |
+| `execution`       | string | execution.md 路径                                |
 | `parsedStylesDir` | string | parsed-styles/ 目录路径（HTML 解析引擎输出目录） |
 
 ---
@@ -100,39 +107,72 @@
 
 ### 3.1 analyze
 
+入口路由阶段的产出（需求名称、平台、需求类型）已写入顶层 `requirementName` / `requirementType` / `inputs.platform`，此对象只记录门禁状态。
+
 ```jsonc
 {
   "analyze": {
-    "featureCount": 12,
+    "checklistPassed": false,
+    "userConfirmed": false,
+  },
+}
+```
+
+| 字段              | 类型    | 说明                    |
+| ----------------- | ------- | ----------------------- |
+| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
+| `userConfirmed`   | boolean | 用户是否确认            |
+
+### 3.2 collect-materials
+
+```jsonc
+{
+  "collect-materials": {
     "materialsReadLog": [
-      "已分析原代码 src/pages/cert/*：提取 12 个功能点、3 个接口、2 组表单联动",
-      "已读取 src/xxx.html（UI 参考）：包含 5 个字段、1 个上传区",
-      "已读取截图（UI 参考）：确认底部有提交按钮"
+      "已读取需求文档 docs/xxx.md",
+      "已扫描原代码 src/pages/cert/*",
     ],
-    "openQuestions": [],
+    "checklistPassed": false,
+    "userConfirmed": false,
+  },
+}
+```
+
+| 字段               | 类型     | 说明                                             |
+| ------------------ | -------- | ------------------------------------------------ |
+| `materialsReadLog` | string[] | 已收集/已读材料清单（材料路径本身写入 `inputs`） |
+| `checklistPassed`  | boolean  | 阶段 checklist 是否通过                          |
+| `userConfirmed`    | boolean  | 用户是否确认                                     |
+
+### 3.3 feature-spec
+
+```jsonc
+{
+  "feature-spec": {
+    "featureCount": 12,
     "risks": [
       {
         "id": "R01",
         "desc": "动态表单字段 nativeID 风险",
-        "mitigation": "使用 SafeInput / SafeUploadFile"
-      }
+        "mitigation": "使用 SafeInput / SafeUploadFile",
+      },
     ],
+    "openQuestions": [],
     "checklistPassed": false,
-    "userConfirmed": false
-  }
+    "userConfirmed": false,
+  },
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `featureCount` | number | 功能点数量 |
-| `materialsReadLog` | string[] | 已读材料清单 |
-| `openQuestions` | string[] | 待解答问题 |
-| `risks` | object[] | 风险项数组 |
-| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
-| `userConfirmed` | boolean | 用户是否确认 |
+| 字段              | 类型     | 说明                    |
+| ----------------- | -------- | ----------------------- |
+| `featureCount`    | number   | 功能点数量              |
+| `risks`           | object[] | 风险项数组              |
+| `openQuestions`   | string[] | 待解答问题              |
+| `checklistPassed` | boolean  | 阶段 checklist 是否通过 |
+| `userConfirmed`   | boolean  | 用户是否确认            |
 
-### 3.2 api-spec
+### 3.4 api-spec
 
 ```jsonc
 {
@@ -145,24 +185,24 @@
     "source": "source-code-reverse",
     "docPath": ".ai-wiki/【需求名】/api-spec.md",
     "checklistPassed": false,
-    "userConfirmed": false
-  }
+    "userConfirmed": false,
+  },
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `apiCount` | number | API 总数 |
-| `availableCount` | number | 可用接口数 |
-| `specOnlyCount` | number | 仅文档接口数 |
-| `pendingBackendCount` | number | 待后端接口数 |
-| `hasMockTemplates` | boolean | 是否生成了 mock 模板 |
-| `source` | string | `"source-code-reverse"`（重构）/ `"api-doc"`（增量） |
-| `docPath` | string | api-spec.md 路径 |
-| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
-| `userConfirmed` | boolean | 用户是否确认 |
+| 字段                  | 类型    | 说明                                                 |
+| --------------------- | ------- | ---------------------------------------------------- |
+| `apiCount`            | number  | API 总数                                             |
+| `availableCount`      | number  | 可用接口数                                           |
+| `specOnlyCount`       | number  | 仅文档接口数                                         |
+| `pendingBackendCount` | number  | 待后端接口数                                         |
+| `hasMockTemplates`    | boolean | 是否生成了 mock 模板                                 |
+| `source`              | string  | `"source-code-reverse"`（重构）/ `"api-doc"`（增量） |
+| `docPath`             | string  | api-spec.md 路径                                     |
+| `checklistPassed`     | boolean | 阶段 checklist 是否通过                              |
+| `userConfirmed`       | boolean | 用户是否确认                                         |
 
-### 3.3 audit
+### 3.5 audit
 
 ```jsonc
 {
@@ -173,32 +213,36 @@
       {
         "component": "XlbUploadFile",
         "risk": "默认不显示删除按钮",
-        "compensation": "传入 showDelete=true"
-      }
+        "compensation": "传入 showDelete=true",
+      },
     ],
     "parsedStyleCount": 3,
     "unmappedTokens": [
-      { "value": "14px", "reason": "FONT.SIZE_14 不存在", "action": "使用 FONT.SIZE_16 近似" }
+      {
+        "value": "14px",
+        "reason": "FONT.SIZE_14 不存在",
+        "action": "使用 FONT.SIZE_16 近似",
+      },
     ],
     "deviationMatches": 2,
     "checklistPassed": false,
-    "userConfirmed": false
-  }
+    "userConfirmed": false,
+  },
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `materialStatus` | string | `"complete"` | `"partial"` | `"skipped"` |
-| `componentDecisionCount` | number | 组件决策数量 |
-| `blackBoxRisks` | object[] | 黑盒组件风险 |
-| `parsedStyleCount` | number | 【v2.0 新增】已解析的样式文件数 |
-| `unmappedTokens` | object[] | 【v2.0 新增】无法 token 映射的清单 |
-| `deviationMatches` | number | 【v2.0 新增】命中偏差库的条目数 |
-| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
-| `userConfirmed` | boolean | 用户是否确认 |
+| 字段                     | 类型     | 说明                               |
+| ------------------------ | -------- | ---------------------------------- | ----------- | ----------- |
+| `materialStatus`         | string   | `"complete"`                       | `"partial"` | `"skipped"` |
+| `componentDecisionCount` | number   | 组件决策数量                       |
+| `blackBoxRisks`          | object[] | 黑盒组件风险                       |
+| `parsedStyleCount`       | number   | 【v2.0 新增】已解析的样式文件数    |
+| `unmappedTokens`         | object[] | 【v2.0 新增】无法 token 映射的清单 |
+| `deviationMatches`       | number   | 【v2.0 新增】命中偏差库的条目数    |
+| `checklistPassed`        | boolean  | 阶段 checklist 是否通过            |
+| `userConfirmed`          | boolean  | 用户是否确认                       |
 
-### 3.3 design
+### 3.6 design
 
 ```jsonc
 {
@@ -208,21 +252,21 @@
     "apiCallCount": 3,
     "dynamicFormSafety": "所有数组 name 转换为字符串；动态字段使用 SafeInput / SafeUploadFile",
     "checklistPassed": false,
-    "userConfirmed": false
-  }
+    "userConfirmed": false,
+  },
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `fileCount` | number | 设计文件数 |
-| `routeCount` | number | 路由数 |
-| `apiCallCount` | number | API 调用数 |
-| `dynamicFormSafety` | string | 动态表单安全方案说明 |
-| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
-| `userConfirmed` | boolean | 用户是否确认 |
+| 字段                | 类型    | 说明                    |
+| ------------------- | ------- | ----------------------- |
+| `fileCount`         | number  | 设计文件数              |
+| `routeCount`        | number  | 路由数                  |
+| `apiCallCount`      | number  | API 调用数              |
+| `dynamicFormSafety` | string  | 动态表单安全方案说明    |
+| `checklistPassed`   | boolean | 阶段 checklist 是否通过 |
+| `userConfirmed`     | boolean | 用户是否确认            |
 
-### 3.4 build
+### 3.7 build
 
 ```jsonc
 {
@@ -235,50 +279,63 @@
     "htmlReadLog": ["分组1: parsed-styles/cert-approve.json"],
     "completedFeatureIds": ["F-001", "F-002"],
     "exitGatePassed": false,
-    "checklistPassed": false
-  }
+    "checklistPassed": false,
+  },
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `totalGroups` | number | 总分数组 |
-| `completedGroups` | number | 已完成组数 |
-| `currentGroup` | number | 当前组号 |
-| `createdFiles` | string[] | 新增文件列表 |
-| `modifiedFiles` | string[] | 修改文件列表 |
-| `htmlReadLog` | string[] | 【v2.0 增强】记录"HTML 已读"或"解析数据已读" |
-| `completedFeatureIds` | string[] | 已完成功能点 ID |
-| `exitGatePassed` | boolean | 出口门禁是否通过 |
-| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
+| 字段                  | 类型     | 说明                                         |
+| --------------------- | -------- | -------------------------------------------- |
+| `totalGroups`         | number   | 总分数组                                     |
+| `completedGroups`     | number   | 已完成组数                                   |
+| `currentGroup`        | number   | 当前组号                                     |
+| `createdFiles`        | string[] | 新增文件列表                                 |
+| `modifiedFiles`       | string[] | 修改文件列表                                 |
+| `htmlReadLog`         | string[] | 【v2.0 增强】记录"HTML 已读"或"解析数据已读" |
+| `completedFeatureIds` | string[] | 已完成功能点 ID                              |
+| `exitGatePassed`      | boolean  | 出口门禁是否通过                             |
+| `checklistPassed`     | boolean  | 阶段 checklist 是否通过                      |
 
-### 3.5 verify
+### 3.8 verify
 
 ```jsonc
 {
   "verify": {
     "scanResults": [
-      { "item": "无硬编码 hex", "pass": true, "evidence": "所有色值来自 theme" },
+      {
+        "item": "无硬编码 hex",
+        "pass": true,
+        "evidence": "所有色值来自 theme",
+      },
       { "item": "dependencies 禁用", "pass": true, "evidence": "grep 无匹配" },
       { "item": "defer 项闭环", "pass": true, "evidence": "3 项全部已修复" },
-      { "item": "label 可见性", "pass": true, "evidence": "所有表单字段 label 已核验可见" },
-      { "item": "上传组件保留删除功能", "pass": false, "evidence": "缺少 showDelete", "fix": "XlbUploadFile 传入 showDelete" }
+      {
+        "item": "label 可见性",
+        "pass": true,
+        "evidence": "所有表单字段 label 已核验可见",
+      },
+      {
+        "item": "上传组件保留删除功能",
+        "pass": false,
+        "evidence": "缺少 showDelete",
+        "fix": "XlbUploadFile 传入 showDelete",
+      },
     ],
     "styleScanPassed": true,
     "dynamicFormPassed": true,
     "gaps": [],
-    "checklistPassed": false
-  }
+    "checklistPassed": false,
+  },
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `scanResults` | object[] | 扫描结果列表 |
-| `styleScanPassed` | boolean | 样式合规扫描是否通过 |
-| `dynamicFormPassed` | boolean | 动态表单安全检查是否通过 |
-| `gaps` | string[] | 未通过项清单 |
-| `checklistPassed` | boolean | 阶段 checklist 是否通过 |
+| 字段                | 类型     | 说明                     |
+| ------------------- | -------- | ------------------------ |
+| `scanResults`       | object[] | 扫描结果列表             |
+| `styleScanPassed`   | boolean  | 样式合规扫描是否通过     |
+| `dynamicFormPassed` | boolean  | 动态表单安全检查是否通过 |
+| `gaps`              | string[] | 未通过项清单             |
+| `checklistPassed`   | boolean  | 阶段 checklist 是否通过  |
 
 ---
 
@@ -291,35 +348,35 @@
       "type": "initial",
       "desc": "初始需求",
       "changedItems": [],
-      "timestamp": "2026-07-09T10:00:00Z"
+      "timestamp": "2026-07-09T10:00:00Z",
     },
     {
       "type": "modification",
       "desc": "增加证件类型字段",
       "changedItems": ["F-004"],
-      "timestamp": "2026-07-09T14:30:00Z"
-    }
-  ]
+      "timestamp": "2026-07-09T14:30:00Z",
+    },
+  ],
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `type` | string | `"initial"`（初始创建）/ `"modification"`（需求变更） |
-| `desc` | string | 变更描述 |
-| `changedItems` | string[] | 受影响的功能点 ID 列表 |
-| `timestamp` | string | ISO 时间戳 |
+| 字段           | 类型     | 说明                                                  |
+| -------------- | -------- | ----------------------------------------------------- |
+| `type`         | string   | `"initial"`（初始创建）/ `"modification"`（需求变更） |
+| `desc`         | string   | 变更描述                                              |
+| `changedItems` | string[] | 受影响的功能点 ID 列表                                |
+| `timestamp`    | string   | ISO 时间戳                                            |
 
 ---
 
 ## 5. 状态迁移规则
 
 ```text
-[init] → analyze ──✅+确认──→ feature-spec ──✅+确认──→ api-spec ──✅+确认──→ audit ──✅+确认──→ design ──✅+确认──→ build ──出口门禁──→ verify ──✅──→ done
+[init] → analyze ──✅+确认──→ collect-materials ──✅+确认──→ feature-spec ──✅+确认──→ api-spec ──✅+确认──→ audit ──✅+确认──→ design ──✅+确认──→ build ──出口门禁──→ verify ──✅──→ done
 ```
 
 - 每个阶段必须 `checklistPassed === true` 才能推进
-- analyze / api-spec / audit / design 四个阶段还需 `userConfirmed === true`
+- analyze / collect-materials / feature-spec / api-spec / audit / design 六个阶段还需 `userConfirmed === true`
 - build 阶段还需 `exitGatePassed === true`
 - 任何阶段不满足条件 → 停止并告知用户
 - 用户提出修改时，从 done 或 verify 回退到 build，追加 changeLog 条目
