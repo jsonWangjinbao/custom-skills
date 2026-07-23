@@ -1,4 +1,4 @@
-# Phase 05 - H5 自测验证与交付
+# Phase 08 - 自测验证与交付（H5）
 
 ## 进入条件
 
@@ -10,23 +10,11 @@
 
 ## 任务
 
-记录 `Phase 05 自测开始: HH:MM` 到 features.md 的「性能计时日志」。
+记录 `verify 开始: HH:MM` 到 features.md 的「性能计时日志」。
 
 ### 验证计时规则
 
-verify 阶段的每个检查项必须单独记录耗时：
-
-- TSC 编译检查：X 分钟
-- 样式合规扫描：X 分钟
-- 导航合规检查：X 分钟
-- API 合规检查：X 分钟
-- defer 项闭环检查：X 分钟
-- 偏差库同步：X 分钟
-- 路由注册检查：X 分钟
-- 权限检查：X 分钟
-- （其他检查项）：X 分钟
-
-在 execution.md 的 verify 区域逐项记录，而非仅记录总时间。
+只记录阶段级总耗时（`verify 完成: HH:MM (耗时 MM 分钟)`），不逐项计时。
 
 ---
 
@@ -43,14 +31,12 @@ verify 阶段的每个检查项必须单独记录耗时：
 
 对照 `api-spec.md` 执行以下 4 项检查：
 
-| # | 检查项 | 检查内容 | 违反后果 |
-|---|--------|---------|---------|
-| 1 | 字段完整性 | 遍历 api-spec.md 中所有 `status !== "spec-only"` 的接口，对照「字段综合映射表」中标注 ✅ 的字段，检查代码中是否均已使用 | 禁止进入下一阶段 |
-| 2 | 取值路径 | 对照 api-spec.md 的取值路径配置，检查每个 API 调用的数据提取方式 | 禁止进入下一阶段 |
-| 3 | 参数默认值 | 对照 api-spec.md 的请求参数表中标注了默认值的参数，检查代码是否实现了该默认值 | 标记需修复 |
-| 4 | mock 残留 | 检查 `status === "available"` 的接口，代码中是否还残留 mock 数据 | 标记需清理 |
-
-**计时规则**：API 合规检查作为一个独立计时项记录：`API 合规检查：X 分钟`
+| #   | 检查项     | 检查内容                                                                                                                | 违反后果         |
+| --- | ---------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | 字段完整性 | 遍历 api-spec.md 中所有 `status !== "spec-only"` 的接口，对照「字段综合映射表」中标注 ✅ 的字段，检查代码中是否均已使用 | 禁止进入下一阶段 |
+| 2   | 取值路径   | 对照 api-spec.md 的取值路径配置，检查每个 API 调用的数据提取方式                                                        | 禁止进入下一阶段 |
+| 3   | 参数默认值 | 对照 api-spec.md 的请求参数表中标注了默认值的参数，检查代码是否实现了该默认值                                           | 标记需修复       |
+| 4   | mock 残留  | 检查 `status === "available"` 的接口，代码中是否还残留 mock 数据                                                        | 标记需清理       |
 
 ### 2. 视觉还原验证
 
@@ -88,12 +74,12 @@ grep -rn "padding:\s*[0-9]" --include="*.scss" src/pages/
 grep -rn "border-radius:\s*[0-9]" --include="*.scss" src/pages/
 ```
 
-3. 检查每个属性值是否使用了 `var(--xlb-*)` CSS 变量
-4. 发现硬编码 → 列出并修复
+3. 检查每个命中行的属性值是否使用了 `var(--xlb-*)` CSS 变量（颜色/字号/间距/圆角必须变量化）
+4. 发现硬编码 → 列出并修复（无对应变量的尺寸值按下述例外规则处理）
 
 **修复原则：只改样式表达，不改功能逻辑。**
 
-**例外规则**：如果项目中已有约定使用特定 CSS 变量（如 `--xlb-space-8` 而非 `--xlb-space-8`），遵循项目约定。
+**例外规则**：无对应 `--xlb-*` 变量的尺寸值允许保留 px（PostCSS pxtorem 自动转换），需标注「无对应变量，保留 px」。
 
 ### 4. 导航合规检查
 
@@ -132,7 +118,7 @@ grep -rn "history\.push\|history\.replace" --include="*.tsx" src/pages/
 
 ### 7. 路由注册检查
 
-- 新增页面是否在 `src/config/route.ts` 的 `FsmsRouteKeys` 中注册
+- 新增页面是否在集中式路由配置 `src/config/route.ts` 中注册
 - 跳转是否使用 `useXlbRouter` 的 `push` / `replace` 方法
 
 ### 8. 权限检查
@@ -168,9 +154,9 @@ verify 阶段结束时执行偏差库同步：
 4. 更新 `design-deviation-db.json`
 
 **规则**：
+
 - 所有 `severity === "critical"` 的偏差必须先 resolved 才能交付
 - `severity === "major"` 的偏差如果无法修复，需在 execution.md 标注「设计不可实现-原因」
-- 记录偏差库同步耗时到验证计时
 
 ---
 
@@ -183,23 +169,43 @@ verify 阶段结束时执行偏差库同步：
 ```jsonc
 {
   "scanResults": [
-    { "item": "无硬编码 hex", "pass": true, "evidence": "所有色值来自 CSS 变量 var(--xlb-*)" },
-    { "item": "导航合规", "pass": true, "evidence": "grep 无 history.push 匹配" },
-    { "item": "API 合规", "pass": true, "evidence": "字段完整性/取值路径/参数默认值/mock 残留 4 项全通过" },
-    { "item": "页面结构", "pass": true, "evidence": "ProPageContainer + XlbNavBar 已使用" },
+    {
+      "item": "无硬编码 hex",
+      "pass": true,
+      "evidence": "所有色值来自 CSS 变量 var(--xlb-*)",
+    },
+    {
+      "item": "导航合规",
+      "pass": true,
+      "evidence": "grep 无 history.push 匹配",
+    },
+    {
+      "item": "API 合规",
+      "pass": true,
+      "evidence": "字段完整性/取值路径/参数默认值/mock 残留 4 项全通过",
+    },
+    {
+      "item": "页面结构",
+      "pass": true,
+      "evidence": "ProPageContainer + XlbNavBar 已使用",
+    },
     { "item": "defer 项闭环", "pass": true, "evidence": "3 项全部已修复" },
-    { "item": "路由注册", "pass": true, "evidence": "新页面已注册到 routes.ts" },
+    {
+      "item": "路由注册",
+      "pass": true,
+      "evidence": "新页面已注册到 routes.ts",
+    },
     { "item": "权限检查", "pass": true, "evidence": "useHasAuth 已正确使用" },
     {
       "item": "偏差库同步",
       "pass": true,
-      "evidence": "2 条偏差已 verified"
-    }
+      "evidence": "2 条偏差已 verified",
+    },
   ],
   "styleScanPassed": true,
   "dynamicFormPassed": true,
   "gaps": [],
-  "checklistPassed": true
+  "checklistPassed": true,
 }
 ```
 
@@ -216,7 +222,7 @@ verify 阶段结束时执行偏差库同步：
 - [ ] 权限检查通过（useHasAuth 正确使用）
 - [ ] NativeBridge 合规检查通过
 - [ ] **偏差库已同步**（当前需求关联的偏差已 verified 或已标注原因）
-- [ ] 性能计时日志已记录 `Phase 05 自测完成: HH:MM (实际 MM 分钟)`
+- [ ] 性能计时日志已记录 `verify 完成: HH:MM (耗时 MM 分钟)`
 
 ### 未通过处理
 
@@ -241,7 +247,9 @@ verify 阶段结束时执行偏差库同步：
 
 ## 完成阶段
 
-- [x] analyze (功能点: N 个)
+- [x] analyze (平台/需求类型确认)
+- [x] collect-materials (材料收集完成)
+- [x] feature-spec (功能点: N 个)
 - [x] api-spec (接口: N 个, available: N, mock: N)
 - [x] audit (组件决策: N 个, 黑盒风险: N 个)
 - [x] design (文件: N 个, 路由: N 个)
@@ -255,14 +263,17 @@ verify 阶段结束时执行偏差库同步：
 
 ## 性能计时
 
-| 阶段     | 耗时               |
-| -------- | ------------------ |
-| analyze  | MM 分钟            |
-| audit    | MM 分钟            |
-| design   | MM 分钟            |
-| build    | MM 分钟 (N 个分组) |
-| verify   | MM 分钟            |
-| **总计** | **MM 分钟**        |
+| 阶段              | 耗时               |
+| ----------------- | ------------------ |
+| analyze           | MM 分钟            |
+| collect-materials | MM 分钟            |
+| feature-spec      | MM 分钟            |
+| api-spec          | MM 分钟            |
+| audit             | MM 分钟            |
+| design            | MM 分钟            |
+| build             | MM 分钟 (N 个分组) |
+| verify            | MM 分钟            |
+| **总计**          | **MM 分钟**        |
 
 ## 剩余风险
 

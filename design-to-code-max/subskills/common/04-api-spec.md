@@ -1,16 +1,17 @@
-# Phase 04 — API 规格设计（新增阶段）
+# Phase 04 — API 规格设计
 
 ## 进入条件
 
 - 已 `Read .ai-wiki/.dtc-state.json`。
 - `phaseOutputs.analyze.checklistPassed === true` 且 `phaseOutputs.analyze.userConfirmed === true`。
+- `phaseOutputs.collect-materials.checklistPassed === true` 且 `phaseOutputs.collect-materials.userConfirmed === true`。
 - `phaseOutputs.feature-spec.checklistPassed === true` 且 `phaseOutputs.feature-spec.userConfirmed === true`。
 - `currentPhase` 为 `api-spec`。
 
 ## 阶段定位
 
 ```
-feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build(查 api-spec)
+feature-spec → api-spec → audit → design(引用 api-spec) → build(查 api-spec)
                   ↓
             api-spec.md
             入参 | 出参 | 字段→UI映射 | mock模板 | 状态
@@ -22,11 +23,11 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 
 ## 输入来源
 
-| 需求类型 | 主要来源 | 次要参考 |
-|---------|---------|---------|
+| 需求类型                                | 主要来源                                                  | 次要参考                     |
+| --------------------------------------- | --------------------------------------------------------- | ---------------------------- |
 | **重构**（H5 → RN / H5 → H5 / PC → PC） | H5/PC 源码中的 API 调用代码（请求参数构造、响应字段取值） | 接口文档（如有，做交叉验证） |
-| **增量/全新** | 接口文档（Swagger/YApi/文本） | 同项目已有相似接口的调用模式 |
-| **混合**（重构+增量） | 已有功能走源码逆向，新增功能走接口文档 | — |
+| **增量/全新**                           | 接口文档（Swagger/YApi/文本）                             | 同项目已有相似接口的调用模式 |
+| **混合**（重构+增量）                   | 已有功能走源码逆向，新增功能走接口文档                    | —                            |
 
 ### 来源优先级规则
 
@@ -44,7 +45,7 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 
 ### Step 2: 分析 API 入参
 
-对**每个 API**（从 features.md 的接口清单表中获取 URL 列表），分析其请求参数：
+对**每个 API**（从 features.md 的「接口清单表」中获取 URL 列表；清单缺失或不全时，回退到在源码中全局搜索 `request` / `Fsmshttp` 等接口调用补齐清单），分析其请求参数：
 
 #### 2.1 重构模式：从源码逆向
 
@@ -67,13 +68,13 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 #### 2.3 输出：请求参数表
 
 ```markdown
-| 参数名 | 类型 | 必填 | 默认值 | 来源 | 说明 |
-|--------|------|------|--------|------|------|
-| keyword | string | 否 | undefined | search keyword | 搜索关键词 |
-| date | string[] | 否 | [月初,月末] | search.date | 日期范围 |
-| states | string[] | 否 | [] | search.states | 状态多选 |
-| orders | object[] | 否 | [{direction:'DESC',property:'create_time'}] | H5 硬编码 | 排序 |
-| query_date_type | string | 否 | 'CREATE' | H5 硬编码 | 日期查询类型 |
+| 参数名          | 类型     | 必填 | 默认值                                      | 来源           | 说明         |
+| --------------- | -------- | ---- | ------------------------------------------- | -------------- | ------------ |
+| keyword         | string   | 否   | undefined                                   | search keyword | 搜索关键词   |
+| date            | string[] | 否   | [月初,月末]                                 | search.date    | 日期范围     |
+| states          | string[] | 否   | []                                          | search.states  | 状态多选     |
+| orders          | object[] | 否   | [{direction:'DESC',property:'create_time'}] | H5 硬编码      | 排序         |
+| query_date_type | string   | 否   | 'CREATE'                                    | H5 硬编码      | 日期查询类型 |
 ```
 
 ### Step 3: 分析 API 出参
@@ -102,16 +103,16 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 #### 3.3 输出：响应字段表
 
 ```markdown
-| 字段 | 类型 | 来源 API | 用途 | UI 元素 | 条件显隐 |
-|------|------|----------|------|---------|---------|
-| item_name | string | page | 列表展示标题 | Index.tsx → renderItem 顶部 | — |
-| item_code | string | page | 列表展示 | Index.tsx → renderItem | — |
-| quality_type | string | page | 质量类型展示 | Index.tsx → renderItem | — |
-| state | enum | page | 状态标签 | Index.tsx → StatusTag | — |
-| fid | string | page | 导航参数传递 | Index.tsx → onPress | — |
-| problem_name | string | page | 一级类目展示 | Index.tsx → renderItem | 有值才显示行 |
-| create_by | string | page | 提报人 | Index.tsx → renderItem footer | — |
-| create_time | string | page | 提报时间 | Index.tsx → renderItem footer | — |
+| 字段         | 类型   | 来源 API | 用途         | UI 元素                       | 条件显隐     |
+| ------------ | ------ | -------- | ------------ | ----------------------------- | ------------ |
+| item_name    | string | page     | 列表展示标题 | Index.tsx → renderItem 顶部   | —            |
+| item_code    | string | page     | 列表展示     | Index.tsx → renderItem        | —            |
+| quality_type | string | page     | 质量类型展示 | Index.tsx → renderItem        | —            |
+| state        | enum   | page     | 状态标签     | Index.tsx → StatusTag         | —            |
+| fid          | string | page     | 导航参数传递 | Index.tsx → onPress           | —            |
+| problem_name | string | page     | 一级类目展示 | Index.tsx → renderItem        | 有值才显示行 |
+| create_by    | string | page     | 提报人       | Index.tsx → renderItem footer | —            |
+| create_time  | string | page     | 提报时间     | Index.tsx → renderItem footer | —            |
 ```
 
 #### 3.4 取值路径适配（跨平台）
@@ -119,10 +120,10 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 由于不同平台（RN/H5）的 HTTP 客户端可能返回不同的响应结构，取值路径必须按平台分别标注：
 
 ```markdown
-| 平台 | 取值路径 | 说明 |
-|------|---------|------|
-| RN (fsmshttp) | `res?.data?.content` | fsmshttp 内部已解一层 data |
-| H5 (request from umi) | `res.content` | 标准 axios 响应 |
+| 平台                  | 取值路径             | 说明                       |
+| --------------------- | -------------------- | -------------------------- |
+| RN (fsmshttp)         | `res?.data?.content` | fsmshttp 内部已解一层 data |
+| H5 (request from umi) | `res.content`        | 标准 axios 响应            |
 ```
 
 **覆写规则**：如果 api-spec 阶段无法确认某个平台的取值路径（无参照页、无接口响应示例），将其标记为「待 verify 阶段确认」，不可留空或使用猜测值。
@@ -134,15 +135,16 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 ```markdown
 ## 字段综合映射表
 
-| 业务字段 | page 接口 | read 接口 | save 接口 | 列表页 | 详情页 | 表单页 |
-|---------|----------|----------|----------|--------|--------|--------|
-| item_name | ✅ | ✅ | ✅ | title(FP-001) | Section0(FP-041) | 商品名称(FP-017) |
-| item_code | ✅ | ✅ | — | 展示(FP-001) | Section0(FP-041) | 自动填充 |
-| state | ✅ | ✅ | — | StatusTag(FP-001) | Banner(FP-032) | — |
-| store_name | ✅ | ✅ | ✅ | — | InfoRow(FP-042) | 门店选择(FP-013) |
+| 业务字段   | page 接口 | read 接口 | save 接口 | 列表页            | 详情页           | 表单页           |
+| ---------- | --------- | --------- | --------- | ----------------- | ---------------- | ---------------- |
+| item_name  | ✅        | ✅        | ✅        | title(FP-001)     | Section0(FP-041) | 商品名称(FP-017) |
+| item_code  | ✅        | ✅        | —         | 展示(FP-001)      | Section0(FP-041) | 自动填充         |
+| state      | ✅        | ✅        | —         | StatusTag(FP-001) | Banner(FP-032)   | —                |
+| store_name | ✅        | ✅        | ✅        | —                 | InfoRow(FP-042)  | 门店选择(FP-013) |
 ```
 
 **说明**：
+
 - 对齐状态：✅=接口有该字段，—=接口无该字段
 - 用途列：标注 FP 编号 + 页面位置
 - 此表是后续 build 阶段**校验字段完整性**的直接依据
@@ -151,18 +153,18 @@ feature-spec → api-spec (🆕) → audit → design(引用 api-spec) → build
 
 每个接口的状态独立标注：
 
-| 状态 | 含义 | 后续处理 |
-|------|------|---------|
-| `available` | 接口已可用（源码已调通 / 后端已上线） | 按 spec 正常使用 |
-| `spec-only` | 仅有接口文档 / 从需求推导，后端未开发 | build 阶段使用 mock 模板 |
-| `pending-backend` | 接口文档未提供，仅标注了 URL 和用途 | build 阶段使用 mock 模板，标记「待联调」 |
-| `deprecated` | H5 有但新页面不再使用（重构模式迁移后淘汰） | 不生成代码，在 tech-design 中标注已弃用 |
+| 状态              | 含义                                        | 后续处理                                 |
+| ----------------- | ------------------------------------------- | ---------------------------------------- |
+| `available`       | 接口已可用（源码已调通 / 后端已上线）       | 按 spec 正常使用                         |
+| `spec-only`       | 仅有接口文档 / 从需求推导，后端未开发       | build 阶段使用 mock 模板                 |
+| `pending-backend` | 接口文档未提供，仅标注了 URL 和用途         | build 阶段使用 mock 模板，标记「待联调」 |
+| `deprecated`      | H5 有但新页面不再使用（重构模式迁移后淘汰） | 不生成代码，在 tech-design 中标注已弃用  |
 
 ### Step 5.5: 生成 Mock 数据模板
 
 对于 `status !== "available"` 的接口，生成 mock 数据模板：
 
-```markdown
+````markdown
 ### Mock：qualityreport.page
 
 ```typescript
@@ -170,21 +172,23 @@ export const mockQualityReportPage = {
   code: 0,
   content: [
     {
-      fid: 'mock-001',
-      item_name: '示例商品',
-      item_code: 'MOCK-001',
-      state: 'INIT',
-      quality_type: 'SELF',
-      problem_name: '包装破损',
-      one_category_name: '标签问题',
-      create_by: '张三',
-      create_time: '2026-07-01 10:00:00',
+      fid: "mock-001",
+      item_name: "示例商品",
+      item_code: "MOCK-001",
+      state: "INIT",
+      quality_type: "SELF",
+      problem_name: "包装破损",
+      one_category_name: "标签问题",
+      create_by: "张三",
+      create_time: "2026-07-01 10:00:00",
     },
   ],
   total_elements: 1,
 };
 ```
-```
+````
+
+````
 
 **mock 数据规则**：
 - mock 数据的字段必须和响应字段表完全一致（每个字段都有对应 mock 值）
@@ -242,14 +246,15 @@ export const mockQualityReportPage = {
 
 ```typescript
 // mock 代码
-```
+````
 
 ## 5. API 状态清单
 
-| 接口 | status | 备注 |
-|------|--------|------|
+| 接口               | status    | 备注         |
+| ------------------ | --------- | ------------ |
 | qualityreport.page | available | 已从 H5 确认 |
-```
+
+````
 
 更新 `.dtc-state.json` 当前需求条目的 `phaseOutputs.api-spec`：
 
@@ -265,17 +270,17 @@ export const mockQualityReportPage = {
   "checklistPassed": true,
   "userConfirmed": false
 }
-```
+````
 
 ## 后续阶段对 api-spec.md 的引用方式
 
-| 阶段 | 引用方式 | 约束 |
-|------|---------|------|
-| **audit** | 不直接引用。UI 审计与 API 无关 | ⚠️ audit 中如果通过截图发现 api-spec.md 未覆盖的字段，必须在 audit 完成后补充到 api-spec.md |
-| **design (§3.3)** | 由现在的「定义接口参数」变为**一句话引用**：「API 规格详见 api-spec.md §2」 | 禁止在 design §3.3 中重复定义参数结构。design 只需说明「状态管理方案」和「缓存策略」 |
-| **build (Step 2)** | 每个分组读 H5 源码的参数构造逻辑改为**读 api-spec.md 对应接口的请求参数表** | 确定参数格式和默认值，不再自行从 H5 源码提取 |
-| **build (Step 4)** | 生成 renderItem / 详情展示 / 表单字段时，**必须对照 api-spec.md 的字段综合映射表和响应字段表** | 每个渲染字段在代码中标注 FP-xxx 编号。表中有的字段代码中必须有，表中没有的字段代码中不能有 |
-| **verify** | 验证 API 相关的 3 项合规性 | 见下方「verify 阶段新增检查项」 |
+| 阶段               | 引用方式                                                                                       | 约束                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **audit**          | 不直接引用。UI 审计与 API 无关                                                                 | ⚠️ audit 中如果通过截图发现 api-spec.md 未覆盖的字段，必须在 audit 完成后补充到 api-spec.md |
+| **design (§3.3)**  | 由现在的「定义接口参数」变为**一句话引用**：「API 规格详见 api-spec.md §2」                    | 禁止在 design §3.3 中重复定义参数结构。design 只需说明「状态管理方案」和「缓存策略」        |
+| **build (Step 2)** | 每个分组读 H5 源码的参数构造逻辑改为**读 api-spec.md 对应接口的请求参数表**                    | 确定参数格式和默认值，不再自行从 H5 源码提取                                                |
+| **build (Step 4)** | 生成 renderItem / 详情展示 / 表单字段时，**必须对照 api-spec.md 的字段综合映射表和响应字段表** | 每个渲染字段在代码中标注 FP-xxx 编号。表中有的字段代码中必须有，表中没有的字段代码中不能有  |
+| **verify**         | 验证 API 相关的 3 项合规性                                                                     | 见下方「verify 阶段新增检查项」                                                             |
 
 ### verify 阶段新增检查项
 
@@ -292,7 +297,7 @@ export const mockQualityReportPage = {
 
 ## 性能计时
 
-记录 `Phase 04 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
+记录 `api-spec 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
 
 ## Checklist（必须全部满足才能标记 checklistPassed: true）
 
@@ -304,7 +309,7 @@ export const mockQualityReportPage = {
 - [ ] 每个接口的 status 已标注（available / spec-only / pending-backend）
 - [ ] status 非 available 的接口均已生成 mock 数据模板
 - [ ] mock 数据字段与响应字段表一致，类型匹配，有业务语义的值
-- [ ] features.md 已追加「性能计时日志」的 Phase 04 记录
+- [ ] features.md 已追加「性能计时日志」的 api-spec 记录
 - [ ] 接口来源已记录（source-code-reverse / api-doc）
 
 ## 用户确认门禁

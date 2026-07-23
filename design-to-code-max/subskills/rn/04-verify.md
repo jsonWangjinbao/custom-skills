@@ -1,4 +1,4 @@
-# Phase 05 - 自测验证与交付
+# Phase 08 - 自测验证与交付（RN）
 
 ## 进入条件
 
@@ -10,24 +10,11 @@
 
 ## 任务
 
-记录 `Phase 05 自测开始: HH:MM` 到 features.md 的「性能计时日志」。
+记录 `verify 开始: HH:MM` 到 features.md 的「性能计时日志」。
 
 ### 验证计时规则
 
-verify 阶段的每个检查项必须单独记录耗时：
-
-- TSC 编译检查：X 分钟
-- 样式合规扫描：X 分钟
-- 动态表单安全检查：X 分钟
-- 图标清单完整性检查：X 分钟
-- dependencies 禁用检查：X 分钟
-- API 合规检查：X 分钟
-- defer 项闭环检查：X 分钟
-- label 可见性逐字段核验：X 分钟
-- 偏差库同步：X 分钟（新增）
-- （其他检查项）：X 分钟
-
-在 execution.md 的 verify 区域逐项记录，而非仅记录总时间。
+verify 阶段只记录阶段级总耗时（`verify 完成: HH:MM (耗时 MM 分钟)`），不逐项计时。
 
 ---
 
@@ -44,14 +31,12 @@ verify 阶段的每个检查项必须单独记录耗时：
 
 对照 `api-spec.md` 执行以下 4 项检查：
 
-| # | 检查项 | 检查内容 | 违反后果 |
-|---|--------|---------|---------|
-| 1 | 字段完整性 | 遍历 api-spec.md 中所有 `status !== "spec-only"` 的接口，对照「字段综合映射表」中标注 ✅ 的字段，检查代码中是否均已使用（列表页/详情页/表单页逐项比对） | 禁止进入下一阶段 |
-| 2 | 取值路径 | 对照 api-spec.md 的取值路径配置，扫描代码中每个 API 调用的数据提取方式（`res?.data?.content` vs `res.data`），确认未多解或少解一层 | 禁止进入下一阶段 |
-| 3 | 参数默认值 | 对照 api-spec.md 的请求参数表中标注了默认值的参数，检查代码是否实现了该默认值（如列表页默认当月日期范围） | 标记需修复 |
-| 4 | mock 残留 | 检查 `status === "available"` 的接口，代码中是否还残留 mock 数据 | 标记需清理 |
-
-**计时规则**：API 合规检查作为一个独立计时项记录：`API 合规检查：X 分钟`
+| #   | 检查项     | 检查内容                                                                                                                                                | 违反后果         |
+| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | 字段完整性 | 遍历 api-spec.md 中所有 `status !== "spec-only"` 的接口，对照「字段综合映射表」中标注 ✅ 的字段，检查代码中是否均已使用（列表页/详情页/表单页逐项比对） | 禁止进入下一阶段 |
+| 2   | 取值路径   | 对照 api-spec.md 的取值路径配置，扫描代码中每个 API 调用的数据提取方式（`res?.data?.content` vs `res.data`），确认未多解或少解一层                      | 禁止进入下一阶段 |
+| 3   | 参数默认值 | 对照 api-spec.md 的请求参数表中标注了默认值的参数，检查代码是否实现了该默认值（如列表页默认当月日期范围）                                               | 标记需修复       |
+| 4   | mock 残留  | 检查 `status === "available"` 的接口，代码中是否还残留 mock 数据                                                                                        | 标记需清理       |
 
 ### 2. 视觉还原验证
 
@@ -77,11 +62,11 @@ verify 阶段的每个检查项必须单独记录耗时：
 3. 核验范围：所有新增/修改的 `.tsx` 文件中的每个表单字段。
 4. 对比来源：`ui-audit.md` 中列出的字段 label 列表。每个字段 label 必须在运行时可见。
 
-**未通过处理**：列出 label 缺失的字段，按 `../reference/rn/gotchas/component-library/dependencies-kills-label.md` 修复后重新验证。
+**未通过处理**：列出 label 缺失的字段，按 `../../reference/rn/gotchas/component-library/dependencies-kills-label.md` 修复后重新验证。
 
 ### 3. 样式合规扫描
 
-执行 `../reference/rn/style-scan-checklist.md` 的完整扫描，对本次新增/修改的所有 `.ts/.tsx` 文件逐条检查。
+执行 `../../reference/rn/style-scan-checklist.md` 的完整扫描，对本次新增/修改的所有 `.ts/.tsx` 文件逐条检查。
 
 **使用 `Grep` 工具在项目目录内搜索**，不要仅凭肉眼检查。
 
@@ -95,7 +80,7 @@ verify 阶段的每个检查项必须单独记录耗时：
 
 - 搜索 `name={[` 确认无数组 name 的 `XlbForm.Item`
 - 如有数组 name，检查直接子组件是否为 `SafeInput` / `SafeUploadFile`
-- 引用 `../reference/rn/gotchas/component-library/safeinput-filter-id.md`
+- 引用 `../../reference/rn/gotchas/component-library/safeinput-filter-id.md`
 
 ### 5. dependencies 禁用终检
 
@@ -105,7 +90,7 @@ verify 阶段的每个检查项必须单独记录耗时：
 grep -rn "dependencies" --include="*.tsx" src/pages/
 ```
 
-- 出现任何 `XlbForm.Item` / `CommonFormItem` 传入 `dependencies` → 按 `../reference/rn/gotchas/component-library/dependencies-kills-label.md` 修复
+- 出现任何 `XlbForm.Item` / `CommonFormItem` 传入 `dependencies` → 按 `../../reference/rn/gotchas/component-library/dependencies-kills-label.md` 修复
 - 此检查项必须通过才能标记 `checklistPassed: true`
 
 ### 6. defer/待处理项闭环消费
@@ -146,7 +131,7 @@ verify 阶段必须执行图标完整性检查：
 
 此项为建议而非强制，在 features.md 的功能点表中标记「可测试纯函数」列即可。
 
-### 10. 偏差库同步（新增）
+### 10. 偏差库同步
 
 verify 阶段结束时执行偏差库同步：
 
@@ -159,9 +144,9 @@ verify 阶段结束时执行偏差库同步：
 4. 更新 `design-deviation-db.json`
 
 **规则**：
+
 - 所有 `severity === "critical"` 的偏差必须先 resolved 才能交付
 - `severity === "major"` 的偏差如果无法修复，需在 execution.md 标注「设计不可实现-原因」
-- 记录偏差库同步耗时到验证计时
 
 ---
 
@@ -180,24 +165,24 @@ verify 阶段结束时执行偏差库同步：
     {
       "item": "label 可见性",
       "pass": true,
-      "evidence": "所有表单字段 label 已核验可见"
+      "evidence": "所有表单字段 label 已核验可见",
     },
     {
       "item": "上传组件保留删除功能",
       "pass": false,
       "evidence": "缺少 showDelete 属性",
-      "fix": "XlbUploadFile 传入 showDelete"
+      "fix": "XlbUploadFile 传入 showDelete",
     },
     {
       "item": "偏差库同步",
       "pass": true,
-      "evidence": "2 条偏差已 verified"
-    }
+      "evidence": "2 条偏差已 verified",
+    },
   ],
   "styleScanPassed": true,
   "dynamicFormPassed": true,
   "gaps": [],
-  "checklistPassed": true
+  "checklistPassed": true,
 }
 ```
 
@@ -214,7 +199,7 @@ verify 阶段结束时执行偏差库同步：
 - [ ] 图标清单完整性已通过（代码使用图标均存在于 @xlb/icon-rn 且已同步到 ui-audit.md）
 - [ ] 路由已注册且跳转使用 getRouteName
 - [ ] **偏差库已同步**（当前需求关联的偏差已 verified 或已标注原因）
-- [ ] 性能计时日志已记录 `Phase 05 自测完成: HH:MM (实际 MM 分钟)`
+- [ ] 性能计时日志已记录 `verify 完成: HH:MM (耗时 MM 分钟)`
 
 ### 未通过处理
 
@@ -239,7 +224,9 @@ verify 阶段结束时执行偏差库同步：
 
 ## 完成阶段
 
-- [x] analyze (功能点: N 个)
+- [x] analyze (平台/需求类型确认)
+- [x] collect-materials (材料收集完成)
+- [x] feature-spec (功能点: N 个)
 - [x] api-spec (接口: N 个, available: N, mock: N)
 - [x] audit (组件决策: N 个, 黑盒风险: N 个)
 - [x] design (文件: N 个, 路由: N 个)
@@ -253,14 +240,17 @@ verify 阶段结束时执行偏差库同步：
 
 ## 性能计时
 
-| 阶段     | 耗时               |
-| -------- | ------------------ |
-| analyze  | MM 分钟            |
-| audit    | MM 分钟            |
-| design   | MM 分钟            |
-| build    | MM 分钟 (N 个分组) |
-| verify   | MM 分钟            |
-| **总计** | **MM 分钟**        |
+| 阶段              | 耗时               |
+| ----------------- | ------------------ |
+| analyze           | MM 分钟            |
+| collect-materials | MM 分钟            |
+| feature-spec      | MM 分钟            |
+| api-spec          | MM 分钟            |
+| audit             | MM 分钟            |
+| design            | MM 分钟            |
+| build             | MM 分钟 (N 个分组) |
+| verify            | MM 分钟            |
+| **总计**          | **MM 分钟**        |
 
 ## 剩余风险
 

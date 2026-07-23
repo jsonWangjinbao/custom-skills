@@ -6,8 +6,8 @@
 
 满足以下任一条件，直接处理，记录到 STYLE-REVIEW.md：
 
-1. **CSS 变量命中映射表**：`var(--Gray-7)` 在 `references/token-map.json` 中找到对应 theme key → 使用 `theme['color-background-page']`，具体色值以 `token-map.json` 的 `themeObject` 为准
-2. **图标命中映射表**：HTML/截图中的图标语义在 `references/icon-map.md` 或 `iconfontGlyphMap` 中找到对应 key → 使用 `<XlbIcon name="Key" ... />`
+1. **CSS 变量命中映射表**：`var(--Gray-7)` 在 `reference/rn/token-map.json` 中找到对应 theme key → 使用 `theme['color-background-page']`，具体色值以 `token-map.json` 的 `themeObject` 为准
+2. **图标命中映射表**：HTML/截图中的图标语义在 `reference/rn/icon-map.md` 或 `iconfontGlyphMap` 中找到对应 key → 使用 `<XlbIcon name="Key" ... />`
 3. **真实图片路径存在**：`src="./asset/xxx.png"` / `src="./asset/xxx.jpg"` 在 assets 目录中存在 → 使用 `<Image source={require('...')} />` / `<XlbImage source={...} />`
 4. **SVG 文件路径存在**：`src="./asset/icons/xxx.svg"` 在 assets 目录中存在 → **不直接 require**，优先映射为 `XlbIcon`；若无法映射则标记「图标无映射」风险
 5. **flex 属性标准**：值在 CSS flexbox 标准范围内 → 直接翻译
@@ -67,7 +67,7 @@
 
 #### 规则 5：图标无法映射到 icon-rn
 
-**条件**：HTML/截图中的图标在 `references/icon-map.md` 和 `iconfontGlyphMap` 中均找不到对应 key
+**条件**：HTML/截图中的图标在 `reference/rn/icon-map.md` 和 `iconfontGlyphMap` 中均找不到对应 key
 **默认处理**：使用语义最接近的候选图标替代，在代码注释中说明降级原因，并在 `ui-audit.md` 标记「图标降级：{原语义} → {替代 name}」
 
 **必须提问**：只有当替代图标与原始语义差异过大（如用 `File` 代替「人」图标）且用户明确要求精确还原时，才使用 `AskUserQuestion`：

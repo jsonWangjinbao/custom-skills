@@ -12,13 +12,14 @@
 ## 样式规范引用
 
 > 本报告提取的样式值供执行阶段直接使用。
-> - 颜色：hex 值 → Less 变量（`@color_link` / `@color_danger` / `@color_warning` / `@color_success` / `@color_invalid` / `@color_init`）
+> - 颜色：hex 值 → Less 变量（`@color_link` / `@color_danger` / `@color_warning` / `@color_success` / `@color_invalid` /
+`@color_init`）
 > - 间距：px 值 → 直接使用 CSS px 值
 > - 圆角：px 值 → CSS `border-radius: {{N}}px`
 > - 字号：px 值 → CSS `font-size: {{N}}px`
 > - 图标：HTML/截图中的图标 → `XlbIcon`，`name` 必须是 `@xlb/components` 中定义的 icon name
 > - 图片：照片/装饰性 PNG/JPG → `import` 引入或 `XlbBaseUpload`
-> - 完整规范见 `../reference/pc/pc-guidelines.md`
+> - 完整规范见 `reference/pc/pc-guidelines.md`
 > - **禁止**在 ui-audit 中写死 hex 供执行阶段直接复制；所有色值必须以 Less 变量形式输出
 
 ## 页面模式识别
@@ -103,7 +104,8 @@
 |---------|---------|---------|-----------------|----------------|---------|
 | {{搜索表单}} | {{XlbForm}} | {{formList 配置}} | {{无差异}} | {{否}} | {{直接使用}} |
 | {{数据表格}} | {{XlbTable}} | {{标准表格}} | {{无差异}} | {{否}} | {{直接使用}} |
-| {{编辑表单}} | {{XlbBasicForm + XlbBasicForm.Item}} | {{CSS Grid 三列}} | {{列数/布局可能不匹配}} | {{是}} | {{自定义 gridTemplateColumns}} |
+| {{编辑表单}} | {{XlbBasicForm + XlbBasicForm.Item}} | {{CSS Grid 三列}} | {{列数/布局可能不匹配}} | {{是}} |
+{{自定义 gridTemplateColumns}} |
 | {{状态标签}} | {{StatusColorByOptions}} | {{颜色标签}} | {{无差异}} | {{否}} | {{直接使用}} |
 | {{操作按钮}} | {{XlbButton.Group}} | {{按钮组}} | {{无差异}} | {{否}} | {{直接使用}} |
 | {{确认弹窗}} | {{XlbTipsModal}} | {{confirm 弹窗}} | {{无差异}} | {{否}} | {{直接使用}} |

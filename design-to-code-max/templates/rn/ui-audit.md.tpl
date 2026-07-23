@@ -11,16 +11,16 @@
 
 ## 样式规范引用
 
-> 本报告提取的样式值必须映射为 token 引用，供 STEP 4 执行时直接使用。
-> - 颜色：hex 值 → `theme['xxx']`（映射见 `references/token-map.json` colors 字段和 themeObject 字段）
-> - 间距：px 值 → `SPACE.SPACE_{{N}}`（映射见 `references/token-map.json` constants.SPACE 字段）
-> - 圆角：px 值 → `BORDER.RADIUS_{{N}}`（映射见 `references/token-map.json` constants.BORDER 字段）
-> - 字号：px 值 → `FONT.SIZE_{{N}}` / `FONT.LINE_HEIGHT_{{N}}` / `FONT.BOLD_{{xxx}}`（映射见 `references/token-map.json`
+> 本报告提取的样式值必须映射为 token 引用，供 build 阶段执行时直接使用。
+> - 颜色：hex 值 → `theme['xxx']`（映射见 `reference/rn/token-map.json` colors 字段和 themeObject 字段）
+> - 间距：px 值 → `SPACE.SPACE_{{N}}`（映射见 `reference/rn/token-map.json` constants.SPACE 字段）
+> - 圆角：px 值 → `BORDER.RADIUS_{{N}}`（映射见 `reference/rn/token-map.json` constants.BORDER 字段）
+> - 字号：px 值 → `FONT.SIZE_{{N}}` / `FONT.LINE_HEIGHT_{{N}}` / `FONT.BOLD_{{xxx}}`（映射见 `reference/rn/token-map.json`
 constants.FONT 字段）
-> - 阴影：`SHADOW.S1 / S2 / S3`（语义见 `references/xlb-style-system.md`）
-> - 图标：HTML/截图中的图标 → `@xlb/icon-rn` 的 `XlbIcon`，`name` 必须是 `iconfontGlyphMap` 中的 key（映射见 `references/icon-map.md`）
+> - 阴影：`SHADOW.S1 / S2 / S3`（语义见 `reference/rn/xlb-style-system.md`）
+> - 图标：HTML/截图中的图标 → `@xlb/icon-rn` 的 `XlbIcon`，`name` 必须是 `iconfontGlyphMap` 中的 key（映射见 `reference/rn/icon-map.md`）
 > - 图片：照片/装饰性 PNG/JPG/WebP → `Image` / `XlbImage` + `require`
-> - 完整规范见 `references/xlb-style-system.md` 和 `references/rn-guidelines.md`
+> - 完整规范见 `reference/rn/xlb-style-system.md` 和 `reference/rn/rn-guidelines.md`
 > - **禁止**在 ui-audit 中写死 hex 供执行阶段直接复制；所有样式值必须以 token 形式输出
 
 ## 扫描配对清单
@@ -37,7 +37,7 @@ constants.FONT 字段）
 
 ## 关键样式规格
 
-> 从 HTML 和截图中提取的样式信息，**必须映射为 token 引用**，供 STEP 4 执行时直接参考。
+> 从 HTML 和截图中提取的样式信息，**必须映射为 token 引用**，供 build 阶段执行时直接参考。
 > 映射规则见上方"样式规范引用"章节。
 
 ### {{组件/页面名}}
@@ -62,7 +62,7 @@ constants.FONT 字段）
 
 > 对每个 UI 元素，检查项目组件库的默认渲染输出与 HTML 目标的差异。
 > 重点关注「黑盒封装组件」（如 `CommonFormItem`、`XlbUploadFile`、`XlbCard`），它们的内部布局/间距/行高由组件库决定，使用者无法直接控制。
-> 参考 `references/gotchas/component-library/blackbox-wrapper-component.md` 识别风险。
+> 参考 `reference/rn/gotchas/component-library/blackbox-wrapper-component.md` 识别风险。
 
 | UI 元素 | 候选组件库组件 | 默认渲染输出 | 与 HTML 目标的差异 | 是否需要额外定制 | 补偿方案 |
 |---------|---------------|------------|-------------------|----------------|---------|

@@ -22,7 +22,7 @@ Step 3: 三要素归类
   │   layout / typography / spacing & style
   ▼
 Step 4: Token 映射
-  │   查 token-map.json / icon-map.md / xlb-style-system.md
+  │   查各平台 token 资源（RN: token-map.json / icon-map.md / xlb-style-system.md；H5/PC: 各自 guidelines 的变量映射）
   ▼
 Step 5: 结构化输出
       写入 parsed-styles/【page-name】.json
@@ -41,12 +41,12 @@ Step 5: 结构化输出
 
 每个 HTML 文件拆分为若干组件级元素：
 
-| 场景 | 拆分方式 | 示例 |
-|------|---------|------|
-| 单个页面 | 按顶级容器拆 | `div.page` → 1 个 entry |
-| 多步骤/多面板 | 按 `div.panel`、`div.step` 等拆分 | 3 个面板 → 3 个 entry |
-| 卡片式布局 | 每张卡片独立 | 3 张信息卡 → 3 个 entry |
-| 表单 | 整张表单 1 个 entry，子字段作为 children | 1 form → 1 entry |
+| 场景          | 拆分方式                                 | 示例                    |
+| ------------- | ---------------------------------------- | ----------------------- |
+| 单个页面      | 按顶级容器拆                             | `div.page` → 1 个 entry |
+| 多步骤/多面板 | 按 `div.panel`、`div.step` 等拆分        | 3 个面板 → 3 个 entry   |
+| 卡片式布局    | 每张卡片独立                             | 3 张信息卡 → 3 个 entry |
+| 表单          | 整张表单 1 个 entry，子字段作为 children | 1 form → 1 entry        |
 
 ### 2.3 排除元素
 
@@ -63,17 +63,17 @@ Step 5: 结构化输出
 
 ### 3.1 必须解析的元素
 
-| 标签 | 原因 | 优先级 |
-|------|------|--------|
-| `div`, `section`, `article`, `main` | 布局容器 | 高 |
-| `form`, `fieldset` | 表单容器 | 高 |
-| `label`, `span`, `p`, `h1`~`h6` | 文本/标签 | 高 |
-| `input`, `select`, `textarea`, `button` | 表单控件 | 高 |
-| `img` | 图片 | 高 |
-| `i`, `svg`, `span.icon-*` | 图标 | 中 |
-| `ul`, `ol`, `li` | 列表 | 中 |
-| `table`, `tr`, `td`, `th` | 表格 | 中 |
-| `a`, `nav`, `header`, `footer` | 导航/header/footer | 低 |
+| 标签                                    | 原因               | 优先级 |
+| --------------------------------------- | ------------------ | ------ |
+| `div`, `section`, `article`, `main`     | 布局容器           | 高     |
+| `form`, `fieldset`                      | 表单容器           | 高     |
+| `label`, `span`, `p`, `h1`~`h6`         | 文本/标签          | 高     |
+| `input`, `select`, `textarea`, `button` | 表单控件           | 高     |
+| `img`                                   | 图片               | 高     |
+| `i`, `svg`, `span.icon-*`               | 图标               | 中     |
+| `ul`, `ol`, `li`                        | 列表               | 中     |
+| `table`, `tr`, `td`, `th`               | 表格               | 中     |
+| `a`, `nav`, `header`, `footer`          | 导航/header/footer | 低     |
 
 ### 3.2 提取信息优先级
 
@@ -96,41 +96,49 @@ Step 5: 结构化输出
 
 ### 4.1 Layout 布局
 
-| 属性 | 来源 | 必填 | 说明 |
-|------|------|------|------|
-| `display` | style | 是 | 通常 `flex` 或 `block` |
-| `flexDirection` | style | 否 | 默认 `row` |
-| `height` | style | 否 | 典型值 48px / 44px / auto |
-| `justifyContent` | style | 否 | flex-start / center / space-between |
-| `alignItems` | style | 否 | center / flex-start / stretch |
-| `padding` | style | 否 | 四值或双值 |
-| `gap` | style | 否 | flex 子元素间距 |
+| 属性             | 来源  | 必填 | 说明                                |
+| ---------------- | ----- | ---- | ----------------------------------- |
+| `display`        | style | 是   | 通常 `flex` 或 `block`              |
+| `flexDirection`  | style | 否   | 默认 `row`                          |
+| `height`         | style | 否   | 典型值 48px / 44px / auto           |
+| `justifyContent` | style | 否   | flex-start / center / space-between |
+| `alignItems`     | style | 否   | center / flex-start / stretch       |
+| `padding`        | style | 否   | 四值或双值                          |
+| `gap`            | style | 否   | flex 子元素间距                     |
 
 ### 4.2 Typography 字体
 
-| 属性 | 来源 | 必填 | 说明 |
-|------|------|------|------|
-| `fontSize` | style | 是 | px 值 |
-| `fontWeight` | style | 否 | 数值或名称 |
-| `lineHeight` | style | 否 | px 值 |
-| `color` | style | 是 | hex 值 |
-| `textAlign` | style | 否 | left / center / right |
+| 属性         | 来源  | 必填 | 说明                  |
+| ------------ | ----- | ---- | --------------------- |
+| `fontSize`   | style | 是   | px 值                 |
+| `fontWeight` | style | 否   | 数值或名称            |
+| `lineHeight` | style | 否   | px 值                 |
+| `color`      | style | 是   | hex 值                |
+| `textAlign`  | style | 否   | left / center / right |
 
 ### 4.3 Spacing & Style 间距与修饰
 
-| 属性 | 来源 | 必填 | 说明 |
-|------|------|------|------|
-| `borderRadius` | style | 否 | px 值 |
-| `borderWidth` | style | 否 | px 值 |
-| `borderColor` | style | 否 | hex 值 |
-| `backgroundColor` | style | 否 | hex 值 |
-| `margin` | style | 否 | 四值或单值 |
-| `marginBottom` | style | 否 | 多用于表单项间距 |
-| `boxShadow` | style | 否 | 阴影定义 |
+| 属性              | 来源  | 必填 | 说明             |
+| ----------------- | ----- | ---- | ---------------- |
+| `borderRadius`    | style | 否   | px 值            |
+| `borderWidth`     | style | 否   | px 值            |
+| `borderColor`     | style | 否   | hex 值           |
+| `backgroundColor` | style | 否   | hex 值           |
+| `margin`          | style | 否   | 四值或单值       |
+| `marginBottom`    | style | 否   | 多用于表单项间距 |
+| `boxShadow`       | style | 否   | 阴影定义         |
 
 ---
 
 ## 5. Token 映射规则
+
+> **平台适配声明**：本节示例以 RN token 格式（`FONT.SIZE_*` / `SPACE.*` / `BORDER.*` / `theme['xxx']`）演示映射方法。各平台实际使用的 token 资源以各自 guidelines 为准：
+>
+> - **RN**：`reference/rn/token-map.json` + `reference/rn/icon-map.md` → `FONT.*` / `SPACE.*` / `BORDER.*` / `theme['xxx']`
+> - **H5**：`reference/h5/h5-guidelines.md` 的变量映射 → `var(--xlb-*)` CSS 变量
+> - **PC**：`reference/pc/pc-guidelines.md` → Less 变量 + px
+>
+> parsed-styles JSON 中的 `token` 字段按目标平台格式填写；映射方法论（精确匹配 → 最近值近似 → 无 token 标注）三平台通用。
 
 ### 5.1 映射优先级
 
@@ -144,7 +152,7 @@ Step 5: 结构化输出
 
 ### 5.2 颜色映射
 
-优先查 `reference/token-map.json` 的 `colors` 字段，然后查 `themeObject` 字段。
+优先查 `reference/rn/token-map.json` 的 `colors` 字段，然后查 `themeObject` 字段（以下为 RN 示例）：
 
 ```text
 #333333 → 查找 token-map.json → theme['color-text-body']
@@ -152,13 +160,14 @@ Step 5: 结构化输出
 ```
 
 **规则：**
+
 - 小写 hex，压缩值展开（`#333` → `#333333`）
 - 忽略 alpha 通道差异（`#333333` 和 `rgba(51,51,51,1)` 视为同一个颜色）
 - 映射前做 value normalization
 
 ### 5.3 间距映射
 
-查 `reference/token-map.json` 的 `constants.SPACE` 字段：
+查 `reference/rn/token-map.json` 的 `constants.SPACE` 字段（RN 示例）：
 
 ```text
 4px  → SPACE.SPACE_1     (4px)
@@ -175,7 +184,7 @@ Step 5: 结构化输出
 
 ### 5.4 圆角映射
 
-查 `reference/token-map.json` 的 `constants.BORDER` 字段：
+查 `reference/rn/token-map.json` 的 `constants.BORDER` 字段（RN 示例）：
 
 ```text
 2px → BORDER.RADIUS_2
@@ -186,7 +195,7 @@ Step 5: 结构化输出
 
 ### 5.5 字号映射
 
-查 `reference/token-map.json` 的 `constants.FONT` 字段：
+查 `reference/rn/token-map.json` 的 `constants.FONT` 字段（RN 示例）：
 
 ```text
 12px → FONT.SIZE_12
@@ -199,7 +208,7 @@ Step 5: 结构化输出
 
 ### 5.6 图标映射
 
-查 `reference/icon-map.md`：
+查 `reference/rn/icon-map.md`（RN 示例）：
 
 ```text
 HTML 中的 <i class="icon-camera"> → XlbIcon name="camera"
@@ -207,6 +216,7 @@ HTML 中的 <i class="icon-delete"> → XlbIcon name="delete"
 ```
 
 **规则：**
+
 - 从 HTML 元素的 class name 或 inline SVG 推断语义
 - 对比 icon-map.md 的 `glyphMap` 查找对应 key
 - 无法找到 → 标注「图标无映射：{{语义}} → 处理方案：{{降级 / SVG / 推动补充}}」
@@ -218,6 +228,7 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
 ```
 
 **规则：**
+
 - 保留相对路径，转换为 RN 兼容的 require 路径
 - 图片路径如果跨目录，标注需调整路径
 - 占位图（placeholder/empty state）标注来源
@@ -228,14 +239,14 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
 
 当 HTML 没有明确的 style 属性时，通过以下规则推断：
 
-| 场景 | 推断结论 |
-|------|---------|
-| `div > (label + input)` 水平排列 | `flexDirection: row`, `alignItems: center` |
-| `div > div` 垂直排列 | `flexDirection: column` |
-| `div > (label above, input below)` | `flexDirection: column` |
+| 场景                               | 推断结论                                              |
+| ---------------------------------- | ----------------------------------------------------- |
+| `div > (label + input)` 水平排列   | `flexDirection: row`, `alignItems: center`            |
+| `div > div` 垂直排列               | `flexDirection: column`                               |
+| `div > (label above, input below)` | `flexDirection: column`                               |
 | `class="xxx-row"` 且子元素水平排列 | `justifyContent: space-between`, `alignItems: center` |
-| `class="xxx-card"` | 通常有 `borderRadius`, `backgroundColor`, `padding` |
-| 底部有 `button` 且独占一行 | `position: fixed` 或 `alignSelf: stretch` |
+| `class="xxx-card"`                 | 通常有 `borderRadius`, `backgroundColor`, `padding`   |
+| 底部有 `button` 且独占一行         | `position: fixed` 或 `alignSelf: stretch`             |
 
 ---
 
@@ -243,17 +254,19 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
 
 用于推断字段语义和 label：
 
-| 来源 | 推断 |
-|------|------|
-| `<label>姓名</label>` | label text = "姓名" |
+| 来源                               | 推断                                                    |
+| ---------------------------------- | ------------------------------------------------------- |
+| `<label>姓名</label>`              | label text = "姓名"                                     |
 | `<input placeholder="请输入姓名">` | placeholder = "请输入姓名"，字段语义从 placeholder 推断 |
-| `aria-label="name"` | 字段名 = "name" |
-| 相邻 `label` + `input` | 字段语义 = 最近的 label text |
-| `button: 提交` | 按钮语义 = "提交" |
+| `aria-label="name"`                | 字段名 = "name"                                         |
+| 相邻 `label` + `input`             | 字段语义 = 最近的 label text                            |
+| `button: 提交`                     | 按钮语义 = "提交"                                       |
 
 ---
 
 ## 8. 完整输出 Schema
+
+> 以下示例中 `token` 字段的值为 RN 格式（`FONT.*` / `SPACE.*` / `theme['xxx']`）；H5 填 `var(--xlb-*)`，PC 填 Less 变量或 px 值。无映射时填 `"—"` 并记入 `unmappedTokens`。
 
 ```jsonc
 {
@@ -279,35 +292,47 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
         "justifyContent": { "html": "space-between", "token": "—" },
         "alignItems": { "html": "center", "token": "—" },
         "padding": { "html": "0 16px", "token": "0 SPACE.SPACE_4" },
-        "gap": { "html": "8px", "token": "SPACE.SPACE_2" }
+        "gap": { "html": "8px", "token": "SPACE.SPACE_2" },
       },
       "typography": {
         "fontSize": { "html": "14px", "token": "FONT.SIZE_14" },
         "fontWeight": { "html": "500", "token": "FONT.BOLD_500" },
         "lineHeight": { "html": "20px", "token": "FONT.LINE_HEIGHT_20" },
         "color": { "html": "#333333", "token": "theme['color-text-body']" },
-        "textAlign": { "html": "left", "token": "—" }
+        "textAlign": { "html": "left", "token": "—" },
       },
       "spacingStyle": {
         "borderRadius": { "html": "4px", "token": "BORDER.RADIUS_4" },
         "borderWidth": { "html": "1px", "token": "—" },
         "borderColor": { "html": "#dddddd", "token": "theme['color-border']" },
         "backgroundColor": { "html": "#ffffff", "token": "theme['color-bg']" },
-        "marginBottom": { "html": "12px", "token": "SPACE.SPACE_3" }
-      }
-    }
+        "marginBottom": { "html": "12px", "token": "SPACE.SPACE_3" },
+      },
+    },
   ],
 
   // 可选
   "iconMap": [
-    { "html": "<i class='icon-camera'>", "semantic": "相机图标", "token": "XlbIcon name='camera'" }
+    {
+      "html": "<i class='icon-camera'>",
+      "semantic": "相机图标",
+      "token": "XlbIcon name='camera'",
+    },
   ],
   "imageMap": [
-    { "html": "<img src='./logo.png'>", "semantic": "logo", "token": "require('./logo.png')" }
+    {
+      "html": "<img src='./logo.png'>",
+      "semantic": "logo",
+      "token": "require('./logo.png')",
+    },
   ],
   "unmappedTokens": [
-    { "value": "14px", "reason": "FONT.SIZE_14 不存在", "action": "使用 FONT.SIZE_16 近似" }
-  ]
+    {
+      "value": "14px",
+      "reason": "FONT.SIZE_14 不存在",
+      "action": "使用 FONT.SIZE_16 近似",
+    },
+  ],
 }
 ```
 
@@ -318,9 +343,15 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
 ### 输入 HTML
 
 ```html
-<div class="form-row" style="display:flex; height:48px; justify-content:space-between; align-items:center; padding:0 16px;">
+<div
+  class="form-row"
+  style="display:flex; height:48px; justify-content:space-between; align-items:center; padding:0 16px;"
+>
   <label style="font-size:14px; font-weight:500; color:#333;">企业名称</label>
-  <input style="width:200px; border:1px solid #ddd; border-radius:4px; padding:0 8px;" placeholder="请输入企业全称" />
+  <input
+    style="width:200px; border:1px solid #ddd; border-radius:4px; padding:0 8px;"
+    placeholder="请输入企业全称"
+  />
 </div>
 ```
 
@@ -348,9 +379,9 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
           "typography": {
             "fontSize": { "html": "14px", "token": "FONT.SIZE_14" },
             "fontWeight": { "html": "500", "token": "FONT.BOLD_500" },
-            "color": { "html": "#333333", "token": "theme['color-text-body']" }
+            "color": { "html": "#333333", "token": "theme['color-text-body']" },
           },
-          "spacingStyle": {}
+          "spacingStyle": {},
         },
         {
           "selector": ".form-row input",
@@ -363,10 +394,13 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
           "typography": {},
           "spacingStyle": {
             "borderWidth": { "html": "1px", "token": "—" },
-            "borderColor": { "html": "#dddddd", "token": "theme['color-border']" },
-            "borderRadius": { "html": "4px", "token": "BORDER.RADIUS_4" }
-          }
-        }
+            "borderColor": {
+              "html": "#dddddd",
+              "token": "theme['color-border']",
+            },
+            "borderRadius": { "html": "4px", "token": "BORDER.RADIUS_4" },
+          },
+        },
       ],
       "layout": {
         "display": { "html": "flex", "token": "—" },
@@ -374,13 +408,13 @@ HTML <img src="./logo.png"> → Image source={require('./logo.png')}
         "height": { "html": "48px", "token": "SPACE.SPACE_12" },
         "justifyContent": { "html": "space-between", "token": "—" },
         "alignItems": { "html": "center", "token": "—" },
-        "padding": { "html": "0 16px", "token": "0 SPACE.SPACE_4" }
+        "padding": { "html": "0 16px", "token": "0 SPACE.SPACE_4" },
       },
       "typography": {},
-      "spacingStyle": {}
-    }
+      "spacingStyle": {},
+    },
   ],
-  "unmappedTokens": []
+  "unmappedTokens": [],
 }
 ```
 

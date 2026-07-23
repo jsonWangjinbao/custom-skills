@@ -12,13 +12,13 @@
 ## 样式规范引用
 
 > 本报告提取的样式值必须映射为 CSS 变量引用，供 build 阶段执行时直接使用。
-> - **颜色**：hex 值 → `var(--xlb-color-*)`（映射见 `../reference/h5/h5-guidelines.md`）
-> - **间距**：px 值 → `var(--xlb-space-*)`（映射见 `../reference/h5/h5-guidelines.md`）
-> - **圆角**：px 值 → `var(--xlb-border-radius-*)`（映射见 `../reference/h5/h5-guidelines.md`）
-> - **字号**：px 值 → `var(--xlb-fontSize-*)` / `var(--xlb-lineHeight-*)`（映射见 `../reference/h5/h5-guidelines.md`）
+> - **颜色**：hex 值 → `var(--xlb-color-*)`（映射见 `reference/h5/h5-guidelines.md`）
+> - **间距**：px 值 → `var(--xlb-space-*)`（映射见 `reference/h5/h5-guidelines.md`）
+> - **圆角**：px 值 → `var(--xlb-border-radius-*)`（映射见 `reference/h5/h5-guidelines.md`）
+> - **字号**：px 值 → `var(--xlb-fontSize-*)` / `var(--xlb-lineHeight-*)`（映射见 `reference/h5/h5-guidelines.md`）
 > - **图标**：HTML/截图中的图标 → `@xlb/components-mobile` 的 `XlbIcon`，`type` 必须是组件库中定义的 key
 > - **图片**：照片/装饰性 PNG/JPG/WebP → `<img src={...} />` 或图片组件
-> - 完整规范见 `../reference/h5/h5-guidelines.md`
+> - 完整规范见 `reference/h5/h5-guidelines.md`
 > - **禁止**在 ui-audit 中写死 hex 供 build 阶段直接复制；所有样式值必须以 `var(--xlb-*)` CSS 变量形式输出
 
 ## 扫描配对清单
@@ -43,12 +43,15 @@
 - **布局**: {{flex 方向、对齐、间距、gap}}
 - **背景**: {{hex 值}} → `var(--xlb-color-*)`
 - **圆角**: {{px 值}}px → `var(--xlb-border-radius-*)`
-- **字体**: {{字号 px 值}}px → `var(--xlb-fontSize-*)` / {{行高 px 值}}px → `var(--xlb-lineHeight-*)` / {{字重}} → `font-weight: {{值}}`
+- **字体**: {{字号 px 值}}px → `var(--xlb-fontSize-*)` / {{行高 px 值}}px → `var(--xlb-lineHeight-*)` / {{字重}} → `font-weight:
+{{值}}`
 - **间距**: {{px 值}}px → `var(--xlb-space-*)`
 - **边框**: {{边框样式、颜色 hex → `var(--xlb-color-*)`、宽度}}
 - **图标**: 逐条列出组件中用到的图标
-- {{图标 1 语义/HTML 元素}} → `<XlbIcon type="{{IconKey}}" size="{{size}}px" color="var(--xlb-color-*)" />`
-- {{图标 2 语义/HTML 元素}} → `<XlbIcon type="{{IconKey}}" size="{{size}}px" color="var(--xlb-color-*)" />`
+- {{图标 1 语义/HTML 元素}} → `
+<XlbIcon type="{{IconKey}}" size="{{size}}px" color="var(--xlb-color-*)" />`
+- {{图标 2 语义/HTML 元素}} → `
+<XlbIcon type="{{IconKey}}" size="{{size}}px" color="var(--xlb-color-*)" />`
 - **图片**: 逐条列出真实图片资源
 - {{图片 1 语义/HTML src}} → `<img src="{{路径}}" alt="{{描述}}" />`
 - **其他**: {{阴影 `box-shadow`、透明度、特殊效果}}
@@ -64,7 +67,8 @@
 | UI 元素 | 候选组件库组件 | 默认渲染输出 | 与 HTML 目标的差异 | 是否需要额外定制 | 补偿方案 |
 |---------|---------------|------------|-------------------|----------------|---------|
 | {{Tab 导航}} | {{XlbTabs}} | {{标准 Tab}} | {{无差异}} | {{否}} | {{直接使用}} |
-| {{表单字段行}} | {{XlbProDetail formList}} | {{默认表单行布局}} | {{行高/间距/对齐由组件库决定}} | {{是}} | {{使用 className 覆写样式 / 调整 extraProps}} |
+| {{表单字段行}} | {{XlbProDetail formList}} | {{默认表单行布局}} | {{行高/间距/对齐由组件库决定}} | {{是}} |
+{{使用 className 覆写样式 / 调整 extraProps}} |
 | {{图片上传}} | {{XlbUpload}} | {{标准上传区域}} | {{设计稿为 52px 缩略图 + 删除按钮}} | {{是}} | {{配置 extraProps 覆写样式}} |
 | {{列表项}} | {{XlbFlatList}} | {{标准列表项}} | {{无差异}} | {{否}} | {{直接使用}} |
 | {{底部按钮}} | {{XlbButtonGroup}} | {{标准按钮组}} | {{无差异}} | {{否}} | {{直接使用}} |

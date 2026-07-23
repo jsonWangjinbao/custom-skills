@@ -15,7 +15,7 @@ description: >-
 2. **Token 唯一来源**：所有色值、字号、间距、圆角必须来自项目 token 系统；禁止硬编码 hex、magic number。各平台 token 系统参见对应平台的 guidelines。
 3. **必须消费输入材料才能写代码**：每个执行分组开始前必须已读取对应 UI 分析文档并记录日志；未读不得写代码。
 4. **黑盒组件先查差异**：使用封装组件前，必须先确认其默认渲染与目标差异，写入组件选择决策表。
-5. **阶段未 checkpoint 禁止推进**：每阶段结束后必须更新 `.ai-wiki/.dtc-state.json` 并通过本阶段 checklist。analyze / audit / design 三阶段还需用户确认（`userConfirmed === true`）。
+5. **阶段未 checkpoint 禁止推进**：每阶段结束后必须更新 `.ai-wiki/.dtc-state.json` 并通过本阶段 checklist。analyze / collect-materials / feature-spec / api-spec / audit / design 六阶段还需用户确认（`userConfirmed === true`）。
 6. **执行分组闭环**：每个分组完成后必须完成所有步骤（读设计 → 读样式 → 生成代码 → 编译抽检 → 更新文档 → 更新状态），缺一不可。
 7. **样式合规是终检门禁**：先生成功能完整代码，所有分组完成后统一扫描修复样式问题。修复时禁止为改样式而简化功能。
 8. **平台约束隔离**：RN 流水线只能引用 `reference/rn/` 的规则，H5 流水线只能引用 `reference/h5/`，PC 流水线只能引用 `reference/pc/`，禁止跨平台引用。
@@ -25,9 +25,11 @@ description: >-
 ```
 用户输入需求
     │
-    ├── Q1: 技术选型?        → RN / H5 / PC
-    ├── Q2: 需求类型?        → 重构 / 增量
+    ├── Q1: 需求名称?        → 用于创建文档目录
+    ├── Q2: 技术选型?        → RN / H5 / PC
+    ├── Q3: 需求类型?        → 重构 / 增量
     │
+    ├── common/01-analyze              → 入口与需求分析
     ├── common/02-collect-materials    → 材料收集
     ├── common/03-feature-spec         → 功能点规格
     ├── common/04-api-spec             → API 规格设计
@@ -40,26 +42,26 @@ description: >-
 
 每个阶段的详细任务见 `subskills/` 目录：
 
-| 阶段             | 文件                                     | 用户确认 |
-| ---------------- | ---------------------------------------- | -------- |
-| 入口路由         | `subskills/common/01-analyze.md`         | 是       |
-| 材料收集         | `subskills/common/02-collect-materials`  | 是       |
-| 功能点规格       | `subskills/common/03-feature-spec`       | 是       |
-| API 规格设计     | `subskills/common/04-api-spec.md`        | 是       |
-| UI 审计          | `subskills/{platform}/01-audit.md`       | 是       |
-| 技术设计         | `subskills/{platform}/02-design.md`      | 是       |
-| 代码生成         | `subskills/{platform}/03-build.md`       | 否       |
-| 验证             | `subskills/{platform}/04-verify.md`      | 否       |
+| 阶段         | 文件                                       | 用户确认 |
+| ------------ | ------------------------------------------ | -------- |
+| 入口路由     | `subskills/common/01-analyze.md`           | 是       |
+| 材料收集     | `subskills/common/02-collect-materials.md` | 是       |
+| 功能点规格   | `subskills/common/03-feature-spec.md`      | 是       |
+| API 规格设计 | `subskills/common/04-api-spec.md`          | 是       |
+| UI 审计      | `subskills/{platform}/01-audit.md`         | 是       |
+| 技术设计     | `subskills/{platform}/02-design.md`        | 是       |
+| 代码生成     | `subskills/{platform}/03-build.md`         | 否       |
+| 验证         | `subskills/{platform}/04-verify.md`        | 否       |
 
 ## 渐进式披露
 
 本技能按技术选型进行渐进式加载：
 
-| 用户选择      | 加载的子技能     | 加载的 reference                        |
-| ------------- | ---------------- | --------------------------------------- |
-| RN 重构/增量  | common/* + rn/*  | reference/common/ + reference/rn/       |
-| H5 重构/增量  | common/* + h5/*  | reference/common/ + reference/h5/       |
-| PC 重构/增量  | common/* + pc/*  | reference/common/ + reference/pc/       |
+| 用户选择     | 加载的子技能        | 加载的 reference                  |
+| ------------ | ------------------- | --------------------------------- |
+| RN 重构/增量 | `common/*` + `rn/*` | reference/common/ + reference/rn/ |
+| H5 重构/增量 | `common/*` + `h5/*` | reference/common/ + reference/h5/ |
+| PC 重构/增量 | `common/*` + `pc/*` | reference/common/ + reference/pc/ |
 
 > 各平台子技能和 reference 完全独立，不跨平台引用。
 > 通用规则放在 reference/common/ 下，各平台专用规则放在各平台目录下。
@@ -69,9 +71,9 @@ description: >-
 - **状态文件路径**：`.ai-wiki/.dtc-state.json`
 - 每个阶段**开始前**必须先 `Read` 它；**结束后**必须 `Write` 更新它。
 - 只有 `phaseOutputs.<current>.checklistPassed === true` 才能进入下一阶段。
-- analyze / api-spec / audit / design 四阶段还需 `userConfirmed === true`。
+- analyze / collect-materials / feature-spec / api-spec / audit / design 六阶段还需 `userConfirmed === true`。
 - 状态异常时立即停止，向用户说明原因，不得继续。
-- 状态机完整 Schema 见 `reference/rn/state-schema.md`（通用结构适用于所有平台）。
+- 状态机完整 Schema 见 `reference/common/state-schema.md`（通用结构适用于所有平台）。
 
 ## 文档输出
 
@@ -99,12 +101,10 @@ description: >-
 
 ## 性能计时
 
-每个阶段记录起止时间，写入 `features.md` 的「性能计时日志」章节：
+每个阶段完成时在 `features.md` 的「性能计时日志」追加一行：`阶段名 完成: HH:MM (耗时 MM 分钟)`。
 
-- 阶段完成时追加：`Phase X 完成: HH:MM (耗时 MM 分钟)`
-- build 阶段每个分组记录：`分组 N 开始: HH:MM` / `分组 N 完成: HH:MM (实际 MM 分钟)`
-- 编译/测试等长耗时操作单独记录
-- 某阶段超过预估 50% 或单次编译超过 5 分钟，标注瓶颈
+- 只记录阶段级耗时（build 阶段按分组记录起止），不逐项计时
+- 某阶段超过预估 50% 时标注瓶颈
 
 ## 后续修改
 
@@ -121,23 +121,24 @@ description: >-
 
 所有需要用户做选择或提供信息的提问，必须通过 `AskUserQuestion` 工具生成结构化问题卡片，禁止以普通文本方式直接询问。
 
-入口 2 个问题定义在 `subskills/common/01-analyze.md` 中，必须按该文件的模板执行。
+入口 3 个问题定义在 `subskills/common/01-analyze.md` 中，必须按该文件的模板执行。
 
 ## 参考文件索引
 
-| 文件                                                              | 用途                     | 消费时机                 |
-| ----------------------------------------------------------------- | ------------------------ | ------------------------ |
-| `reference/common/ambiguity-rules.md`                             | 歧义检测规则             | analyze 阶段             |
-| `reference/common/html-parser-rules.md`                           | HTML 结构化解析引擎规则  | audit 阶段               |
-| `reference/rn/rn-guidelines.md`                                   | RN 代码生成约束          | RN build 阶段            |
-| `reference/rn/xlb-style-system.md`                                | XLB 风格系统规范         | RN build 阶段样式参考    |
-| `reference/rn/icon-map.md`                                        | 图标名称映射             | RN build 阶段            |
-| `reference/rn/token-map.json`                                     | CSS 变量 → theme token 映射 | RN build 阶段样式参考 |
-| `reference/rn/style-scan-checklist.md`                            | 样式合规扫描清单（终检） | verify 阶段              |
-| `reference/rn/state-schema.md`                                    | 状态机 Schema（v2.0）    | 所有阶段读写 state.json  |
-| `reference/rn/deviation-db-schema.md`                             | 偏差持久化库 Schema      | audit / build / verify   |
-| `reference/rn/gotchas/`                                           | 已知问题库               | build 阶段按需           |
-| H5 和 PC 的参考文件在各平台目录中声明                              |                          |                          |
+| 文件                                      | 用途                        | 消费时机                |
+| ----------------------------------------- | --------------------------- | ----------------------- |
+| `reference/common/ambiguity-rules.md`     | 歧义检测规则                | audit / build 阶段      |
+| `reference/common/html-parser-rules.md`   | HTML 结构化解析引擎规则     | audit 阶段              |
+| `reference/common/gotchas/`               | 平台通用已知问题库          | audit / design 阶段按需 |
+| `reference/rn/rn-guidelines.md`           | RN 代码生成约束             | RN build 阶段           |
+| `reference/rn/xlb-style-system.md`        | XLB 风格系统规范            | RN build 阶段样式参考   |
+| `reference/rn/icon-map.md`                | 图标名称映射                | RN build 阶段           |
+| `reference/rn/token-map.json`             | CSS 变量 → theme token 映射 | RN build 阶段样式参考   |
+| `reference/rn/style-scan-checklist.md`    | 样式合规扫描清单（终检）    | verify 阶段             |
+| `reference/common/state-schema.md`        | 状态机 Schema（v2.0）       | 所有阶段读写 state.json |
+| `reference/common/deviation-db-schema.md` | 偏差持久化库 Schema         | audit / build / verify  |
+| `reference/rn/gotchas/`                   | 已知问题库                  | build 阶段按需          |
+| H5 和 PC 的参考文件在各平台目录中声明     |                             |                         |
 
 ## 偏差持久化库
 
@@ -149,7 +150,7 @@ description: >-
 | build Step 5.5 | 发现新偏差 → 追加到库；命中已知偏差 → occurrenceCount+1 |
 | verify 结束    | 验证已修复的偏差标记 resolved=true                      |
 
-完整 Schema 定义见 `reference/rn/deviation-db-schema.md`。
+完整 Schema 定义见 `reference/common/deviation-db-schema.md`。
 
 ## 交付总结格式
 

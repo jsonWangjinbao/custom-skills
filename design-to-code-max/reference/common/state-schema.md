@@ -4,6 +4,7 @@
 > 从 SKILL.md 拆分而来，供所有 subskill 引用。
 > 版本: 2.0
 > 2026-07-19：对齐三平台流水线（`currentPhase` 新增 `collect-materials`，phaseOutputs 补齐 `collect-materials` / `feature-spec`，`inputs` 补齐 `platform` / `requirementDocPath`）
+> 2026-07-23：§3.5 audit 补齐 `screenshotFindings` / `apiSpecSupplements` 字段定义（与三平台 audit subskill 对齐）
 
 ---
 
@@ -65,18 +66,18 @@
 
 ### 顶层需求字段说明
 
-| 字段              | 类型   | 必填 | 说明                               |
-| ----------------- | ------ | ---- | ---------------------------------- | ------------ | --------------------- | ---------------- | ------------ | --------- | ---------- | --------- | ---------- | -------- |
-| `id`              | string | 是   | 唯一标识，建议 `req-${Date.now()}` |
-| `requirementName` | string | 是   | 需求名称，init 阶段由用户输入      |
-| `requirementType` | string | 是   | `"incremental"`                    | `"refactor"` |
-| `status`          | string | 是   | `"in-progress"`                    | `"done"`     |
-| `currentPhase`    | string | 是   | `"init"`                           | `"analyze"`  | `"collect-materials"` | `"feature-spec"` | `"api-spec"` | `"audit"` | `"design"` | `"build"` | `"verify"` | `"done"` |
-| `inputs`          | object | 是   | 输入材料路径                       |
-| `docPaths`        | object | 是   | 各阶段生成的文档路径               |
-| `phaseOutputs`    | object | 是   | 各阶段输出状态                     |
-| `performanceLog`  | array  | 是   | 性能计时日志数组                   |
-| `changeLog`       | array  | 是   | 变更记录数组                       |
+| 字段              | 类型   | 必填 | 说明                                                                                                                                          |
+| ----------------- | ------ | ---- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`              | string | 是   | 唯一标识，建议 `req-${Date.now()}`                                                                                                            |
+| `requirementName` | string | 是   | 需求名称，init 阶段由用户输入                                                                                                                 |
+| `requirementType` | string | 是   | `"incremental"` / `"refactor"`                                                                                                                |
+| `status`          | string | 是   | `"in-progress"` / `"done"`                                                                                                                    |
+| `currentPhase`    | string | 是   | `"init"` / `"analyze"` / `"collect-materials"` / `"feature-spec"` / `"api-spec"` / `"audit"` / `"design"` / `"build"` / `"verify"` / `"done"` |
+| `inputs`          | object | 是   | 输入材料路径                                                                                                                                  |
+| `docPaths`        | object | 是   | 各阶段生成的文档路径                                                                                                                          |
+| `phaseOutputs`    | object | 是   | 各阶段输出状态                                                                                                                                |
+| `performanceLog`  | array  | 是   | 性能计时日志数组                                                                                                                              |
+| `changeLog`       | array  | 是   | 变更记录数组                                                                                                                                  |
 
 ### inputs 字段说明
 
@@ -216,6 +217,22 @@
         "compensation": "传入 showDelete=true",
       },
     ],
+    "screenshotFindings": [
+      {
+        "path": "screenshots/cert.png",
+        "pageOrBlock": "认证页-企业信息卡",
+        "dynamicInteractions": ["点击整行展开/收起"],
+        "visualDetailsBeyondHtml": ["收起态仅显示 3 行摘要"],
+        "newFeaturePoints": [],
+      },
+    ],
+    "apiSpecSupplements": [
+      {
+        "api": "POST /api/cert/submit",
+        "fields": ["id_card_encrypted"],
+        "source": "截图-上传成功态",
+      },
+    ],
     "parsedStyleCount": 3,
     "unmappedTokens": [
       {
@@ -231,16 +248,18 @@
 }
 ```
 
-| 字段                     | 类型     | 说明                               |
-| ------------------------ | -------- | ---------------------------------- | ----------- | ----------- |
-| `materialStatus`         | string   | `"complete"`                       | `"partial"` | `"skipped"` |
-| `componentDecisionCount` | number   | 组件决策数量                       |
-| `blackBoxRisks`          | object[] | 黑盒组件风险                       |
-| `parsedStyleCount`       | number   | 【v2.0 新增】已解析的样式文件数    |
-| `unmappedTokens`         | object[] | 【v2.0 新增】无法 token 映射的清单 |
-| `deviationMatches`       | number   | 【v2.0 新增】命中偏差库的条目数    |
-| `checklistPassed`        | boolean  | 阶段 checklist 是否通过            |
-| `userConfirmed`          | boolean  | 用户是否确认                       |
+| 字段                     | 类型     | 说明                                                                                                                                       |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `materialStatus`         | string   | `"complete"` / `"partial"` / `"skipped"`                                                                                                   |
+| `componentDecisionCount` | number   | 组件决策数量                                                                                                                               |
+| `blackBoxRisks`          | object[] | 黑盒组件风险                                                                                                                               |
+| `screenshotFindings`     | object[] | 【v2.0 新增】逐张截图的提取要素（path / pageOrBlock / dynamicInteractions / visualDetailsBeyondHtml / newFeaturePoints），无截图时为空数组 |
+| `apiSpecSupplements`     | object[] | 【v2.0 新增】audit 发现的 api-spec 未覆盖字段（api / fields / source），本阶段输出前回补到 api-spec.md                                     |
+| `parsedStyleCount`       | number   | 【v2.0 新增】已解析的样式文件数                                                                                                            |
+| `unmappedTokens`         | object[] | 【v2.0 新增】无法 token 映射的清单                                                                                                         |
+| `deviationMatches`       | number   | 【v2.0 新增】命中偏差库的条目数                                                                                                            |
+| `checklistPassed`        | boolean  | 阶段 checklist 是否通过                                                                                                                    |
+| `userConfirmed`          | boolean  | 用户是否确认                                                                                                                               |
 
 ### 3.6 design
 

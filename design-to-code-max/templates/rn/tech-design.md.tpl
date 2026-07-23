@@ -27,9 +27,9 @@
 
 ## 5. UI 样式规格
 
-> 从 `ui-audit.md` 提取每个组件的关键样式决策，作为 STEP 4 执行时的样式依据。
+> 从 `ui-audit.md` 提取每个组件的关键样式决策，作为 build 阶段执行时的样式依据。
 > **RN 项目**：所有样式值必须映射为 token 引用（颜色 → `theme['xxx']`，间距 → `SPACE.*`，圆角 → `BORDER.*`，字号 → `FONT.*`，阴影 → `SHADOW.*`）。
-> 完整规范见 `references/xlb-style-system.md`。
+> 完整规范见 `reference/rn/xlb-style-system.md`。
 > 无 UI 材料时写：使用项目通用样式，待 UI 材料补充后完善。
 > **强制要求**：本章节必须逐条写出每个样式值对应的 token 引用；不得只写 hex 或 px 值。
 
@@ -53,10 +53,10 @@
 > 若存在无法映射到 token 的样式值，在此标注「无 token 映射：{{原因}} → 处理方案：{{新增 token / 记录风险 / 其他}}」。
 > 若存在无法映射到 `iconfontGlyphMap` 的图标，在此标注「图标无映射：{{语义}} → 处理方案：{{降级替代 name / 新增本地 SVG / 推动补充 icon-rn}}」。
 
-## 5.5 组件选择决策表
+## 6. 组件选择决策表
 
 > 从 `ui-audit.md` 的「组件库渲染差异分析」章节输入，对每个 UI 元素明确选用哪个组件库组件或自定义实现。
-> 此表是 STEP 4 执行时样式还原的直接依据。执行时如果标注了「需要额外定制」，必须在代码中实现补偿方案。
+> 此表是 build 阶段样式还原的直接依据。执行时如果标注了「需要额外定制」，必须在代码中实现补偿方案。
 
 | UI 元素 | 选用组件 | 默认渲染 | 与 HTML 目标差异 | 是否需要额外定制 | 补偿方案 |
 |---------|---------|---------|-----------------|----------------|---------|
@@ -68,14 +68,14 @@
 {{自定义 itemStyle / activeItemStyle}} |
 | {{底部按钮}} | {{XlbButton}} | {{标准按钮}} | {{无差异}} | {{否}} | {{直接使用}} |
 
-> 对「黑盒封装组件」（如 `CommonFormItem`），参考 `references/gotchas/component-library/blackbox-wrapper-component.md` 了解其样式不可控风险。
+> 对「黑盒封装组件」（如 `CommonFormItem`），参考 `reference/rn/gotchas/component-library/blackbox-wrapper-component.md` 了解其样式不可控风险。
 
-## 6. 功能点对照
+## 7. 功能点对照
 
 | ID | 组件 | 文件路径 | UI 参考 | 状态 |
 |----|------|---------|---------|------|
 | F-001 | {{组件名}} | {{路径}} | {{截图/HTML 文件名}} | {{待开发/已完成}} |
 
-## 7. 关注点 / Gotchas
+## 8. 关注点 / Gotchas
 
-{{引用 references/gotchas/ 中相关的已知问题}}
+{{引用 reference/rn/gotchas/ 中相关的已知问题}}

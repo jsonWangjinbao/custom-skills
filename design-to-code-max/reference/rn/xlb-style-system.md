@@ -1,6 +1,6 @@
 # XLB Style System — RN 样式书写规范
 
-> 本文件是 design-to-code skill 在 RN 项目中生成样式代码的**强制基线**。违反本规范的代码不得通过 STEP 5 自测。
+> 本文件是 design-to-code-max skill 在 RN 项目中生成样式代码的**强制基线**。违反本规范的代码不得通过 verify 阶段自测。
 > 与 `rn-guidelines.md`（HTML→RN 转换规则）互补：前者管"怎么翻译 HTML"，本文件管"怎么写 RN 样式"。
 
 ## 第零原则：样式合规不得牺牲功能完整性
@@ -47,13 +47,13 @@
 ## 第二原则：图标只用 @xlb/icon-rn
 
 ```tsx
-import {XlbIcon} from '@xlb/icon-rn';
-import {SPACE} from '@xlb/components-react-native';
+import { XlbIcon } from "@xlb/icon-rn";
+import { SPACE } from "@xlb/components-react-native";
 
 <XlbIcon
   name="Search"
   size={SPACE.SPACE_24}
-  color={theme['color-text-icon-1']}
+  color={theme["color-text-icon-1"]}
 />;
 ```
 
@@ -78,14 +78,14 @@ import {SPACE} from '@xlb/components-react-native';
 ### 颜色 → `theme`（运行时主题）
 
 ```tsx
-import {useAppContext} from '@xlb/components-react-native';
+import { useAppContext } from "@xlb/components-react-native";
 
 const MyComponent = () => {
-  const {theme} = useAppContext();
+  const { theme } = useAppContext();
 
   const styles = StyleSheet.create({
-    title: {color: theme['color-text-icon-0']},
-    btn: {backgroundColor: theme['color-primary-brand']},
+    title: { color: theme["color-text-icon-0"] },
+    btn: { backgroundColor: theme["color-primary-brand"] },
   });
 
   return <View style={styles.title} />;
@@ -97,7 +97,7 @@ const MyComponent = () => {
 ### 间距 / 字号 / 圆角 / 阴影 → 常量（编译期固定）
 
 ```tsx
-import {SPACE, FONT, BORDER, SHADOW} from '@xlb/components-react-native';
+import { SPACE, FONT, BORDER, SHADOW } from "@xlb/components-react-native";
 
 const styles = StyleSheet.create({
   card: {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
 
 ## 第四原则：设计稿色值必须映射到 token
 
-从 HTML/截图中提取到的 hex 值，**必须先在 `references/token-map.json` 中查找对应 theme key**：
+从 HTML/截图中提取到的 hex 值，**必须先在 `reference/rn/token-map.json` 中查找对应 theme key**：
 
 1. 找到 → 使用 `theme['color-xxx']`
 2. 找不到 → 在 `ui-audit.md` 中标记「无 token 映射」，并在 `tech-design.md` 中提出风险
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
 - 描边：`color-line-1/2`
 - 状态：`color-function-error|warning|success-active/main/hover/disable/bright/highlight`
 
-> 完整 hex → theme key 映射见 `references/token-map.json` 的 `colors` 字段和 `themeObject` 字段。
+> 完整 hex → theme key 映射见 `reference/rn/token-map.json` 的 `colors` 字段和 `themeObject` 字段。
 
 ### 间距（`SPACE.*`）
 
@@ -222,36 +222,43 @@ const styles = StyleSheet.create({
 
 ```tsx
 // ❌ 错误：硬编码颜色 + magic number + 文字符号代替图标 + 图标名错误
-<View style={{backgroundColor: '#E8F0FF', padding: 12, borderRadius: 4}}>
+<View style={{ backgroundColor: "#E8F0FF", padding: 12, borderRadius: 4 }}>
   <XlbIcon name="icon_add" size={14} color="#1A6AFF" />
-  <Text style={{color: '#1A6AFF', fontSize: 14}}>+ 添加</Text>
+  <Text style={{ color: "#1A6AFF", fontSize: 14 }}>+ 添加</Text>
 </View>;
 
 // ✅ 正确：theme + 常量 + XlbIcon（name 用 glyph map key）
-import {useAppContext, SPACE, FONT, BORDER} from '@xlb/components-react-native';
-import {XlbIcon} from '@xlb/icon-rn';
+import {
+  useAppContext,
+  SPACE,
+  FONT,
+  BORDER,
+} from "@xlb/components-react-native";
+import { XlbIcon } from "@xlb/icon-rn";
 
-const {theme} = useAppContext();
+const { theme } = useAppContext();
 
 <View
   style={{
-    backgroundColor: theme['color-primary-bright'],
+    backgroundColor: theme["color-primary-bright"],
     padding: SPACE.SPACE_12,
     borderRadius: BORDER.RADIUS_4,
-  }}>
+  }}
+>
   <XlbIcon
     name="Add"
     size={SPACE.SPACE_14}
-    color={theme['color-primary-brand']}
+    color={theme["color-primary-brand"]}
   />
   <XlbText
-    style={{color: theme['color-primary-brand'], fontSize: FONT.SIZE_14}}>
+    style={{ color: theme["color-primary-brand"], fontSize: FONT.SIZE_14 }}
+  >
     添加
   </XlbText>
 </View>;
 ```
 
-## 落地自检清单（STEP 5 自测必须逐条检查）
+## 落地自检清单（verify 阶段自测必须逐条检查）
 
 在产出代码前 / 提交前过一遍：
 

@@ -1,4 +1,4 @@
-# Phase 04 - 分组执行与代码生成（PC）
+# Phase 07 - 分组执行与代码生成（PC）
 
 ## 进入条件
 
@@ -13,7 +13,7 @@
 
 ### 1. 生成执行文档
 
-从 `tech-design.md` 拆解为分步执行步骤，使用 `../templates/pc/execution.md.tpl` 格式生成 `execution.md`。
+从 `tech-design.md` 拆解为分步执行步骤，使用 `../../templates/pc/execution.md.tpl` 格式生成 `execution.md`。
 
 - 按功能模块或页面拆分为分组（每组 3-8 个步骤）
 - 每步标注关联功能点 ID、UI 参考文件、预计耗时
@@ -22,8 +22,8 @@
 
 ### 2. 读取规范
 
-**先读 `../reference/pc/pc-guidelines.md`**，确认组件、路由、状态、权限等约束。
-**再读 `../reference/pc/project-conventions.md`**，确认页面文件结构、service 模式等约定。
+**先读 `../../reference/pc/pc-guidelines.md`**，确认组件、路由、状态、权限等约束。
+**再读 `../../reference/pc/project-conventions.md`**，确认页面文件结构、service 模式等约定。
 
 ### 3. 按分组执行
 
@@ -53,17 +53,18 @@
 
 **生存必备模式清单（每项必须与参照页逐行对照）：**
 
-| 维度 | 说明 | 参照页文件名 |
-|------|------|-------------|
-| 页面容器结构 | XlbPageContainer vs XlbProPageContainer 的使用差异 | — |
-| 搜索表单定义 | SearchFormType 配置模式（type/options 字段命名） | — |
-| API 响应取值 | `res?.code === 0` 后的数据路径 | — |
-| Item props | data/onRefresh/onClose 命名和类型 | — |
-| 权限控制 | hasAuth 的调用方式和参数格式 | — |
-| 列定义 | XlbTableColumnProps 的 name/code/render 使用 | — |
-| 导航方式 | useIRouter / useNavigation / history 的选择 | — |
+| 维度         | 说明                                               | 参照页文件名 |
+| ------------ | -------------------------------------------------- | ------------ |
+| 页面容器结构 | XlbPageContainer vs XlbProPageContainer 的使用差异 | —            |
+| 搜索表单定义 | SearchFormType 配置模式（type/options 字段命名）   | —            |
+| API 响应取值 | `res?.code === 0` 后的数据路径                     | —            |
+| Item props   | data/onRefresh/onClose 命名和类型                  | —            |
+| 权限控制     | hasAuth 的调用方式和参数格式                       | —            |
+| 列定义       | XlbTableColumnProps 的 name/code/render 使用       | —            |
+| 导航方式     | useIRouter / useNavigation / history 的选择        | —            |
 
 **参照页选择规则**：
+
 - 增量需求 → 选本页面同目录下的兄弟文件
 - 重构需求 → 必选项目中已有的同类型 PC 页面
 - 没有同类型页面 → 选任意已有 PC 页面作参照
@@ -117,12 +118,12 @@ const Page = () => {
 
   const handleDelete = async (record: any) => {
     XlbTipsModal.confirm({
-      title: '确认删除',
+      title: "确认删除",
       content: `确定要删除「${record.name}」吗？`,
       onOk: async () => {
         const res = await server.delete({ id: record.id });
         if (res?.code === 0) {
-          XlbMessage.success('删除成功');
+          XlbMessage.success("删除成功");
           fetchList();
         }
       },
@@ -139,10 +140,12 @@ const Page = () => {
       <XlbForm formList={searchFormList} onFinish={handleSearch} />
 
       <XlbButton.Group>
-        {hasAuth(['module', 'create']) && (
-          <XlbButton type="primary" onClick={handleAdd}>新增</XlbButton>
+        {hasAuth(["module", "create"]) && (
+          <XlbButton type="primary" onClick={handleAdd}>
+            新增
+          </XlbButton>
         )}
-        {hasAuth(['module', 'export']) && (
+        {hasAuth(["module", "export"]) && (
           <XlbDropdownButton text="导出" menuItems={exportMenuItems} />
         )}
       </XlbButton.Group>
@@ -164,12 +167,16 @@ const Page = () => {
       />
 
       <ProPageModal
-        title={editItem ? '编辑' : '新增'}
+        title={editItem ? "编辑" : "新增"}
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
         width={800}
       >
-        <Item data={editItem} onRefresh={handleSaveSuccess} onClose={() => setModalVisible(false)} />
+        <Item
+          data={editItem}
+          onRefresh={handleSaveSuccess}
+          onClose={() => setModalVisible(false)}
+        />
       </ProPageModal>
     </XlbPageContainer>
   );
@@ -180,24 +187,53 @@ const Page = () => {
 
 ```tsx
 // index.tsx — 集成 CRUD
-import { XlbProPageContainer, SearchFormType, XlbTableColumnProps } from '@xlb/components';
-import { hasAuth } from '@xlb/max';
-import * as server from './server';
+import {
+  XlbProPageContainer,
+  SearchFormType,
+  XlbTableColumnProps,
+} from "@xlb/components";
+import { hasAuth } from "@xlb/max";
+import * as server from "./server";
 
 const searchFormList: SearchFormType[] = [
-  { label: '名称', name: 'name', type: 'input', placeholder: '请输入名称' },
-  { label: '状态', name: 'status', type: 'select', options: statusOptions, placeholder: '请选择状态' },
+  { label: "名称", name: "name", type: "input", placeholder: "请输入名称" },
+  {
+    label: "状态",
+    name: "status",
+    type: "select",
+    options: statusOptions,
+    placeholder: "请选择状态",
+  },
 ];
 
 const columns: XlbTableColumnProps[] = [
-  { name: '名称', code: 'name', width: 200 },
-  { name: '状态', code: 'status', render: (val) => <StatusColorByOptions value={val} options={statusOptions} /> },
-  { name: '操作', code: 'action', width: 200, render: (_, record) => (
-    <XlbButton.Group>
-      {hasAuth(['module', 'edit']) && <XlbButton type="link" onClick={() => handleEdit(record)}>编辑</XlbButton>}
-      {hasAuth(['module', 'delete']) && <XlbButton type="link" danger onClick={() => handleDelete(record)}>删除</XlbButton>}
-    </XlbButton.Group>
-  )},
+  { name: "名称", code: "name", width: 200 },
+  {
+    name: "状态",
+    code: "status",
+    render: (val) => (
+      <StatusColorByOptions value={val} options={statusOptions} />
+    ),
+  },
+  {
+    name: "操作",
+    code: "action",
+    width: 200,
+    render: (_, record) => (
+      <XlbButton.Group>
+        {hasAuth(["module", "edit"]) && (
+          <XlbButton type="link" onClick={() => handleEdit(record)}>
+            编辑
+          </XlbButton>
+        )}
+        {hasAuth(["module", "delete"]) && (
+          <XlbButton type="link" danger onClick={() => handleDelete(record)}>
+            删除
+          </XlbButton>
+        )}
+      </XlbButton.Group>
+    ),
+  },
 ];
 
 const Page = () => (
@@ -206,7 +242,11 @@ const Page = () => (
     columns={columns}
     request={(params) => server.fetchList(params)}
     operateBtnList={[
-      hasAuth(['module', 'create']) && { text: '新增', type: 'primary' as const, onClick: () => handleAdd() },
+      hasAuth(["module", "create"]) && {
+        text: "新增",
+        type: "primary" as const,
+        onClick: () => handleAdd(),
+      },
     ].filter(Boolean)}
   />
 );
@@ -225,12 +265,8 @@ const Page = () => {
         <h2>仪表盘标题</h2>
       </div>
       <div className={styles.content}>
-        <div className={styles.leftPanel}>
-          {/* 左侧子组件 */}
-        </div>
-        <div className={styles.rightPanel}>
-          {/* 右侧子组件 */}
-        </div>
+        <div className={styles.leftPanel}>{/* 左侧子组件 */}</div>
+        <div className={styles.rightPanel}>{/* 右侧子组件 */}</div>
       </div>
     </div>
   );
@@ -241,7 +277,13 @@ const Page = () => {
 
 ```tsx
 // item.tsx — 新增/编辑弹窗表单
-import { XlbBasicForm, XlbBasicFormItem, XlbInput, XlbSelect, XlbMessage } from '@xlb/components';
+import {
+  XlbBasicForm,
+  XlbBasicFormItem,
+  XlbInput,
+  XlbSelect,
+  XlbMessage,
+} from "@xlb/components";
 
 interface ItemProps {
   data?: any;
@@ -264,7 +306,7 @@ const Item: React.FC<ItemProps> = ({ data, onRefresh, onClose }) => {
       const api = data?.id ? server.update : server.create;
       const res = await api({ ...values, id: data?.id });
       if (res?.code === 0) {
-        XlbMessage.success('保存成功');
+        XlbMessage.success("保存成功");
         onRefresh();
       }
     } finally {
@@ -274,8 +316,18 @@ const Item: React.FC<ItemProps> = ({ data, onRefresh, onClose }) => {
 
   return (
     <XlbBasicForm form={form} onFinish={handleSubmit}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-        <XlbBasicForm.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "16px",
+        }}
+      >
+        <XlbBasicForm.Item
+          name="name"
+          label="名称"
+          rules={[{ required: true, message: "请输入名称" }]}
+        >
           <XlbInput placeholder="请输入名称" />
         </XlbBasicForm.Item>
         <XlbBasicForm.Item name="status" label="状态">
@@ -292,14 +344,14 @@ const Item: React.FC<ItemProps> = ({ data, onRefresh, onClose }) => {
 
 ```tsx
 // server.ts — API 定义
-import { XlbFetch } from '@xlb/components';
+import { XlbFetch } from "@xlb/components";
 
 const server = {
-  fetchList: (params) => XlbFetch.post('/api/your-module/list', params),
-  create: (params) => XlbFetch.post('/api/your-module/create', params),
-  update: (params) => XlbFetch.post('/api/your-module/update', params),
-  delete: (params) => XlbFetch.post('/api/your-module/delete', params),
-  getDetail: (params) => XlbFetch.post('/api/your-module/detail', params),
+  fetchList: (params) => XlbFetch.post("/api/your-module/list", params),
+  create: (params) => XlbFetch.post("/api/your-module/create", params),
+  update: (params) => XlbFetch.post("/api/your-module/update", params),
+  delete: (params) => XlbFetch.post("/api/your-module/delete", params),
+  getDetail: (params) => XlbFetch.post("/api/your-module/detail", params),
 };
 
 export default server;
@@ -309,15 +361,19 @@ export default server;
 
 ```tsx
 // fsmsModal 模式（NiceModal.create）
-import NiceModal from '@ebay/nice-modal-react';
-import { fsmsModal } from '@xlb/components';
+import NiceModal from "@ebay/nice-modal-react";
+import { fsmsModal } from "@xlb/components";
 
-const YourModal = NiceModal.create('your-modal', () => {
+const YourModal = NiceModal.create("your-modal", () => {
   const modal = NiceModal.useModal();
   const { data } = modal.args;
 
   return (
-    <XlbModal title="操作" visible={modal.visible} onCancel={() => modal.hide()}>
+    <XlbModal
+      title="操作"
+      visible={modal.visible}
+      onCancel={() => modal.hide()}
+    >
       {/* 弹窗内容 */}
     </XlbModal>
   );
@@ -330,27 +386,37 @@ const YourModal = NiceModal.create('your-modal', () => {
 // data.tsx — 列定义
 const columns: XlbTableColumnProps[] = [
   {
-    name: '名称',
-    code: 'name',
+    name: "名称",
+    code: "name",
     width: 200,
-    render: (val, record) => <span className="link" onClick={() => handleDetail(record)}>{val}</span>,
+    render: (val, record) => (
+      <span className="link" onClick={() => handleDetail(record)}>
+        {val}
+      </span>
+    ),
     features: { sortable: true, details: true },
   },
   {
-    name: '状态',
-    code: 'status',
+    name: "状态",
+    code: "status",
     width: 100,
-    render: (val) => <StatusColorByOptions value={val} options={statusColorOptions} />,
+    render: (val) => (
+      <StatusColorByOptions value={val} options={statusColorOptions} />
+    ),
   },
   {
-    name: '操作',
-    code: 'action',
+    name: "操作",
+    code: "action",
     width: 200,
-    fixed: 'right',
+    fixed: "right",
     render: (_, record) => (
       <XlbButton.Group>
-        <XlbButton type="link" onClick={() => handleEdit(record)}>编辑</XlbButton>
-        <XlbButton type="link" danger onClick={() => handleDelete(record)}>删除</XlbButton>
+        <XlbButton type="link" onClick={() => handleEdit(record)}>
+          编辑
+        </XlbButton>
+        <XlbButton type="link" danger onClick={() => handleDelete(record)}>
+          删除
+        </XlbButton>
       </XlbButton.Group>
     ),
   },
@@ -370,7 +436,36 @@ const columns: XlbTableColumnProps[] = [
 3. **import 完整性**：检查所有 import 的来源正确（`@xlb/components`、`@xlb/max` 等）
 4. **权限覆盖**：检查每个操作按钮是否有 `hasAuth` 包裹
 5. **路由注册**：检查路由是否在 `routeList` 中注册
-6. 记录 `分组 N 编译校验: MM 分钟`
+
+#### Step 5.5: 设计偏差捕捉
+
+在每个分组校验通过后，检查生成的代码样式是否符合设计规格：
+
+1. 读取 `execution.md` 中本分组的「解析数据已读」日志，确认已消费
+2. 读取 `parsed-styles/*.json` 中本分组涉及的样式数据
+3. 读取 `ui-audit.md` 中对应组件的三要素表
+4. **逐属性检查**：至少检查以下 4 项必查属性：
+   - `layout.height` → 代码中的高度是否符合 parsed 值
+   - `typography.fontSize` → 字号是否符合
+   - `typography.color` → 颜色值是否符合（使用 Less 变量）
+   - `spacingStyle.backgroundColor` → 背景色是否符合（使用 Less 变量）
+5. 输出「设计偏差记录表」到 `execution.md`：
+
+```markdown
+#### 设计偏差记录 — 分组 N
+
+| #   | 元素   | 属性   | 预期(设计值) | 实际(代码) | 偏差类型 | 严重度 | 处理方案 |
+| --- | ------ | ------ | ------------ | ---------- | -------- | ------ | -------- |
+| 1   | 表格行 | height | 48px         | 44px       | layout   | major  | 立即修复 |
+```
+
+偏差类型枚举：`layout | typography | spacing | icon | color | missing`
+严重度枚举：`critical`（功能缺失）/ `major`（视觉明显不符）/ `minor`（细微偏差）
+处理方案枚举：`立即修复` / `defer 到 verify` / `不可修复-原因`
+
+6. **同步偏差库**：将新偏差追加到 `.ai-wiki/design-deviation-db.json`
+   - 新偏差 → 追加新条目（生成 DEV-ID）
+   - 命中已知偏差（component + defectType 匹配） → 仅 `occurrenceCount++`, `lastOccurred` 更新
 
 #### Step 6: 更新 execution.md
 
@@ -404,7 +499,7 @@ const columns: XlbTableColumnProps[] = [
 
 ---
 
-## 出口门禁（必须全部通过才能进入 Phase 05）
+## 出口门禁（必须全部通过才能进入 verify 阶段）
 
 在所有分组执行完毕后，**强制执行以下校验**：
 
@@ -415,9 +510,10 @@ const columns: XlbTableColumnProps[] = [
    - 无硬编码 hex 色值（已使用 Less 变量）
    - 组件都来自 `@xlb/components`
    - 无 Ant Design 原生组件引用
-5. **权限检查**：所有操作按钮都有 `hasAuth` 包裹
-6. **路由检查**：新页面路由已在 `routeList` 中注册
-7. **defer/待处理项消费检查**：扫描 `execution.md` 中 defer 项是否全部闭环
+5. **设计偏差捕捉完整性**：检查 `execution.md` 中每个分组的「设计偏差记录表」是否已生成；所有 `critical` 偏差必须已修复
+6. **权限检查**：所有操作按钮都有 `hasAuth` 包裹
+7. **路由检查**：新页面路由已在 `routeList` 中注册
+8. **defer/待处理项消费检查**：扫描 `execution.md` 中 defer 项是否全部闭环
 
 **全部通过后**：
 

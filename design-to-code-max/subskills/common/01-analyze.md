@@ -18,8 +18,6 @@
 1. **文件不存在或 `requirements` 为空数组** → 直接进入「新需求流程」
 2. **`requirements` 存在一个或多个条目** → 展示需求总览表，使用 `AskUserQuestion` 让用户选择续接或新建
 
-（此部分状态检测逻辑与原有 `01-analyze.md` 第 1 节相同）
-
 ### 2. 新需求流程
 
 > **❗️ 执行铁律（不得违反）**：一次 AskUserQuestion 只能包含 1 个问题，严禁多问题打包。
@@ -64,16 +62,17 @@
 
 当选择续接已有需求时，根据 `currentPhase` 跳到对应阶段：
 
-| 当前阶段           | 跳转到                                                       |
-| ------------------ | ------------------------------------------------------------ |
-| analyze            | 跳到上方「新需求流程」（仅状态检测后）                         |
-| collect-materials  | `subskills/common/02-collect-materials.md`                    |
-| feature-spec       | `subskills/common/03-feature-spec.md`                         |
-| audit              | `subskills/{platform}/01-audit.md`（根据 `inputs.platform` 路由） |
-| design             | `subskills/{platform}/02-design.md`                           |
-| build              | `subskills/{platform}/03-build.md`                            |
-| verify             | `subskills/{platform}/04-verify.md`                           |
-| done               | 询问是否修改                                                 |
+| 当前阶段          | 跳转到                                                            |
+| ----------------- | ----------------------------------------------------------------- |
+| analyze           | 跳到上方「新需求流程」（仅状态检测后）                            |
+| collect-materials | `subskills/common/02-collect-materials.md`                        |
+| feature-spec      | `subskills/common/03-feature-spec.md`                             |
+| api-spec          | `subskills/common/04-api-spec.md`                                 |
+| audit             | `subskills/{platform}/01-audit.md`（根据 `inputs.platform` 路由） |
+| design            | `subskills/{platform}/02-design.md`                               |
+| build             | `subskills/{platform}/03-build.md`                                |
+| verify            | `subskills/{platform}/04-verify.md`                               |
+| done              | 询问是否修改                                                      |
 
 ---
 

@@ -1,9 +1,9 @@
-# Phase 02 - UI 审计与组件映射（PC）
+# Phase 05 - UI 审计与组件映射（PC）
 
 ## 进入条件
 
 - 已 `Read .ai-wiki/.dtc-state.json`。
-- `phaseOutputs.analyze.checklistPassed === true` 且 `phaseOutputs.analyze.userConfirmed === true`。
+- `phaseOutputs.api-spec.checklistPassed === true` 且 `phaseOutputs.api-spec.userConfirmed === true`。
 - `currentPhase` 为 `audit`。
 - `inputs.platform === "pc"`。
 
@@ -32,15 +32,16 @@
 
 ### Step 2: 运行 HTML 结构化解析引擎
 
-对每个 HTML 文件，按 `../reference/common/html-parser-rules.md` 执行结构化解析：
+对每个 HTML 文件，按 `../../reference/common/html-parser-rules.md` 执行结构化解析：
 
-1. **读取解析规则**：`Read ../reference/common/html-parser-rules.md`，理解解析流程和输出格式
+1. **读取解析规则**：`Read ../../reference/common/html-parser-rules.md`，理解解析流程和输出格式
 2. **拆分 HTML**：按页面/组件 DOM 边界拆分，排除非视觉元素
 3. **逐元素解析**：提取每个元素的标签、样式、文本、子元素，构建结构化数据
 4. **三要素归类**：按 layout / typography / spacingStyle 三要素归类各属性
 5. **Token 映射**：
-   - 查 `../reference/pc/token-map.json`（如有）做颜色、间距、圆角、字号映射
+   - 查 `../../reference/pc/pc-guidelines.md` 的 Less 变量与样式约定做颜色、间距、圆角、字号映射
    - 无法映射的值记录到 `unmappedTokens`
+   - 解析/映射中的歧义处理（色值未解析、图标无映射、尺寸偏差等提问模板）见 `../../reference/common/ambiguity-rules.md`
 6. **写入解析结果**：输出到 `.ai-wiki/【需求名】/parsed-styles/【page-name】.json`
 
 **重要：**
@@ -67,7 +68,8 @@
    - `newFeaturePoints`: 截图里发现但 `features.md` **未收录**的功能点 → 记录 ID 建议
 3. **交叉核对**：把每张截图的 `pageOrBlock` 与 `parsed-styles/*.json` 页面名对齐；若截图揭示 HTML 未表达的元素，在对应 parsed JSON 旁边加 `screenshotSupplement` 备注。
 4. **产出建议动作**：
-   - 有 `newFeaturePoints` → **停下来，先回 Phase 01 补 features.md**，再继续 Step 3。禁止「先做完 audit 再回头补」。
+   - 有 `newFeaturePoints` → **停下来，先回 feature-spec 阶段补 features.md**，再继续 Step 3。禁止「先做完 audit 再回头补」。
+   - 截图/解析中发现 `api-spec.md` 未覆盖的接口字段 → 记录到 `phaseOutputs.audit.apiSpecSupplements`，并在本阶段输出前回补到 api-spec.md 对应接口的响应字段表。
    - 有 `dynamicInteractions` / `visualDetailsBeyondHtml` → 在 Step 3 拆解时必须体现。
 
 **输出示例：**
@@ -112,30 +114,30 @@
 
 根据 UI 结构识别页面模式，并选择对应 PC 容器组件：
 
-| 设计特征 | 页面模式 | PC 容器组件 |
-|----------|----------|-------------|
-| 顶部搜索区 + 工具栏按钮 + 数据表格 | Mode A | `XlbPageContainer` |
-| 搜索 + 表格 + 详情 + 增删改导出一体 | Mode B | `XlbProPageContainer` |
-| 自定义卡片布局、仪表盘、看板 | Mode C | 自定义布局 |
+| 设计特征                            | 页面模式 | PC 容器组件           |
+| ----------------------------------- | -------- | --------------------- |
+| 顶部搜索区 + 工具栏按钮 + 数据表格  | Mode A   | `XlbPageContainer`    |
+| 搜索 + 表格 + 详情 + 增删改导出一体 | Mode B   | `XlbProPageContainer` |
+| 自定义卡片布局、仪表盘、看板        | Mode C   | 自定义布局            |
 
 #### 4.2 组件映射
 
-根据 `../reference/pc/component-mapping.md`，为每个 UI 块选择对应 `@xlb/components` 组件：
+根据 `../../reference/pc/component-mapping.md`，为每个 UI 块选择对应 `@xlb/components` 组件：
 
-| UI 块类型 | 推荐组件 | 使用方式 |
-|-----------|----------|----------|
-| 搜索区域 | `XlbForm` | `formList: SearchFormType[]` |
-| 详情/编辑表单 | `XlbBasicForm` + `XlbBasicForm.Item` | CSS Grid 三列 |
-| 数据表格 | `XlbTable` + `XlbTableColumnProps` | 列定义 |
-| 工具栏按钮 | `XlbButton.Group` | 操作按钮 |
-| 弹窗 | `ProPageModal` / `NiceModal` + `fsmsModal` | 视场景选择 |
-| 状态标签 | `StatusColorByOptions` | 颜色映射 |
+| UI 块类型     | 推荐组件                                   | 使用方式                     |
+| ------------- | ------------------------------------------ | ---------------------------- |
+| 搜索区域      | `XlbForm`                                  | `formList: SearchFormType[]` |
+| 详情/编辑表单 | `XlbBasicForm` + `XlbBasicForm.Item`       | CSS Grid 三列                |
+| 数据表格      | `XlbTable` + `XlbTableColumnProps`         | 列定义                       |
+| 工具栏按钮    | `XlbButton.Group`                          | 操作按钮                     |
+| 弹窗          | `ProPageModal` / `NiceModal` + `fsmsModal` | 视场景选择                   |
+| 状态标签      | `StatusColorByOptions`                     | 颜色映射                     |
 
 #### 4.3 组件选择决策表
 
 填写组件选择决策表：每个 UI 块对应使用的组件、默认渲染差异、是否需要定制、补偿方案。
 
-参考 `../reference/pc/pc-guidelines.md` 和 `../reference/pc/component-mapping.md`。
+参考 `../../reference/pc/pc-guidelines.md` 和 `../../reference/pc/component-mapping.md`。
 
 #### 4.4 三要素对比表
 
@@ -147,41 +149,41 @@
 
 从 parsed JSON 中 `element.layout` 字段读取：
 
-| 属性 | HTML 值 | CSS 值 | 确认 |
-|------|---------|--------|------|
-| display | flex | flex | ✅ |
-| flexDirection | row | row | ✅ |
-| height | 48px | 48px | ✅ |
-| justifyContent | space-between | space-between | ✅ |
-| alignItems | center | center | ✅ |
-| padding | 0 16px | 0 16px | ✅ |
-| gap | 8px | 8px | ✅ |
+| 属性           | HTML 值       | CSS 值        | 确认 |
+| -------------- | ------------- | ------------- | ---- |
+| display        | flex          | flex          | ✅   |
+| flexDirection  | row           | row           | ✅   |
+| height         | 48px          | 48px          | ✅   |
+| justifyContent | space-between | space-between | ✅   |
+| alignItems     | center        | center        | ✅   |
+| padding        | 0 16px        | 0 16px        | ✅   |
+| gap            | 8px           | 8px           | ✅   |
 
 ##### Typography 字体表
 
 从 parsed JSON 中 `element.typography` 字段读取：
 
-| 属性 | HTML 值 | CSS 值 | 确认 |
-|------|---------|--------|------|
-| fontSize | 14px | 14px | ✅ |
-| fontWeight | 500 | 500 | ✅ |
-| lineHeight | 20px | 20px | ✅ |
-| color | #333333 | -- | Less 变量 |
-| textAlign | left | left | ✅ |
+| 属性       | HTML 值 | CSS 值 | 确认      |
+| ---------- | ------- | ------ | --------- |
+| fontSize   | 14px    | 14px   | ✅        |
+| fontWeight | 500     | 500    | ✅        |
+| lineHeight | 20px    | 20px   | ✅        |
+| color      | #333333 | --     | Less 变量 |
+| textAlign  | left    | left   | ✅        |
 
 ##### Spacing & Style 间距与修饰表
 
 从 parsed JSON 中 `element.spacingStyle` 字段读取：
 
-| 属性 | HTML 值 | CSS值/ Less变量 | 确认 |
-|------|---------|----------------|------|
-| borderRadius | 4px | 4px | ✅ |
-| borderWidth | 1px | 1px | ✅ |
-| borderColor | #dddddd | -- | Less 变量 |
-| backgroundColor | #ffffff | -- | Less 变量 |
-| marginBottom | 12px | 12px | ✅ |
+| 属性            | HTML 值 | CSS值/ Less变量 | 确认      |
+| --------------- | ------- | --------------- | --------- |
+| borderRadius    | 4px     | 4px             | ✅        |
+| borderWidth     | 1px     | 1px             | ✅        |
+| borderColor     | #dddddd | --              | Less 变量 |
+| backgroundColor | #ffffff | --              | Less 变量 |
+| marginBottom    | 12px    | 12px            | ✅        |
 
-> PC 端样式值直接使用 CSS px 值，色值映射到 Less 变量（`@color_link`、`@color_danger` 等）。参见 `../reference/pc/pc-guidelines.md`。
+> PC 端样式值直接使用 CSS px 值，色值映射到 Less 变量（`@color_link`、`@color_danger` 等）。参见 `../../reference/pc/pc-guidelines.md`。
 
 ---
 
@@ -189,7 +191,7 @@
 
 #### 5.1 组件选择
 
-**先读 `../reference/pc/pc-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 `@xlb/components` 组件，并说明理由。
+**先读 `../../reference/pc/pc-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 `@xlb/components` 组件，并说明理由。
 
 #### 5.2 表单模式识别
 
@@ -225,17 +227,19 @@
 
 ### 文档输出
 
-使用 `../templates/pc/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
+使用 `../../templates/pc/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
 
 1. **扫描配对清单** — HTML + 截图配对状态
 2. **页面模式识别** — Mode A / B / C 判定及理由
 3. **功能点 UI 覆盖检查** — 每个功能点的 UI 材料覆盖情况
 4. **关键样式规格** — 三要素表（由 Step 4 填充）
 5. **组件选择决策表** — 组件映射 + 默认渲染差异 + 补偿方案
-6. **组件库渲染差异分析** — 黑盒组件差异 + 偏差库预标注
+6. **组件库渲染差异分析** — 黑盒组件差异（识别方法参考 `../../reference/common/gotchas/blackbox-wrapper-component.md`）+ 偏差库预标注
 7. **缺失项汇总** — 缺失的 UI 材料及影响
 
-记录 `Phase 02 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
+若 `phaseOutputs.audit.apiSpecSupplements` 非空，先将补充字段回补到 api-spec.md 对应接口的响应字段表，再输出本阶段文档。
+
+记录 `audit 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
 
 ### 状态更新
 
@@ -250,7 +254,7 @@
   "unmappedTokens": [],
   "deviationMatches": 0,
   "checklistPassed": true,
-  "userConfirmed": false
+  "userConfirmed": false,
 }
 ```
 
@@ -262,6 +266,7 @@
 - [ ] Step 2 HTML 结构化解析已完成，parsed-styles JSON 已输出
 - [ ] Step 2.5 截图已逐张 Read，`screenshotFindings` 条数 = `screenshotList` 条数（用户明确「无截图」除外）
 - [ ] 截图揭示的 `newFeaturePoints` 已回补到 features.md（如有）
+- [ ] 截图/解析发现的 api-spec.md 未覆盖字段已回补（如有）
 - [ ] **页面模式已识别**（Mode A / B / C），且理由充分
 - [ ] 三要素表已填充（每个 UI 块包含 Layout / Typography / Spacing 三张表）
 - [ ] 每个 UI 块有组件选择 + 理由
@@ -277,7 +282,7 @@
 1. **必须停下来向用户确认**：输出页面模式、组件选择决策表摘要，使用 `AskUserQuestion` 询问：
 
    ```
-   问题：Phase 02 UI 审计完成，共分析 N 个 UI 块、识别为 Mode {A/B/C}、解析 M 个 HTML 文件。
+   问题：PC UI 审计完成，共分析 N 个 UI 块、识别为 Mode {A/B/C}、解析 M 个 HTML 文件。
    是否确认进入技术设计？
    选项：
    - 确认，进入技术设计

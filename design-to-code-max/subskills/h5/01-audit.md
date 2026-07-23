@@ -1,9 +1,9 @@
-# Phase 02 - H5 UI 审计与组件映射
+# Phase 05 - UI 审计与组件映射（H5）
 
 ## 进入条件
 
 - 已 `Read .ai-wiki/.dtc-state.json`。
-- `phaseOutputs.analyze.checklistPassed === true` 且 `phaseOutputs.analyze.userConfirmed === true`。
+- `phaseOutputs.api-spec.checklistPassed === true` 且 `phaseOutputs.api-spec.userConfirmed === true`。
 - `currentPhase` 为 `audit`。
 
 ---
@@ -31,20 +31,21 @@
 
 ### Step 2: 运行 HTML 结构化解析引擎
 
-对每个 HTML 文件，按 `../reference/common/html-parser-rules.md` 执行结构化解析：
+对每个 HTML 文件，按 `../../reference/common/html-parser-rules.md` 执行结构化解析：
 
-1. **读取解析规则**：`Read ../reference/common/html-parser-rules.md`，理解解析流程和输出格式
+1. **读取解析规则**：`Read ../../reference/common/html-parser-rules.md`，理解解析流程和输出格式
 2. **拆分 HTML**：按页面/组件 DOM 边界拆分，排除非视觉元素
 3. **逐元素解析**：提取每个元素的标签、样式、文本、子元素，构建结构化数据
 4. **三要素归类**：按 layout / typography / spacingStyle 三要素归类各属性
 5. **Token 映射**：
-   - 查 `../reference/h5/h5-guidelines.md` 做颜色、间距、圆角、字号的 CSS 变量映射
+   - 查 `../../reference/h5/h5-guidelines.md` 做颜色、间距、圆角、字号的 CSS 变量映射
    - 颜色 HTML hex → `var(--xlb-color-*)` CSS 变量
    - 间距 HTML px → `var(--xlb-space-*)` CSS 变量
    - 字号 HTML px → `var(--xlb-fontSize-*)` CSS 变量
    - 圆角 HTML px → `var(--xlb-border-radius-*)` CSS 变量
    - 图标 HTML → 查找 `@xlb/components-mobile` 中 `XlbIcon` 的 `type` 映射
    - 无法映射的值记录到 `unmappedTokens`
+   - 解析/映射中的歧义处理（CSS 变量未解析、图标无映射、尺寸偏差等提问模板）见 `../../reference/common/ambiguity-rules.md`
 6. **写入解析结果**：输出到 `.ai-wiki/【需求名】/parsed-styles/【page-name】.json`
 
 **重要：**
@@ -72,7 +73,8 @@
    - `newFeaturePoints`: 截图里发现但 `features.md` **未收录**的功能点 → 记录 ID 建议（如 `F-15-a`）
 3. **交叉核对**：把每张截图的 `pageOrBlock` 与 `parsed-styles/*.json` 页面名对齐；若截图揭示 HTML 未表达的元素（如"过期/下架"红框标签），在对应 parsed JSON 旁边加 `screenshotSupplement` 备注。
 4. **产出建议动作**：
-   - 有 `newFeaturePoints` → **停下来，先回 Phase 01 补 features.md**，再继续 Step 3。禁止「先做完 audit 再回头补」。
+   - 有 `newFeaturePoints` → **停下来，先回 feature-spec 阶段补 features.md**，再继续 Step 3。禁止「先做完 audit 再回头补」。
+   - 截图/解析中发现 `api-spec.md` 未覆盖的接口字段 → 记录到 `phaseOutputs.audit.apiSpecSupplements`，并在本阶段输出前回补到 api-spec.md 对应接口的响应字段表。
    - 有 `dynamicInteractions` / `visualDetailsBeyondHtml` → 在 Step 3 拆解时必须体现。
 
 **输出示例：**
@@ -111,7 +113,7 @@
 
 ---
 
-### Step 4: 填充三要素对比表（增强）
+### Step 4: 填充三要素对比表
 
 从 parsed JSON 的 layout / typography / spacingStyle 数据中读取，填充到 ui-audit.md 的「关键样式规格」章节。
 
@@ -121,39 +123,39 @@
 
 从 parsed JSON 中 `element.layout` 字段读取：
 
-| 属性 | HTML 值 | CSS 变量映射 | 确认 |
-|------|---------|-------------|------|
-| display | flex | — | ✅ |
-| flexDirection | row | — | ✅ |
-| height | 48px | var(--xlb-space-48) | ✅ |
-| justifyContent | space-between | — | ✅ |
-| alignItems | center | — | ✅ |
-| padding | 0 16px | 0 var(--xlb-space-16) | ✅ |
-| gap | 8px | var(--xlb-space-8) | ✅ |
+| 属性           | HTML 值       | CSS 变量映射          | 确认 |
+| -------------- | ------------- | --------------------- | ---- |
+| display        | flex          | —                     | ✅   |
+| flexDirection  | row           | —                     | ✅   |
+| height         | 48px          | var(--xlb-space-48)   | ✅   |
+| justifyContent | space-between | —                     | ✅   |
+| alignItems     | center        | —                     | ✅   |
+| padding        | 0 16px        | 0 var(--xlb-space-16) | ✅   |
+| gap            | 8px           | var(--xlb-space-8)    | ✅   |
 
 #### 4.2 Typography 字体表
 
 从 parsed JSON 中 `element.typography` 字段读取：
 
-| 属性 | HTML 值 | CSS 变量映射 | 确认 |
-|------|---------|-------------|------|
-| fontSize | 14px | var(--xlb-fontSize-14) | ✅ |
-| fontWeight | 500 | font-weight: 500 | ✅ |
-| lineHeight | 20px | var(--xlb-lineHeight-20) | ✅ |
-| color | #333333 | var(--xlb-color-text-primary) | ✅ |
-| textAlign | left | — | ✅ |
+| 属性       | HTML 值 | CSS 变量映射                  | 确认 |
+| ---------- | ------- | ----------------------------- | ---- |
+| fontSize   | 14px    | var(--xlb-fontSize-14)        | ✅   |
+| fontWeight | 500     | font-weight: 500              | ✅   |
+| lineHeight | 20px    | var(--xlb-lineHeight-20)      | ✅   |
+| color      | #333333 | var(--xlb-color-text-primary) | ✅   |
+| textAlign  | left    | —                             | ✅   |
 
 #### 4.3 Spacing & Style 间距与修饰表
 
 从 parsed JSON 中 `element.spacingStyle` 字段读取：
 
-| 属性 | HTML 值 | CSS 变量映射 | 确认 |
-|------|---------|-------------|------|
-| borderRadius | 4px | var(--xlb-border-radius-4) | ✅ |
-| borderWidth | 1px | — | ✅ |
-| borderColor | #dddddd | var(--xlb-color-border) | ✅ |
-| backgroundColor | #ffffff | var(--xlb-color-bg) | ✅ |
-| marginBottom | 12px | var(--xlb-space-12) | ✅ |
+| 属性            | HTML 值 | CSS 变量映射               | 确认 |
+| --------------- | ------- | -------------------------- | ---- |
+| borderRadius    | 4px     | var(--xlb-border-radius-4) | ✅   |
+| borderWidth     | 1px     | —                          | ✅   |
+| borderColor     | #dddddd | var(--xlb-color-border)    | ✅   |
+| backgroundColor | #ffffff | var(--xlb-color-bg)        | ✅   |
+| marginBottom    | 12px    | var(--xlb-space-12)        | ✅   |
 
 **填充规则：**
 
@@ -169,30 +171,30 @@
 
 #### 5.1 组件选择
 
-**先读 `../reference/h5/h5-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 `@xlb/components-mobile` 组件，并说明理由。
+**先读 `../../reference/h5/h5-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 `@xlb/components-mobile` 组件，并说明理由。
 
 **H5 组件映射规则：**
 
-| UI 块类型 | 候选组件 | 说明 |
-|-----------|---------|------|
-| 页面容器 | `ProPageContainer` | 每个页面顶层容器 |
-| 导航栏 | `XlbNavBar` | 作为 ProPageContainer 的 navBar prop |
-| 列表/无限滚动 | `XlbFlatList` | 通过 url + params 驱动 |
-| 表单/详情 | `XlbProDetail` | 声明式 formList，componentType 驱动 |
-| Tab 切换 | `XlbTabs` | 标签式切换 |
-| 搜索 | `XlbSearchBar` | 搜索栏 |
-| 文本输入 | `XlbInput` | componentType: 'input' |
-| 日期选择 | `XlbDatePicker` | componentType: 'datePicker' |
-| 图片上传 | `XlbUpload` | componentType: 'uploadImg' |
-| 选择器 | `XlbCascaderSelect` | componentType: 'cascader' |
-| 单选 | `XlbRadio` | componentType: 'radio' |
-| 多选 | `XlbCheckbox` | componentType: 'checkbox' |
-| 弹窗 | `XlbPopup` | 底部/居中弹出 |
-| 对话框 | `XlbDialog` | 模态确认 |
-| 图标 | `XlbIcon` | type prop 指定图标名 |
-| 筛选 | `XlbFilter` | 筛选栏 |
-| 按钮组 | `XlbButtonGroup` | 操作按钮分组 |
-| 标签 | `XlbTag` | 状态标签 |
+| UI 块类型     | 候选组件            | 说明                                 |
+| ------------- | ------------------- | ------------------------------------ |
+| 页面容器      | `ProPageContainer`  | 每个页面顶层容器                     |
+| 导航栏        | `XlbNavBar`         | 作为 ProPageContainer 的 navBar prop |
+| 列表/无限滚动 | `XlbFlatList`       | 通过 url + params 驱动               |
+| 表单/详情     | `XlbProDetail`      | 声明式 formList，componentType 驱动  |
+| Tab 切换      | `XlbTabs`           | 标签式切换                           |
+| 搜索          | `XlbSearchBar`      | 搜索栏                               |
+| 文本输入      | `XlbInput`          | componentType: 'input'               |
+| 日期选择      | `XlbDatePicker`     | componentType: 'datePicker'          |
+| 图片上传      | `XlbUpload`         | componentType: 'uploadImg'           |
+| 选择器        | `XlbCascaderSelect` | componentType: 'cascader'            |
+| 单选          | `XlbRadio`          | componentType: 'radio'               |
+| 多选          | `XlbCheckbox`       | componentType: 'checkbox'            |
+| 弹窗          | `XlbPopup`          | 底部/居中弹出                        |
+| 对话框        | `XlbDialog`         | 模态确认                             |
+| 图标          | `XlbIcon`           | type prop 指定图标名                 |
+| 筛选          | `XlbFilter`         | 筛选栏                               |
+| 按钮组        | `XlbButtonGroup`    | 操作按钮分组                         |
+| 标签          | `XlbTag`            | 状态标签                             |
 
 #### 5.2 表单布局方向识别
 
@@ -217,7 +219,7 @@
 - 该 UI 元素如果用组件库的 XX 组件渲染，默认输出是什么？
 - 与 HTML 目标的关键差异在哪（行高、分隔线、对齐方式、尺寸等）？
 - 是否需要额外定制（覆写样式、调整间距等）？
-- 参考 `../reference/rn/gotchas/component-library/blackbox-wrapper-component.md`（黑盒组件识别方法通用，可跨平台参考）
+- 参考 `../../reference/common/gotchas/blackbox-wrapper-component.md`（黑盒组件识别方法通用，可跨平台参考）
 
 ---
 
@@ -230,9 +232,9 @@
 5. 匹配项 → **预标注到 ui-audit.md 的「组件库渲染差异分析」章节**：
 
 ```markdown
-| UI 元素    | 候选组件       | 默认渲染                | 差异       | 定制 | 补偿方案                                                                               |
-| ---------- | -------------- | ----------------------- | ---------- | ---- | -------------------------------------------------------------------------------------- |
-| 表单字段行 | XlbProDetail   | XlbProDetail formList 默认行布局 | 样式差异 | 是   | 【来源：偏差库 DEV-001】使用 className 覆写 ProPageContainer 内联样式 |
+| UI 元素    | 候选组件     | 默认渲染                         | 差异     | 定制 | 补偿方案                                                              |
+| ---------- | ------------ | -------------------------------- | -------- | ---- | --------------------------------------------------------------------- |
+| 表单字段行 | XlbProDetail | XlbProDetail formList 默认行布局 | 样式差异 | 是   | 【来源：偏差库 DEV-001】使用 className 覆写 ProPageContainer 内联样式 |
 ```
 
 6. 更新 `phaseOutputs.audit.deviationMatches` 为命中条目数
@@ -243,7 +245,7 @@
 
 ### 文档输出
 
-使用 `../templates/h5/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
+使用 `../../templates/h5/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
 
 1. **扫描配对清单** — HTML + 截图配对状态
 2. **功能点 UI 覆盖检查** — 每个功能点的 UI 材料覆盖情况
@@ -271,7 +273,9 @@
 4. **组件库渲染差异分析** — 含偏差库预标注
 5. **缺失项汇总** — 缺失的 UI 材料及影响
 
-记录 `Phase 02 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
+若 `phaseOutputs.audit.apiSpecSupplements` 非空，先将补充字段回补到 api-spec.md 对应接口的响应字段表，再输出本阶段文档。
+
+记录 `audit 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
 
 ### 状态更新
 
@@ -310,6 +314,7 @@
 - [ ] Step 2 HTML 结构化解析已完成，parsed-styles JSON 已输出
 - [ ] **Step 2.5 截图已逐张 Read**，`screenshotFindings` 条数 = `screenshotList` 条数（用户明确「无截图」除外）
 - [ ] 截图揭示的 `newFeaturePoints` 已回补到 features.md（如有）
+- [ ] 截图/解析发现的 api-spec.md 未覆盖字段已回补（如有）
 - [ ] **三要素表已填充**（每个 UI 块包含 Layout / Typography / Spacing 三张表，且逐项确认 ✅）
 - [ ] 每个 UI 块有组件选择 + 理由
 - [ ] 每个含交互的 UI 块，关键交互行为列出了 `screenshot` 来源证据
@@ -327,7 +332,7 @@
 1. **必须停下来向用户确认**：输出组件选择决策表摘要和黑盒风险 summary，使用 `AskUserQuestion` 询问：
 
    ```
-   问题：Phase 02 H5 UI 审计完成，共分析 N 个 UI 块、N 个黑盒风险项、解析 M 个 HTML 文件。
+   问题：H5 UI 审计完成，共分析 N 个 UI 块、N 个黑盒风险项、解析 M 个 HTML 文件。
    是否确认进入技术设计？
    选项：
    - 确认，进入技术设计

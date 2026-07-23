@@ -1,4 +1,4 @@
-# Phase 04 - H5 分组执行与代码生成
+# Phase 07 - 分组执行与代码生成（H5）
 
 ## 进入条件
 
@@ -12,7 +12,7 @@
 
 ### 1. 生成执行文档
 
-从 `tech-design.md` 拆解为分步执行步骤，使用 `../templates/h5/execution.md.tpl` 格式生成 `execution.md`。
+从 `tech-design.md` 拆解为分步执行步骤，使用 `../../templates/h5/execution.md.tpl` 格式生成 `execution.md`。
 
 - 按功能模块或页面拆分为分组（每组 3-8 个步骤）
 - 每步标注关联功能点 ID、UI 参考文件、预计耗时
@@ -21,7 +21,7 @@
 
 ### 2. 读取规范
 
-**先读 `../reference/h5/h5-guidelines.md`**，确认 H5 组件、CSS 变量、路由、样式等约束。
+**先读 `../../reference/h5/h5-guidelines.md`**，确认 H5 组件、CSS 变量、路由、样式等约束。
 
 ### 3. 按分组执行（核心：8 步闭环）
 
@@ -49,21 +49,20 @@ H5 代码生成不需要 RN 的 Step 3.5 模式对齐确认表（那是 H5→RN 
 5. **记录日志**：在 `execution.md` 对应步骤后记录 `解析数据已读: parsed-styles/xxx.json`
    - 如果回退读了原始 HTML，在日志中追加 `HTML 交叉验证: 文件路径`
    - **记录 `API 规格已读: api-spec.md §2.x（接口名）`**
-6. 记录 `分组 N 读解析数据: MM 分钟`
 
 #### Step 3: 读项目代码风格
 
 读取目标目录现有文件，匹配已有 H5 页面模式。确认以下清单：
 
-| 维度 | 说明 |
-|------|------|
-| 页面容器结构 | ProPageContainer 的 navBar prop 用法 |
-| 导航跳转 | useXlbRouter 的 push/goBack/replace 用法 |
-| 表单模式 | XlbProDetail formList 配置模式 |
-| 路由参数 | useXlbRouter query 取值方式 |
-| API 调用 | request() 调用方式和响应处理（res.code === 0）|
-| Toast 调用 | Toast.show() 的 import 和调用方式 |
-| 状态管理 | Zustand store 的创建和使用模式 |
+| 维度         | 说明                                           |
+| ------------ | ---------------------------------------------- |
+| 页面容器结构 | ProPageContainer 的 navBar prop 用法           |
+| 导航跳转     | useXlbRouter 的 push/goBack/replace 用法       |
+| 表单模式     | XlbProDetail formList 配置模式                 |
+| 路由参数     | useXlbRouter query 取值方式                    |
+| API 调用     | request() 调用方式和响应处理（res.code === 0） |
+| Toast 调用   | Toast.show() 的 import 和调用方式              |
+| 状态管理     | Zustand store 的创建和使用模式                 |
 
 #### Step 4: 生成/修改代码
 
@@ -82,13 +81,13 @@ H5 代码生成不需要 RN 的 Step 3.5 模式对齐确认表（那是 H5→RN 
 
 每个功能特性目录包含 5 个标准文件：
 
-| 文件 | 说明 | 必选 |
-|------|------|------|
-| `index.tsx` | 页面/组件主文件 | 是 |
-| `index.scss` | CSS Module 样式文件 | 是 |
-| `store.ts` | Zustand store（页面级状态）| 按需 |
-| `server.ts` | API 接口封装 | 有 API 则必选 |
-| `config.tsx` | 常量/配置/formList 定义 | 按需 |
+| 文件         | 说明                        | 必选          |
+| ------------ | --------------------------- | ------------- |
+| `index.tsx`  | 页面/组件主文件             | 是            |
+| `index.scss` | CSS Module 样式文件         | 是            |
+| `store.ts`   | Zustand store（页面级状态） | 按需          |
+| `server.ts`  | API 接口封装                | 有 API 则必选 |
+| `config.tsx` | 常量/配置/formList 定义     | 按需          |
 
 **formList 配置模式：**
 
@@ -96,21 +95,21 @@ H5 代码生成不需要 RN 的 Step 3.5 模式对齐确认表（那是 H5→RN 
 // config.tsx
 export const formList = [
   {
-    label: '企业名称',
-    name: 'name',
-    componentType: 'input',
-    rules: [{ required: true, message: '请输入企业名称' }],
+    label: "企业名称",
+    name: "name",
+    componentType: "input",
+    rules: [{ required: true, message: "请输入企业名称" }],
   },
   {
-    label: '有效期',
-    name: 'validDate',
-    componentType: 'datePicker',
-    extraProps: { picker: 'date' },
+    label: "有效期",
+    name: "validDate",
+    componentType: "datePicker",
+    extraProps: { picker: "date" },
   },
   {
-    label: '证件照片',
-    name: 'images',
-    componentType: 'uploadImg',
+    label: "证件照片",
+    name: "images",
+    componentType: "uploadImg",
     extraProps: { maxCount: 5 },
   },
 ];
@@ -121,7 +120,7 @@ export const formList = [
 ```tsx
 <XlbFlatList
   url="/api/xxx/page"
-  params={{ status: 'active' }}
+  params={{ status: "active" }}
   renderItem={({ item }) => <CellItem data={item} />}
   emptyText="暂无数据"
 />
@@ -130,10 +129,10 @@ export const formList = [
 **API 调用模式：**
 
 ```tsx
-import { request } from 'umi';
+import { request } from "umi";
 
-const res = await request('/api/xxx/page', {
-  method: 'POST',
+const res = await request("/api/xxx/page", {
+  method: "POST",
   data: params,
 });
 if (res.code === 0) {
@@ -158,7 +157,7 @@ if (res.code === 0) {
 }
 ```
 
-> **关于 px 单位**：直接在 SCSS 中写设计稿 750px 下的 px 值（如 `width: 750px`、`height: 48px`），PostCSS pxtorem 插件（rootValue: 75）会自动将 px 转换为 rem。不要手动计算 rem 值。
+> **关于 px 单位**：颜色、字号、间距、圆角必须使用 `var(--xlb-*)` CSS 变量，禁止直接写 hex 或 px 数值；无对应 CSS 变量的尺寸值（如特殊宽度/高度）可直接写设计稿 750px 下的 px 值，PostCSS pxtorem 插件（rootValue: 75）会自动转换为 rem，不要手动计算 rem。
 
 **表单提交流程：**
 
@@ -166,15 +165,15 @@ if (res.code === 0) {
 const handleSubmit = async () => {
   try {
     const values = await form.getFieldsValue(true);
-    const res = await request('/api/xxx/save', { data: values });
+    const res = await request("/api/xxx/save", { data: values });
     if (res.code === 0) {
-      Toast.show({ content: '保存成功' });
+      Toast.show({ content: "保存成功" });
       router.goBack();
     } else {
-      Toast.show({ content: res.message || '操作失败' });
+      Toast.show({ content: res.message || "操作失败" });
     }
   } catch (err) {
-    console.error('submit error', err);
+    console.error("submit error", err);
   }
 };
 ```
@@ -200,7 +199,6 @@ Step 4 生成代码时，以下场景**必须**加行内注释：
 1. **编译验证**：运行 `tsc --noEmit` 或 `npm run build -- --analyze`，修复所有编译错误后再继续
 2. **样式合规速查**：检查本分组新增/修改的 `.scss` 文件中是否存在硬编码 hex 或 magic number（无 `var(--xlb-*)` 包裹的值），发现则修复
 3. **导航合规速查**：检查本分组新增/修改的 `.tsx` 文件中是否存在 `history.push` / `history.replace`，发现则替换为 `useXlbRouter`
-4. 记录 `分组 N 编译/抽检: MM 分钟`
 
 #### Step 5.5: 设计偏差捕捉
 
@@ -219,9 +217,9 @@ Step 4 生成代码时，以下场景**必须**加行内注释：
 ```markdown
 #### 设计偏差记录 — 分组 N
 
-| # | 元素 | 属性 | 预期(CSS变量) | 实际(代码) | 偏差类型 | 严重度 | 处理方案 |
-|---|------|------|--------------|-----------|---------|--------|---------|
-| 1 | 标题栏 | height | var(--xlb-space-48) | 44px | layout | major | 立即修复 |
+| #   | 元素   | 属性   | 预期(CSS变量)       | 实际(代码) | 偏差类型 | 严重度 | 处理方案 |
+| --- | ------ | ------ | ------------------- | ---------- | -------- | ------ | -------- |
+| 1   | 标题栏 | height | var(--xlb-space-48) | 44px       | layout   | major  | 立即修复 |
 ```
 
 偏差类型枚举：`layout | typography | spacing | icon | color | missing`
@@ -231,7 +229,6 @@ Step 4 生成代码时，以下场景**必须**加行内注释：
 6. **同步偏差库**：将新偏差追加到 `.ai-wiki/design-deviation-db.json`
    - 新偏差 → 追加新条目（生成 DEV-ID）
    - 命中已知偏差（component + defectType 匹配） → 仅 `occurrenceCount++`, `lastOccurred` 更新
-7. 记录 `分组 N 偏差捕捉: MM 分钟`
 
 #### Step 6: 更新 execution.md
 
@@ -274,11 +271,11 @@ Step 4 生成代码时，以下场景**必须**加行内注释：
 
 ### 4. 分层验证一览
 
-| 层级 | 时机 | 范围 | 结果 |
-|------|------|------|------|
-| **分组自检** | build Step 5.5 | 本分组代码 vs parsed-styles + 三要素表 | 偏差记录表 |
-| **出口门禁** | build 全部完成后 | 全部分组 + 全量扫描 | 通过/禁止 |
-| **verify 终检** | verify 阶段 | 全部分组 + 完整扫描 | 交付/返回修复 |
+| 层级            | 时机             | 范围                                   | 结果          |
+| --------------- | ---------------- | -------------------------------------- | ------------- |
+| **分组自检**    | build Step 5.5   | 本分组代码 vs parsed-styles + 三要素表 | 偏差记录表    |
+| **出口门禁**    | build 全部完成后 | 全部分组 + 全量扫描                    | 通过/禁止     |
+| **verify 终检** | verify 阶段      | 全部分组 + 完整扫描                    | 交付/返回修复 |
 
 ---
 
@@ -294,19 +291,19 @@ build 阶段的每个分组开始时，**增量加载**而非全量加载：
 
 ---
 
-## 出口门禁（必须全部通过才能进入 Phase 05）
+## 出口门禁（必须全部通过才能进入 verify 阶段）
 
 在所有分组执行完毕后，**强制执行以下校验**：
 
-1. **分组完成度**：读取 `execution.md`，检查所有分组标题是否均标记 ✅ — 有遗漏则列出，禁止进入 Phase 05
+1. **分组完成度**：读取 `execution.md`，检查所有分组标题是否均标记 ✅ — 有遗漏则列出，禁止进入 verify 阶段
 2. **功能点完成度**：读取 `features.md`，检查是否仍有 `⬜` — 有则列出遗漏功能点
 3. **解析数据消费完整性**：检查 `execution.md` 中每个分组的「解析数据已读」日志是否已填写 — 有缺失则标记
 4. **样式合规终检**：对本次新增/修改的 `.scss` 文件搜索硬编码 hex 色值（`#` + 6 位十六进制）和 magic number，检查是否使用了 `var(--xlb-*)`。发现硬编码 → 统一修复。修复时**禁止**为改样式而简化功能
-5. **导航合规终检**：搜索本次新增/修改的 `.tsx` 文件中的 `history.push` / `history.replace`。存在 → 替换为 `useXlbRouter`，**禁止进入 Phase 05**，修复后重新校验
-6. **defer/待处理项消费检查**：扫描 `execution.md` 中所有标注为 `defer`、`待处理`、`verify 处理`、`后续处理` 的条目，为每条生成对应的修复动作项。所有 defer 项必须在进入 Phase 05 前闭环（已修复 或 明确标注「设计不可实现-原因」）
+5. **导航合规终检**：搜索本次新增/修改的 `.tsx` 文件中的 `history.push` / `history.replace`。存在 → 替换为 `useXlbRouter`，**禁止进入 verify 阶段**，修复后重新校验
+6. **defer/待处理项消费检查**：扫描 `execution.md` 中所有标注为 `defer`、`待处理`、`verify 处理`、`后续处理` 的条目，为每条生成对应的修复动作项。所有 defer 项必须在进入 verify 阶段前闭环（已修复 或 明确标注「设计不可实现-原因」）
 7. **偏差库同步检查**：扫描 `design-deviation-db.json` 中当前需求关联的偏差条目，确认所有 `severity === "critical"` 的条目已有 `处理方案` 或已 `resolved`
 8. **授权检查**：检查使用 `useHasAuth` 的组件是否与功能点中的权限要求一致
-9. **路由注册检查**：新增页面是否在 `src/config/route.ts` 的 `FsmsRouteKeys` 中注册
+9. **路由注册检查**：新增页面是否在集中式路由配置 `src/config/route.ts` 中注册
 
 **全部通过后**：
 

@@ -1,9 +1,9 @@
-# Phase 02 - UI 审计与组件映射
+# Phase 05 - UI 审计与组件映射（RN）
 
 ## 进入条件
 
 - 已 `Read .ai-wiki/.dtc-state.json`。
-- `phaseOutputs.analyze.checklistPassed === true` 且 `phaseOutputs.analyze.userConfirmed === true`。
+- `phaseOutputs.api-spec.checklistPassed === true` 且 `phaseOutputs.api-spec.userConfirmed === true`。
 - `currentPhase` 为 `audit`。
 
 ---
@@ -29,18 +29,18 @@
 
 ---
 
-### Step 2: 运行 HTML 结构化解析引擎（新增）
+### Step 2: 运行 HTML 结构化解析引擎
 
-对每个 HTML 文件，按 `../reference/common/html-parser-rules.md` 执行结构化解析：
+对每个 HTML 文件，按 `../../reference/common/html-parser-rules.md` 执行结构化解析：
 
-1. **读取解析规则**：`Read ../reference/common/html-parser-rules.md`，理解解析流程和输出格式
+1. **读取解析规则**：`Read ../../reference/common/html-parser-rules.md`，理解解析流程和输出格式；解析/映射中的歧义处理（CSS 变量未解析、图标无映射、尺寸偏差等提问模板）见 `../../reference/common/ambiguity-rules.md`
 2. **拆分 HTML**：按页面/组件 DOM 边界拆分，排除非视觉元素
 3. **逐元素解析**：提取每个元素的标签、样式、文本、子元素，构建结构化数据
 4. **三要素归类**：按 layout / typography / spacingStyle 三要素归类各属性
 5. **Token 映射**：
-   - 查 `../reference/rn/token-map.json` 做颜色、间距、圆角、字号映射
-   - 查 `../reference/rn/icon-map.md` 做图标映射
-   - 查 `../reference/rn/xlb-style-system.md` 确认 token 语义
+   - 查 `../../reference/rn/token-map.json` 做颜色、间距、圆角、字号映射
+   - 查 `../../reference/rn/icon-map.md` 做图标映射
+   - 查 `../../reference/rn/xlb-style-system.md` 确认 token 语义
    - 无法映射的值记录到 `unmappedTokens`
 6. **写入解析结果**：输出到 `.ai-wiki/【需求名】/parsed-styles/【page-name】.json`
 
@@ -68,8 +68,9 @@
    - `newFeaturePoints`: 截图里发现但 `features.md` **未收录**的功能点 → 记录 ID 建议（如 `F-15-a`）
 3. **交叉核对**：把每张截图的 `pageOrBlock` 与 `parsed-styles/*.json` 页面名对齐；若截图揭示 HTML 未表达的元素（如"过期/下架"红框标签），在对应 parsed JSON 旁边加 `screenshotSupplement` 备注。
 4. **产出建议动作**：
-   - 有 `newFeaturePoints` → **停下来，先回 Phase 01 补 features.md**，再继续 Step 3。禁止「先做完 audit 再回头补」。
+   - 有 `newFeaturePoints` → **停下来，先回 feature-spec 阶段补 features.md**，再继续 Step 3。禁止「先做完 audit 再回头补」。
    - 有 `dynamicInteractions` / `visualDetailsBeyondHtml` → 在 Step 3 拆解时必须体现。
+   - 截图/解析中发现 `api-spec.md` 未覆盖的接口字段（如截图展示了响应字段表没有的字段）→ 记录到 `phaseOutputs.audit.apiSpecSupplements`，并在本阶段输出前回补到 api-spec.md 对应接口的响应字段表。
 
 **输出示例：**
 
@@ -107,7 +108,7 @@
 
 ---
 
-### Step 4: 填充三要素对比表（增强）
+### Step 4: 填充三要素对比表
 
 从 parsed JSON 的 layout / typography / spacingStyle 数据中读取，填充到 ui-audit.md 的「关键样式规格」章节。
 
@@ -159,7 +160,8 @@
 - `unmappedTokens` 中有值的，在表格旁备注「无 token 映射」
 
 **⚠️ 设计值 → 组件 API 映射标记：** 当 `spacingStyle.padding` 或 `spacingStyle.marginHorizontal` 存在水平内边距值（如 `0 12px`）时，必须在三要素表旁标注：
-> **组件 API 映射提示**：此 padding 值需通过 `XlbForm` 的 `cellTheme` prop 全局设置（`cell_group_title_padding_horizontal`），不可加到单个 `XlbForm.Item` 的 style 上。详见 `../reference/rn/gotchas/component-library/xlbform-celltheme-horizontal-padding.md`。
+
+> **组件 API 映射提示**：此 padding 值需通过 `XlbForm` 的 `cellTheme` prop 全局设置（`cell_group_title_padding_horizontal`），不可加到单个 `XlbForm.Item` 的 style 上。详见 `../../reference/rn/gotchas/component-library/xlbform-celltheme-horizontal-padding.md`。
 
 ---
 
@@ -167,7 +169,7 @@
 
 #### 5.1 组件选择
 
-**先读 `../reference/rn/rn-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 XLB 组件，并说明理由。
+**先读 `../../reference/rn/rn-guidelines.md` 的组件库使用清单**，为每个 UI 块选择对应 XLB 组件，并说明理由。
 
 #### 5.2 表单布局方向识别
 
@@ -192,11 +194,11 @@
 - 该 UI 元素如果用组件库的 XX 组件渲染，默认输出是什么？
 - 与 HTML 目标的关键差异在哪（行高、分隔线、对齐方式、尺寸等）？
 - 是否需要额外定制（插入分隔线、自定义行高、覆写样式）？
-- 引用 `../reference/rn/gotchas/component-library/blackbox-wrapper-component.md` 识别黑盒封装组件风险
+- 引用 `../../reference/rn/gotchas/component-library/blackbox-wrapper-component.md` 识别黑盒封装组件风险
 
 ---
 
-### Step 6: 偏差库预标注（新增）
+### Step 6: 偏差库预标注
 
 1. **读取偏差库**：`Read .ai-wiki/design-deviation-db.json`
 2. 如果文件不存在 → 跳过此步
@@ -218,7 +220,7 @@
 
 ### 文档输出
 
-使用 `../templates/rn/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
+使用 `../../templates/rn/ui-audit.md.tpl` 格式生成 `ui-audit.md`，包含以下章节：
 
 1. **扫描配对清单** — HTML + 截图配对状态
 2. **功能点 UI 覆盖检查** — 每个功能点的 UI 材料覆盖情况
@@ -246,7 +248,9 @@
 4. **组件库渲染差异分析** — 含偏差库预标注
 5. **缺失项汇总** — 缺失的 UI 材料及影响
 
-记录 `Phase 02 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
+如 Step 2.5 记录了 `apiSpecSupplements`（截图/解析发现的 api-spec.md 未覆盖字段），在生成 ui-audit.md 的同时将其回补到 api-spec.md 对应接口的响应字段表。
+
+记录 `audit 完成: HH:MM (耗时 MM 分钟)` 到 features.md 的「性能计时日志」。
 
 ### 状态更新
 
@@ -285,6 +289,7 @@
 - [ ] Step 2 HTML 结构化解析已完成，parsed-styles JSON 已输出
 - [ ] **Step 2.5 截图已逐张 Read**，`screenshotFindings` 条数 = `screenshotList` 条数（用户明确「无截图」除外）
 - [ ] 截图揭示的 `newFeaturePoints` 已回补到 features.md（如有）
+- [ ] 截图/解析发现的 api-spec.md 未覆盖字段已回补到 api-spec.md（如有）
 - [ ] **三要素表已填充**（每个 UI 块包含 Layout / Typography / Spacing 三张表，且逐项确认 ✅）
 - [ ] 每个 UI 块有组件选择 + 理由
 - [ ] 每个含交互的 UI 块，关键交互行为列出了 `screenshot` 来源证据
@@ -301,7 +306,7 @@
 1. **必须停下来向用户确认**：输出组件选择决策表摘要和黑盒风险 summary，使用 `AskUserQuestion` 询问：
 
    ```
-   问题：Phase 02 UI 审计完成，共分析 N 个 UI 块、N 个黑盒风险项、解析 M 个 HTML 文件。
+   问题：UI 审计完成，共分析 N 个 UI 块、N 个黑盒风险项、解析 M 个 HTML 文件。
    是否确认进入技术设计？
    选项：
    - 确认，进入技术设计
