@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # XlbDatePicker 必须用 DatePickerField 包装 + onConfirm 回填
 
 **条件**：目标代码使用 `XlbDatePicker` 组件，且它在 `XlbForm.Item` 内。

@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # Module Federation 路由注册（四仓库联动）
 
 **条件**：目标项目是 React Native Module Federation 架构。

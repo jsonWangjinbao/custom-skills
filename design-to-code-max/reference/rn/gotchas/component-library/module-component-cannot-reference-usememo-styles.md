@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # 模块级组件不能引用 useMemo 创建的 styles
 
 **条件**：在组件外部定义了子组件函数，但 `styles` 在父组件内部通过 `useMemo(() => StyleSheet.create(...))` 创建。

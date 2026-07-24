@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # 禁止对需批量回填的字段使用 dependencies；用 useWatch + skipClear 替代
 
 **条件**：表单字段 A 的值需要在「切换字段 B 时清空」，同时 `form.setFieldsValue` 会批量回填所有字段。

@@ -11,6 +11,8 @@
 
 ## 任务
 
+> 上下文预算：本阶段读写遵循 `../../reference/common/context-budget.md`——只定点读取 ui-audit.md 的「组件选择决策表」与「关键样式规格」章节，不整篇回读；tech-design.md 超限时只保留决策结论与理由。
+
 ### 1. 读取规范
 
 **先读 `../../reference/pc/pc-guidelines.md`**，确认组件库、路由、状态、权限、API 调用等约束。

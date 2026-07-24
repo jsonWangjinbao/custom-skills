@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # 对齐属性不可跨 DOM 层级平移
 
 **条件**：HTML 中父容器有 `justify-content: space-between`（或 `align-items: center`），但该属性只作用于子元素层级。当 HTML 的子元素是**嵌套容器**（内有多子元素），而 RN 中是**扁平直接子元素**时。

@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-23"
+---
 # 黑盒封装组件：内部样式不可控
 
 **条件**：使用 `CommonFormItem`、`XlbUploadFile` 等封装了 `XlbForm.Item` + 原生控件的"黑盒"组件，且 HTML 设计稿有精确的行高、分隔线、对齐方式等布局要求。

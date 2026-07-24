@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # XlbForm cellTheme 控制水平内边距
 
 > 本文件记录 XlbForm 组件通过 `cellTheme` 控制表单项水平内边距的正确方式。

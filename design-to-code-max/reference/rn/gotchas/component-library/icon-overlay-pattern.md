@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # 组件库内置图标不可替换时必须用覆盖层
 
 **条件**：设计稿使用图标 A，但三方组件（如 XlbUpload）内部硬编码图标 B 且不暴露 `iconName` prop。

@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # 所有 Text / TextInput 必须显式传入 fontFamily
 
 **条件**：RN 页面中使用了 `<Text>`（react-native）或 `XlbInput` / `XlbSearchBar` 等输入组件。

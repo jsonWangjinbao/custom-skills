@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-23"
+---
 # 黑盒封装组件 — 识别与补偿方法论（平台通用）
 
 > 本文定义平台无关的识别方法与处理流程。各平台的具体组件名单、不可控样式表与代码示例见平台目录下的 gotchas（如 RN: `reference/rn/gotchas/component-library/blackbox-wrapper-component.md`）。

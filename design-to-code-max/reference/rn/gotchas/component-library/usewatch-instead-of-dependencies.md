@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # 条件分支切换用 useWatch 替代 Form.Item dependencies
 
 **条件**：需要根据某个表单字段的值切换显示不同内容。

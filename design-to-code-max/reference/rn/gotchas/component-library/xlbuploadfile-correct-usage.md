@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # XlbUploadFile / SafeUploadFile 正确用法
 
 **条件**：需要实现文件/照片上传功能。

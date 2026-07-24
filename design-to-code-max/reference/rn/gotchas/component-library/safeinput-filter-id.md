@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # SafeInput / SafeUploadFile 过滤 id 防止 Android nativeID 崩溃
 
 **条件**：`XlbForm.Item` 使用数组 `name`（如 `['detail_infos', 0, 'name']`）时，其直接子组件是原生组件（`XlbInput`、`XlbUploadFile` 等）。

@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # 组件容器 flex 链塌缩导致内容不显示
 
 ## 现象

@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # UI 结构变更时字段映射遗漏
 
 ## 问题描述

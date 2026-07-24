@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # XlbForm.Item render prop 不可靠，优先用 useWatch + setFieldsValue
 
 **条件**：需要用自定义 UI（如 Chip 按钮）控制表单字段值。

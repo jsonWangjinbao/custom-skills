@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # XlbUpload 动态数组字段需要 initialValue={[]}
 
 **条件**：`XlbUpload` 位于动态数组字段中（如 `fooddetail_infos[N].files`）。

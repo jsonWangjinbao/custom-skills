@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-23"
+---
 # 组件库内置样式覆盖
 
 **条件**：目标代码使用了第三方组件库（如 XlbButton、XlbNavbar），这些组件有内置默认样式。

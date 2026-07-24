@@ -1,0 +1,468 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-23",
+  "usage": "build 阶段按当前组件列表在 entries 中匹配 components/keywords，只加载 1-2 篇最相关 gotcha，不再全量扫读 reference/**/gotchas/。verifiedVersion 为 n/a 或与目标项目实际组件版本不一致的条目仅作线索，生成代码前须核对目标项目实际组件版本。",
+  "baseline": {
+    "componentLibrary": "@xlb/components-mobile",
+    "verifiedVersion": "1.0.396",
+    "note": "component-library 场景条目的核验基线；RN 平台特性 / HTML 解析 / 流程类条目与组件库版本无关，标 n/a"
+  },
+  "entries": [
+    {
+      "path": "common/gotchas/blackbox-wrapper-component.md",
+      "platform": "common",
+      "scenario": "黑盒组件识别方法论（平台通用）",
+      "components": [],
+      "keywords": [
+        "黑盒组件",
+        "封装组件",
+        "行高",
+        "分隔线",
+        "补偿方案"
+      ],
+      "title": "黑盒封装组件 — 识别与补偿方法论（平台通用）",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-23"
+    },
+    {
+      "path": "rn/gotchas/api-patterns/fsms-response-structure.md",
+      "platform": "rn",
+      "scenario": "FSMS 接口取值",
+      "components": [],
+      "keywords": [
+        "接口",
+        "响应结构",
+        "page",
+        "read",
+        "content",
+        "data"
+      ],
+      "title": "FSMS API 响应结构",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/build-phase/ui-structure-remap-field-loss.md",
+      "platform": "rn",
+      "scenario": "build 阶段流程（UI 结构变更）",
+      "components": [],
+      "keywords": [
+        "字段遗漏",
+        "UI 结构变更",
+        "Tab",
+        "字段分配表"
+      ],
+      "title": "UI 结构变更时字段映射遗漏",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/blackbox-wrapper-component.md",
+      "platform": "rn",
+      "scenario": "黑盒表单容器",
+      "components": [
+        "CommonFormItem",
+        "XlbForm.Item"
+      ],
+      "keywords": [
+        "黑盒组件",
+        "行高",
+        "分隔线",
+        "label",
+        "样式不可控"
+      ],
+      "title": "黑盒封装组件：内部样式不可控",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-23"
+    },
+    {
+      "path": "rn/gotchas/component-library/clearable-input-ios-shadow-value.md",
+      "platform": "rn",
+      "scenario": "输入框清空",
+      "components": [
+        "XlbInput",
+        "FormItemContainer"
+      ],
+      "keywords": [
+        "清空按钮",
+        "clearable",
+        "iOS",
+        "value 注入"
+      ],
+      "title": "XlbInput 清空按钮不生效 — 禁止依赖 FormItemContainer 注入的 value/onChange",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/datepicker-onchange-conflict.md",
+      "platform": "rn",
+      "scenario": "日期选择与表单联动",
+      "components": [
+        "XlbDatePicker",
+        "XlbForm.Item"
+      ],
+      "keywords": [
+        "日期选择",
+        "onChange 冲突",
+        "onConfirm",
+        "表单重渲染"
+      ],
+      "title": "XlbDatePicker 必须用 DatePickerField 包装 + onConfirm 回填",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/dependencies-kills-label.md",
+      "platform": "rn",
+      "scenario": "表单项 label 消失",
+      "components": [
+        "XlbForm.Item",
+        "CommonFormItem"
+      ],
+      "keywords": [
+        "dependencies",
+        "label 不渲染",
+        "联动校验"
+      ],
+      "title": "禁止在需要显示 label 的 XlbForm.Item 上传 dependencies prop",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/dependencies-setfieldsvalue-conflict.md",
+      "platform": "rn",
+      "scenario": "批量回填与 dependencies 冲突",
+      "components": [
+        "XlbForm.Item"
+      ],
+      "keywords": [
+        "dependencies",
+        "setFieldsValue",
+        "skipClear",
+        "useWatch"
+      ],
+      "title": "禁止对需批量回填的字段使用 dependencies；用 useWatch + skipClear 替代",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/dynamic-list-independent-component.md",
+      "platform": "rn",
+      "scenario": "动态列表 hooks",
+      "components": [],
+      "keywords": [
+        "动态列表",
+        "hooks",
+        "子组件",
+        "useWatch"
+      ],
+      "title": "动态列表每项需独立子组件管理 hooks",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/form-item-render-prop-unreliable.md",
+      "platform": "rn",
+      "scenario": "Form.Item render prop",
+      "components": [
+        "XlbForm.Item"
+      ],
+      "keywords": [
+        "render prop",
+        "useWatch",
+        "setFieldsValue"
+      ],
+      "title": "XlbForm.Item render prop 不可靠，优先用 useWatch + setFieldsValue",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/icon-name-mismatch.md",
+      "platform": "rn",
+      "scenario": "图标渲染为空",
+      "components": [
+        "XlbIcon"
+      ],
+      "keywords": [
+        "图标",
+        "name 映射",
+        "渲染为空"
+      ],
+      "title": "XlbIcon name 错误导致图标渲染为空",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-23"
+    },
+    {
+      "path": "rn/gotchas/component-library/icon-overlay-pattern.md",
+      "platform": "rn",
+      "scenario": "内置图标不可替换",
+      "components": [
+        "XlbIcon"
+      ],
+      "keywords": [
+        "图标",
+        "覆盖层",
+        "overlay"
+      ],
+      "title": "组件库内置图标不可替换时必须用覆盖层",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/module-component-cannot-reference-usememo-styles.md",
+      "platform": "rn",
+      "scenario": "模块级组件样式引用",
+      "components": [],
+      "keywords": [
+        "useMemo",
+        "styles",
+        "模块级组件"
+      ],
+      "title": "模块级组件不能引用 useMemo 创建的 styles",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/safeinput-filter-id.md",
+      "platform": "rn",
+      "scenario": "数组 name 字段 Android 崩溃",
+      "components": [
+        "SafeInput",
+        "SafeUploadFile",
+        "XlbForm.Item"
+      ],
+      "keywords": [
+        "数组 name",
+        "nativeID",
+        "Android 崩溃",
+        "SafeInput"
+      ],
+      "title": "SafeInput / SafeUploadFile 过滤 id 防止 Android nativeID 崩溃",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/upload-dynamic-array-initial-value.md",
+      "platform": "rn",
+      "scenario": "上传组件动态数组初值",
+      "components": [
+        "XlbUpload"
+      ],
+      "keywords": [
+        "上传",
+        "动态数组",
+        "initialValue"
+      ],
+      "title": "XlbUpload 动态数组字段需要 initialValue={[]}",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/usewatch-instead-of-dependencies.md",
+      "platform": "rn",
+      "scenario": "条件分支切换",
+      "components": [
+        "XlbForm.Item"
+      ],
+      "keywords": [
+        "useWatch",
+        "dependencies",
+        "条件渲染"
+      ],
+      "title": "条件分支切换用 useWatch 替代 Form.Item dependencies",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/xlbform-celltheme-horizontal-padding.md",
+      "platform": "rn",
+      "scenario": "表单水平内边距",
+      "components": [
+        "XlbForm"
+      ],
+      "keywords": [
+        "cellTheme",
+        "padding",
+        "水平内边距"
+      ],
+      "title": "XlbForm cellTheme 控制水平内边距",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/component-library/xlbuploadfile-correct-usage.md",
+      "platform": "rn",
+      "scenario": "文件上传",
+      "components": [
+        "XlbUploadFile",
+        "SafeUploadFile"
+      ],
+      "keywords": [
+        "上传",
+        "customUpload",
+        "filesMax",
+        "数组 name"
+      ],
+      "title": "XlbUploadFile / SafeUploadFile 正确用法",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/html-parsing/flex-gap-exact-token.md",
+      "platform": "rn",
+      "scenario": "HTML 解析（flex gap）",
+      "components": [],
+      "keywords": [
+        "flex",
+        "gap",
+        "token"
+      ],
+      "title": "flex gap 值是精确的设计 token，不可近似",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/html-parsing/force-full-element-mapping.md",
+      "platform": "rn",
+      "scenario": "HTML 解析（全量映射）",
+      "components": [],
+      "keywords": [
+        "元素映射",
+        "全量",
+        "禁止跳过"
+      ],
+      "title": "强制全量元素映射，禁止跳过",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/html-parsing/img-zero-size-svg-fallback.md",
+      "platform": "rn",
+      "scenario": "HTML 解析（img 零尺寸）",
+      "components": [],
+      "keywords": [
+        "img",
+        "svg",
+        "零尺寸",
+        "回退"
+      ],
+      "title": "img 的 width/height 为 0 不代表元素不可见",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/absolute-position-to-rn-layout.md",
+      "platform": "rn",
+      "scenario": "absolute/sticky 定位翻译",
+      "components": [],
+      "keywords": [
+        "absolute",
+        "sticky",
+        "定位",
+        "zIndex"
+      ],
+      "title": "HTML absolute/sticky 定位 → RN 布局翻译错误",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/align-cannot-cross-dom-levels.md",
+      "platform": "rn",
+      "scenario": "对齐属性跨层级",
+      "components": [],
+      "keywords": [
+        "对齐",
+        "DOM 层级",
+        "justifyContent"
+      ],
+      "title": "对齐属性不可跨 DOM 层级平移",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/component-library-style-override.md",
+      "platform": "rn",
+      "scenario": "组件库内置样式覆盖",
+      "components": [],
+      "keywords": [
+        "样式覆盖",
+        "内置样式",
+        "优先级"
+      ],
+      "title": "组件库内置样式覆盖",
+      "verifiedVersion": "@xlb/components-mobile@1.0.396",
+      "verifiedAt": "2026-07-23"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/flex-container-height-collapse.md",
+      "platform": "rn",
+      "scenario": "flex 链高度塌缩",
+      "components": [],
+      "keywords": [
+        "flex",
+        "高度塌缩",
+        "内容不显示"
+      ],
+      "title": "组件容器 flex 链塌缩导致内容不显示",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/flex-start-text-align-center-conflict.md",
+      "platform": "rn",
+      "scenario": "flex-start 与 text-align 冲突",
+      "components": [],
+      "keywords": [
+        "flex-start",
+        "text-align",
+        "对齐冲突"
+      ],
+      "title": "父级 flex-start + 子级 text-align:center 对齐冲突",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/font-weight-cross-platform-visual-diff.md",
+      "platform": "rn",
+      "scenario": "font-weight 跨平台差异",
+      "components": [],
+      "keywords": [
+        "font-weight",
+        "iOS",
+        "Android",
+        "视觉差异"
+      ],
+      "title": "font-weight 跨平台视觉差异",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/module-federation-route-registration.md",
+      "platform": "rn",
+      "scenario": "模块联邦路由注册",
+      "components": [],
+      "keywords": [
+        "Module Federation",
+        "路由注册",
+        "基座"
+      ],
+      "title": "Module Federation 路由注册（四仓库联动）",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    },
+    {
+      "path": "rn/gotchas/rn-quirks/text-input-explicit-fontfamily.md",
+      "platform": "rn",
+      "scenario": "字体显式指定",
+      "components": [],
+      "keywords": [
+        "fontFamily",
+        "Text",
+        "TextInput"
+      ],
+      "title": "所有 Text / TextInput 必须显式传入 fontFamily",
+      "verifiedVersion": "n/a",
+      "verifiedAt": "2026-07-14"
+    }
+  ]
+}

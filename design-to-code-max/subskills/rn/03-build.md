@@ -10,6 +10,8 @@
 
 ## 任务
 
+> 上下文预算：本阶段读写遵循 `../../reference/common/context-budget.md`——每个分组只读 execution.md 当前分组 + 该分组涉及的 parsed-styles JSON，不整篇回读 ui-audit.md / tech-design.md；execution.md 已完成分组压缩为一行摘要。
+
 ### 1. 生成执行文档
 
 从 `tech-design.md` 拆解为分步执行步骤，使用 `../../templates/rn/execution.md.tpl` 格式生成 `execution.md`。
@@ -117,6 +119,7 @@
 - **XlbForm 水平内边距**：如果 ui-audit.md / parsed-styles 中记录了表单项存在水平 padding（如 `padding: 0 12px`），必须通过 `XlbForm` 的 `cellTheme` prop 全局设置，而不是加到每个 Item 的 style 上。引用 `../../reference/rn/gotchas/component-library/xlbform-celltheme-horizontal-padding.md`。
 - **XlbForm.useWatch 调用位置**：`useWatch` 必须在 `<XlbForm>` 内部调用（作为 Form children 的子孙组件），不能在 Form 挂载前或 Form 外部调用。从 Form 外部传 `formRef.current` 给 `useWatch` 会导致 `form` 为 null。
 - **onLayout 回调保护**：任何 `onLayout` 回调中访问 `e.nativeEvent.layout` 前必须加 null guard：`e?.nativeEvent?.layout?.y`。在 ScrollView 中绑定 onLayout 时 nativeEvent 可能在 unmount 后为 null。
+- **gotchas 按需加载**：写代码前用本分组组件列表查 `../../reference/gotchas-manifest.json`，按 `components` / `keywords` 匹配，只 `Read` 命中的 1-2 篇 gotcha，禁止全量扫读 `reference/rn/gotchas/`。条目的 `verifiedVersion` 与目标项目实际组件库版本（`@xlb/components-mobile`）不一致或为 `n/a` 时，该条目仅作线索，生成代码前须核对目标项目实际组件版本的用法。
 
 ##### UI 结构变更时的字段分配表（当 features.md 的分区结构与新 UI 不匹配时必须执行）
 
@@ -169,7 +172,7 @@ Step 4 生成代码时，以下场景**必须**加 JSDoc 或行内注释：
    - 对本分组新增/修改的 `.tsx` 文件执行 `grep -n "dependencies" <file>`。
    - 若发现任何 `XlbForm.Item` / `CommonFormItem` 传入了 `dependencies` prop，**立即修复**：按 `../../reference/rn/gotchas/component-library/dependencies-kills-label.md` 替换为 `form.getFieldValue` / `useWatch`。
    - 依据：`dependencies` 会导致 label 不渲染（编译通过但运行时表现错误）。
-3. **prop 兼容性速查**：检查本组使用的每个黑盒组件 prop 是否有对应 gotcha 文件（`../../reference/rn/gotchas/component-library/`），有则核对用法合规。
+3. **prop 兼容性速查**：以 Step 4 按 `gotchas-manifest.json` 命中的 1-2 篇 gotcha 为准，核对本组使用的每个黑盒组件 prop 用法合规；组件列表有新组件但未命中任何条目时，才按组件名检索 `../../reference/rn/gotchas/component-library/` 补充。
 4. **模式对齐复审**：对照 Step 3.5 输出的「模式对齐确认表」，快速复审代码中每个维度是否确实按表中"本分组写法"列实现。发现不一致但无理由的 → 修正。
 
 #### Step 5.5: 设计偏差捕捉

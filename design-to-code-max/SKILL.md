@@ -101,8 +101,10 @@ description: >-
 
 ## 性能计时
 
-每个阶段完成时在 `features.md` 的「性能计时日志」追加一行：`阶段名 完成: HH:MM (耗时 MM 分钟)`。
+每个阶段完成时在 `features.md` 的「性能计时日志」追加一行：`阶段名 完成: HH:MM (耗时 MM 分钟)`（人读摘要）。完整指标数据由脚本记录：
 
+- 各阶段开始/结束时执行 `node scripts/dtc-metrics.mjs start|end ".ai-wiki/【需求名】" <阶段名>`（end 支持 `--retries` 与 `--first-pass`）
+- verify 结束时执行 `node scripts/dtc-metrics.mjs summary ".ai-wiki/【需求名】"` 生成 `run-metrics.md`
 - 只记录阶段级耗时（build 阶段按分组记录起止），不逐项计时
 - 某阶段超过预估 50% 时标注瓶颈
 
@@ -125,20 +127,25 @@ description: >-
 
 ## 参考文件索引
 
-| 文件                                      | 用途                        | 消费时机                |
-| ----------------------------------------- | --------------------------- | ----------------------- |
-| `reference/common/ambiguity-rules.md`     | 歧义检测规则                | audit / build 阶段      |
-| `reference/common/html-parser-rules.md`   | HTML 结构化解析引擎规则     | audit 阶段              |
-| `reference/common/gotchas/`               | 平台通用已知问题库          | audit / design 阶段按需 |
-| `reference/rn/rn-guidelines.md`           | RN 代码生成约束             | RN build 阶段           |
-| `reference/rn/xlb-style-system.md`        | XLB 风格系统规范            | RN build 阶段样式参考   |
-| `reference/rn/icon-map.md`                | 图标名称映射                | RN build 阶段           |
-| `reference/rn/token-map.json`             | CSS 变量 → theme token 映射 | RN build 阶段样式参考   |
-| `reference/rn/style-scan-checklist.md`    | 样式合规扫描清单（终检）    | verify 阶段             |
-| `reference/common/state-schema.md`        | 状态机 Schema（v2.0）       | 所有阶段读写 state.json |
-| `reference/common/deviation-db-schema.md` | 偏差持久化库 Schema         | audit / build / verify  |
-| `reference/rn/gotchas/`                   | 已知问题库                  | build 阶段按需          |
-| H5 和 PC 的参考文件在各平台目录中声明     |                             |                         |
+| 文件                                      | 用途                           | 消费时机                                       |
+| ----------------------------------------- | ------------------------------ | ---------------------------------------------- |
+| `reference/common/ambiguity-rules.md`     | 歧义检测规则                   | audit / build 阶段                             |
+| `reference/common/html-parser-rules.md`   | HTML 结构化解析引擎规则        | audit 阶段                                     |
+| `reference/common/gotchas/`               | 平台通用已知问题库             | audit / design 阶段按需                        |
+| `reference/gotchas-manifest.json`         | gotchas 场景索引（含核验基线） | build 阶段按组件列表查表加载                   |
+| `reference/rn/rn-guidelines.md`           | RN 代码生成约束                | RN build 阶段                                  |
+| `reference/rn/xlb-style-system.md`        | XLB 风格系统规范               | RN build 阶段样式参考                          |
+| `reference/rn/icon-map.md`                | 图标名称映射                   | RN build 阶段                                  |
+| `reference/rn/token-map.json`             | CSS 变量 → theme token 映射    | RN build 阶段样式参考                          |
+| `reference/rn/style-scan-checklist.md`    | 样式合规扫描清单（终检）       | verify 阶段                                    |
+| `reference/common/state-schema.md`        | 状态机 Schema（v2.0）          | 所有阶段读写 state.json                        |
+| `reference/common/deviation-db-schema.md` | 偏差持久化库 Schema            | audit / build / verify                         |
+| `reference/common/context-budget.md`      | 上下文预算规则                 | audit / design / build / verify                |
+| `scripts/dtc-artifacts.mjs`               | 产物完整性检查脚本             | verify 交付前强制执行                          |
+| `scripts/dtc-classify-mode.mjs`           | 复杂度分级脚本                 | analyze 阶段写入 inputs.mode                   |
+| `scripts/dtc-metrics.mjs`                 | 指标收集脚本                   | 各阶段起止记录，verify 结束生成 run-metrics.md |
+| `reference/rn/gotchas/`                   | 已知问题库                     | build 阶段按需                                 |
+| H5 和 PC 的参考文件在各平台目录中声明     |                                |                                                |
 
 ## 偏差持久化库
 

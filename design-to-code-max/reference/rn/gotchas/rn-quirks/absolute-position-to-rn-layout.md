@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # HTML absolute/sticky 定位 → RN 布局翻译错误
 
 ## 问题描述

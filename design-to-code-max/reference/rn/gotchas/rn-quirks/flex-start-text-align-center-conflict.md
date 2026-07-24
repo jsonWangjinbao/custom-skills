@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # 父级 flex-start + 子级 text-align:center 对齐冲突
 
 **条件**：父容器 `align-items: flex-start`（或 `justify-content: flex-start`），子元素声明了 `text-align: center`。

@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # XlbInput 清空按钮不生效 — 禁止依赖 FormItemContainer 注入的 value/onChange
 
 **条件**：`XlbInput` 在 `XlbForm.Item` 内部使用时，点击清空按钮（×）后内容未清除。

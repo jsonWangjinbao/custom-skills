@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # img 的 width/height 为 0 不代表元素不可见
 
 **条件**：HTML 中 `<img>` 的 `width="0"` 或 `height="0"`。

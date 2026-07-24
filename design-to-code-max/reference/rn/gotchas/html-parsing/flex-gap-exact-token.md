@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # flex gap 值是精确的设计 token，不可近似
 
 **条件**：HTML 中出现 `gap: Npx`，N 不是 0/4/8/12/16 等常见值。

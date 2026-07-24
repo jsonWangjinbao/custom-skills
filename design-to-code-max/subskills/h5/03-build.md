@@ -10,6 +10,8 @@
 
 ## 任务
 
+> 上下文预算：本阶段读写遵循 `../../reference/common/context-budget.md`——每个分组只读 execution.md 当前分组 + 该分组涉及的 parsed-styles JSON，不整篇回读 ui-audit.md / tech-design.md；execution.md 已完成分组压缩为一行摘要。
+
 ### 1. 生成执行文档
 
 从 `tech-design.md` 拆解为分步执行步骤，使用 `../../templates/h5/execution.md.tpl` 格式生成 `execution.md`。

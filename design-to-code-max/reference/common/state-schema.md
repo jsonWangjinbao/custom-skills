@@ -5,6 +5,7 @@
 > 版本: 2.0
 > 2026-07-19：对齐三平台流水线（`currentPhase` 新增 `collect-materials`，phaseOutputs 补齐 `collect-materials` / `feature-spec`，`inputs` 补齐 `platform` / `requirementDocPath`）
 > 2026-07-23：§3.5 audit 补齐 `screenshotFindings` / `apiSpecSupplements` 字段定义（与三平台 audit subskill 对齐）
+> 2026-07-24：`inputs` 新增 `mode` 字段（quick/standard/full 复杂度分级），需求条目新增 `modeHistory`（分级升级历史，只升不降）
 
 ---
 
@@ -41,6 +42,7 @@
   "currentPhase": "build",
   "inputs": {
     "platform": "rn",
+    "mode": "standard",
     "requirementDocPath": "docs/requirement.md",
     "htmlPath": "src/cert-approve.html",
     "screenshotPath": "screenshots/cert.png",
@@ -59,6 +61,7 @@
   "phaseOutputs": {
     /* 见第 3 节 */
   },
+  "modeHistory": [],
   "performanceLog": [],
   "changeLog": [],
 }
@@ -76,20 +79,22 @@
 | `inputs`          | object | 是   | 输入材料路径                                                                                                                                  |
 | `docPaths`        | object | 是   | 各阶段生成的文档路径                                                                                                                          |
 | `phaseOutputs`    | object | 是   | 各阶段输出状态                                                                                                                                |
+| `modeHistory`     | array  | 是   | 复杂度分级历史（`[{ mode, evidence, at }]`），mode 升级时追加，只升不降                                                                       |
 | `performanceLog`  | array  | 是   | 性能计时日志数组                                                                                                                              |
 | `changeLog`       | array  | 是   | 变更记录数组                                                                                                                                  |
 
 ### inputs 字段说明
 
-| 字段                 | 类型   | 说明                                                         |
-| -------------------- | ------ | ------------------------------------------------------------ |
-| `platform`           | string | 目标平台：`"rn"` / `"h5"` / `"pc"`，平台路由与中断恢复的根据 |
-| `requirementDocPath` | string | 需求文档路径（飞书链接 / 本地文件）                          |
-| `htmlPath`           | string | HTML 设计稿路径（可多个，逗号分隔）                          |
-| `screenshotPath`     | string | 截图路径（可多个，逗号分隔）                                 |
-| `apiDocPath`         | string | 接口文档路径                                                 |
-| `description`        | string | 需求描述（口述需求时填入）                                   |
-| `originalCodePath`   | string | 原代码路径（重构模式必填；增量模式为增量模块目录）           |
+| 字段                 | 类型   | 说明                                                                                                                                                                                                 |
+| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `platform`           | string | 目标平台：`"rn"` / `"h5"` / `"pc"`，平台路由与中断恢复的根据                                                                                                                                         |
+| `mode`               | string | 复杂度分级：`"quick"` / `"standard"` / `"full"`，由 `scripts/dtc-classify-mode.mjs` 判定后写入，默认 `"standard"`；决定流程深度（quick 裁剪、full 强制状态矩阵），断点恢复与产物检查的根据；只升不降 |
+| `requirementDocPath` | string | 需求文档路径（飞书链接 / 本地文件）                                                                                                                                                                  |
+| `htmlPath`           | string | HTML 设计稿路径（可多个，逗号分隔）                                                                                                                                                                  |
+| `screenshotPath`     | string | 截图路径（可多个，逗号分隔）                                                                                                                                                                         |
+| `apiDocPath`         | string | 接口文档路径                                                                                                                                                                                         |
+| `description`        | string | 需求描述（口述需求时填入）                                                                                                                                                                           |
+| `originalCodePath`   | string | 原代码路径（重构模式必填；增量模式为增量模块目录）                                                                                                                                                   |
 
 ### docPaths 字段说明
 

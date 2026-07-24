@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-14"
+---
 # 禁止在需要显示 label 的 XlbForm.Item 上传 dependencies prop
 
 **条件**：`XlbForm.Item` 或 `CommonFormItem`（通过 `formItemProps`）收到 `dependencies` 属性。

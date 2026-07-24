@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # font-weight 跨平台视觉差异
 
 **条件**：HTML 声明的 `font-weight` 值在 300~600 范围内，目标平台为 RN。

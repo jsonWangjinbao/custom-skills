@@ -1,3 +1,7 @@
+---
+verifiedVersion: "n/a"
+verifiedAt: "2026-07-14"
+---
 # FSMS API 响应结构
 
 > 本文件记录 FSMS 项目 API 的通用响应格式，用于生成数据请求代码时的取值参考。

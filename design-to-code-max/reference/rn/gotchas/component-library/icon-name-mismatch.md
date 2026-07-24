@@ -1,3 +1,7 @@
+---
+verifiedVersion: "@xlb/components-mobile@1.0.396"
+verifiedAt: "2026-07-23"
+---
 # XlbIcon name 错误导致图标渲染为空
 
 ## 现象
