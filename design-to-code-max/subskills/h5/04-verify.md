@@ -21,6 +21,7 @@ verify 结束时执行指标汇总并生成 `run-metrics.md`：
 ```bash
 node <skill目录>/scripts/dtc-metrics.mjs end ".ai-wiki/【需求名】" verify --first-pass <true|false> --retries <N>
 node <skill目录>/scripts/dtc-metrics.mjs doc ".ai-wiki/【需求名】" ".ai-wiki/【需求名】/features.md" ".ai-wiki/【需求名】/api-spec.md" ".ai-wiki/【需求名】/ui-audit.md" ".ai-wiki/【需求名】/tech-design.md" ".ai-wiki/【需求名】/execution.md"
+> micro / quick 模式：api-spec.md 不存在，脚本自动跳过该文件，不影响指标生成。standard / full 模式：正常传入所有文档。
 node <skill目录>/scripts/dtc-metrics.mjs summary ".ai-wiki/【需求名】"
 ```
 
@@ -37,7 +38,9 @@ node <skill目录>/scripts/dtc-metrics.mjs summary ".ai-wiki/【需求名】"
 
 ### 1.1 API 合规检查
 
-对照 `api-spec.md` 执行以下 4 项检查：
+> **micro / quick 模式**：跳过此项（无独立 api-spec.md，API 信息在 features.md §接口清单 + §接口补充已足够）。**standard / full 模式**：执行以下 4 项检查。
+
+当 `inputs.mode !== "micro" && inputs.mode !== "quick"` 时，对照 `api-spec.md` 执行以下 4 项检查：
 
 | #   | 检查项     | 检查内容                                                                                                                | 违反后果         |
 | --- | ---------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------- |
@@ -45,6 +48,8 @@ node <skill目录>/scripts/dtc-metrics.mjs summary ".ai-wiki/【需求名】"
 | 2   | 取值路径   | 对照 api-spec.md 的取值路径配置，检查每个 API 调用的数据提取方式                                                        | 禁止进入下一阶段 |
 | 3   | 参数默认值 | 对照 api-spec.md 的请求参数表中标注了默认值的参数，检查代码是否实现了该默认值                                           | 标记需修复       |
 | 4   | mock 残留  | 检查 `status === "available"` 的接口，代码中是否还残留 mock 数据                                                        | 标记需清理       |
+
+**micro / quick 模式**：不执行上述 4 项检查，改为验证 features.md §接口补充的「关键响应字段」是否在代码中使用。检查结果记录到 scanResults。
 
 ### 1.5 双轴 Review（Standards + Spec，基于真实 git diff）
 
@@ -278,7 +283,7 @@ node <skill目录>/scripts/dtc-artifacts.mjs check ".ai-wiki/【需求名】" --
 ### Checklist（必须全部满足才能标记 checklistPassed: true）
 
 - [ ] 所有功能点已逐项验证（组件存在 + API 完整 + 联动实现）
-- [ ] **API 合规检查通过**（字段完整性、取值路径、参数默认值、mock 残留 4 项全通过）
+- [ ] **API 合规检查通过**（standard/full：字段完整性、取值路径、参数默认值、mock 残留 4 项全通过；micro/quick：features.md §接口补充关键响应字段已验证）
 - [ ] 视觉还原已通过 side-by-side 对比（或按 materialStatus 规则处理）
 - [ ] **浏览器验收通过**（触发条件命中时必跑；playwright-report.md 已产出，页面打开与主路径交互无失败，控制台无 error，无失败网络请求）
 - [ ] 样式合规扫描已通过（无硬编码 hex / magic number）
@@ -319,7 +324,7 @@ node <skill目录>/scripts/dtc-artifacts.mjs check ".ai-wiki/【需求名】" --
 - [x] analyze (平台/需求类型确认)
 - [x] collect-materials (材料收集完成)
 - [x] feature-spec (功能点: N 个)
-- [x] api-spec (接口: N 个, available: N, mock: N)
+- [x] api-spec (接口: N 个, available: N, mock: N) — standard/full 模式
 - [x] audit (组件决策: N 个, 黑盒风险: N 个)
 - [x] design (文件: N 个, 路由: N 个)
 - [x] build (分组: N/N, 功能点: N/N)

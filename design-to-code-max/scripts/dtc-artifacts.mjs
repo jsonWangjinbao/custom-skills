@@ -49,8 +49,8 @@ if (!["rn", "h5", "pc"].includes(platform)) {
 }
 
 const mode = getFlag("--mode", "standard") || "standard";
-if (!["quick", "standard", "full"].includes(mode)) {
-  fail("--mode 必须是 quick | standard | full");
+if (!["micro", "quick", "standard", "full"].includes(mode)) {
+  fail("--mode 必须是 micro | quick | standard | full");
 }
 
 const reqDir = path.resolve(reqDirArg);
@@ -67,6 +67,7 @@ const COMMON_DOCS = [
   "execution.md",
 ];
 const MODE_EXTRA_DOCS = {
+  micro: [],
   quick: [],
   standard: ["api-spec.md"],
   full: ["api-spec.md"],
@@ -131,7 +132,15 @@ if (!fs.existsSync(statePath)) {
 if (requirement) {
   const phases = requirement.phaseOutputs || {};
   const checklistPhases =
-    mode === "quick"
+    mode === "micro"
+      ? [
+          "analyze",
+          "collect-materials",
+          "feature-spec",
+          "build",
+          "verify",
+        ]
+      : mode === "quick"
       ? [
           "analyze",
           "collect-materials",
@@ -152,7 +161,9 @@ if (requirement) {
           "verify",
         ];
   const confirmPhases =
-    mode === "quick"
+    mode === "micro"
+      ? ["analyze", "collect-materials", "feature-spec"]
+      : mode === "quick"
       ? ["analyze", "collect-materials", "feature-spec", "audit", "design"]
       : [
           "analyze",
@@ -175,6 +186,20 @@ if (requirement) {
   }
   if (phases.build?.exitGatePassed !== true) {
     stateIssues.push("phaseOutputs.build.exitGatePassed !== true");
+  }
+
+  // groupGates：检查全部分组的门禁状态
+  const groupGates = phases.build?.groupGates || {};
+  const totalGroups = phases.build?.totalGroups || 0;
+  if (totalGroups > 0) {
+    for (let g = 1; g <= totalGroups; g++) {
+      const gate = groupGates[String(g)];
+      if (!gate || gate.passed !== true || gate.userApproved !== true) {
+        stateIssues.push(
+          `build.groupGates.${g}: passed=${gate?.passed ?? false}, userApproved=${gate?.userApproved ?? false} (expected both true)`,
+        );
+      }
+    }
   }
 
   // parsed-styles：state 声明了解析目录时才检查（材料 skipped / quick 无材料时允许为空）

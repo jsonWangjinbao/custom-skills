@@ -3,8 +3,22 @@
 ## 进入条件
 
 - 已 `Read .ai-wiki/.dtc-state.json`。
-- `phaseOutputs.api-spec.checklistPassed === true` 且 `phaseOutputs.api-spec.userConfirmed === true`。
+- **standard / full**：`phaseOutputs.api-spec.checklistPassed === true` 且 `phaseOutputs.api-spec.userConfirmed === true`。
+- **quick**：`inputs.mode === "quick"` 且 `phaseOutputs.feature-spec.checklistPassed === true` 且 `phaseOutputs.feature-spec.userConfirmed === true`（跳过了 api-spec，接口信息从 features.md §接口清单表消费）。
 - `currentPhase` 为 `audit`。
+
+---
+
+## quick 模式裁剪指引
+
+当 `inputs.mode === "quick"` 时：
+
+- **免做全量三要素表**：不对每个 UI 块逐一输出 Layout / Typography / Spacing 三张对比表
+- **仍强制执行**：组件选择决策表（默认渲染差异 + 补偿方案）；截图逐张 Read 双源交叉（有截图材料时）；HTML 结构化解析（产出 parsed-styles JSON 供 build 消费）
+- **产出简化**：ui-audit.md 只保留「组件选择决策表」+「黑盒风险」+「缺失项汇总」三章，跳过「关键样式规格」章节
+- **三要素数据保留**：parsed-styles JSON 照常生成，build 阶段直接从中消费样式数据，无需经过 ui-audit.md 中转
+
+> 若后续升级到 standard/full → 回退到此阶段补全全量三要素表。
 
 ---
 

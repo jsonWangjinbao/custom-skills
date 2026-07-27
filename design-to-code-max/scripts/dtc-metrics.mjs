@@ -66,8 +66,8 @@ function writeMetrics(metrics) {
   fs.writeFileSync(metricsPath, `${JSON.stringify(metrics, null, 2)}\n`);
 }
 
-const MODES = ["quick", "standard", "full"];
-const MODE_RANK = { quick: 1, standard: 2, full: 3 };
+const MODES = ["micro", "quick", "standard", "full"];
+const MODE_RANK = { micro: 0, quick: 1, standard: 2, full: 3 };
 
 // ---------- run-metrics.md 生成（summary / report 共用） ----------
 function buildReport(metrics) {

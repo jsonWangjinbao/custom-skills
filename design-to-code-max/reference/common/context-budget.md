@@ -36,6 +36,7 @@
 | audit             | features.md 功能点表 + api-spec.md 接口清单                                   | 需求原始材料全文（已在 collect-materials 落盘） |
 | design            | ui-audit.md 的「组件选择决策表」+「关键样式规格」章节路径                     | ui-audit.md 全文、原始 HTML                     |
 | build（每个分组） | execution.md 当前分组 + 该分组涉及的 parsed-styles JSON（定点 Read 单个文件） | 其他分组的 parsed JSON、ui-audit.md 全文        |
+| build 分组门禁     | Step 2 已加载的 parsed-styles 数据（复用，不重读）+ api-spec.md §3 本分组字段  | 不重新读取 parsed-styles 文件                   |
 | verify            | execution.md 分组摘要 + features.md 验收标准 + git diff                       | build 过程的中间叙述                            |
 
 只有当定点读取的内容缺少关键证据时，才允许回读全文，并在阶段日志中记录回读原因。

@@ -2,10 +2,12 @@
 
 > 本文件是 `.ai-wiki/.dtc-state.json` 的完整字段定义。
 > 从 SKILL.md 拆分而来，供所有 subskill 引用。
-> 版本: 2.0
+> 版本: 2.3
 > 2026-07-19：对齐三平台流水线（`currentPhase` 新增 `collect-materials`，phaseOutputs 补齐 `collect-materials` / `feature-spec`，`inputs` 补齐 `platform` / `requirementDocPath`）
 > 2026-07-23：§3.5 audit 补齐 `screenshotFindings` / `apiSpecSupplements` 字段定义（与三平台 audit subskill 对齐）
 > 2026-07-24：`inputs` 新增 `mode` 字段（quick/standard/full 复杂度分级），需求条目新增 `modeHistory`（分级升级历史，只升不降）
+> 2026-07-25：`build` 新增 `groupGates` 字段（每分组门禁结果，含 passed / userApproved 等 9 个子字段）
+> 2026-07-25：`inputs` 新增 `preliminaryMode` 字段（Phase 01 预判）；复杂度分级改为两阶段（preliminary + confirm）
 
 ---
 
@@ -14,7 +16,7 @@
 ```jsonc
 {
   "skill": "design-to-code-max",
-  "version": "2.0",
+  "version": "2.3",
   "startedAt": "2026-07-09T10:00:00Z",
   "updatedAt": "2026-07-09T12:00:00Z",
   "requirements": [],
@@ -42,6 +44,7 @@
   "currentPhase": "build",
   "inputs": {
     "platform": "rn",
+    "preliminaryMode": "standard",
     "mode": "standard",
     "requirementDocPath": "docs/requirement.md",
     "htmlPath": "src/cert-approve.html",
@@ -88,7 +91,8 @@
 | 字段                 | 类型   | 说明                                                                                                                                                                                                 |
 | -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `platform`           | string | 目标平台：`"rn"` / `"h5"` / `"pc"`，平台路由与中断恢复的根据                                                                                                                                         |
-| `mode`               | string | 复杂度分级：`"quick"` / `"standard"` / `"full"`，由 `scripts/dtc-classify-mode.mjs` 判定后写入，默认 `"standard"`；决定流程深度（quick 裁剪、full 强制状态矩阵），断点恢复与产物检查的根据；只升不降 |
+| `preliminaryMode`    | string | 【v2.2 新增】Phase 01 复杂度预判：`"micro"` / `"quick"` / `"standard"` / `"full"`，由 `--phase preliminary` 判定后写入，保守策略（默认 standard）；仅供参考，不裁剪流程                                       |
+| `mode`               | string | 复杂度正式分级：`"micro"` / `"quick"` / `"standard"` / `"full"`，由 Phase 03 `--phase confirm` 基于真实数据判定后写入；决定流程深度（quick 裁剪、full 强制状态矩阵），断点恢复与产物检查的根据；只升不降            |
 | `requirementDocPath` | string | 需求文档路径（飞书链接 / 本地文件）                                                                                                                                                                  |
 | `htmlPath`           | string | HTML 设计稿路径（可多个，逗号分隔）                                                                                                                                                                  |
 | `screenshotPath`     | string | 截图路径（可多个，逗号分隔）                                                                                                                                                                         |
@@ -302,23 +306,64 @@
     "modifiedFiles": ["src/pages/cert/index.tsx"],
     "htmlReadLog": ["分组1: parsed-styles/cert-approve.json"],
     "completedFeatureIds": ["F-001", "F-002"],
+    "groupGates": {
+      "1": {
+        "passed": true,
+        "userApproved": true,
+        "deviationsFound": 2,
+        "deviationsFixed": 2,
+        "minorDeferred": 1,
+        "revisions": 0,
+        "filesCreated": ["src/pages/cert/Index/index.tsx"],
+        "filesModified": [],
+        "completedFeatureIds": ["F-001", "F-002"]
+      },
+      "2": {
+        "passed": true,
+        "userApproved": true,
+        "deviationsFound": 1,
+        "deviationsFixed": 1,
+        "minorDeferred": 0,
+        "revisions": 1,
+        "filesCreated": [],
+        "filesModified": ["src/pages/cert/FormItems.tsx"],
+        "completedFeatureIds": ["F-003"]
+      }
+    },
     "exitGatePassed": false,
     "checklistPassed": false,
   },
 }
 ```
 
-| 字段                  | 类型     | 说明                                         |
-| --------------------- | -------- | -------------------------------------------- |
-| `totalGroups`         | number   | 总分数组                                     |
-| `completedGroups`     | number   | 已完成组数                                   |
-| `currentGroup`        | number   | 当前组号                                     |
-| `createdFiles`        | string[] | 新增文件列表                                 |
-| `modifiedFiles`       | string[] | 修改文件列表                                 |
-| `htmlReadLog`         | string[] | 【v2.0 增强】记录"HTML 已读"或"解析数据已读" |
-| `completedFeatureIds` | string[] | 已完成功能点 ID                              |
-| `exitGatePassed`      | boolean  | 出口门禁是否通过                             |
-| `checklistPassed`     | boolean  | 阶段 checklist 是否通过                      |
+| 字段                  | 类型     | 说明                                                   |
+| --------------------- | -------- | ------------------------------------------------------ |
+| `totalGroups`         | number   | 总分数组                                               |
+| `completedGroups`     | number   | 已完成组数                                             |
+| `currentGroup`        | number   | 当前组号                                               |
+| `createdFiles`        | string[] | 新增文件列表                                           |
+| `modifiedFiles`       | string[] | 修改文件列表                                           |
+| `htmlReadLog`         | string[] | 【v2.0 增强】记录"HTML 已读"或"解析数据已读"           |
+| `completedFeatureIds` | string[] | 已完成功能点 ID                                        |
+| `groupGates`          | object   | 【v2.1 新增】每分组门禁结果，key = 分组号              |
+| `exitGatePassed`      | boolean  | 出口门禁是否通过                                       |
+| `checklistPassed`     | boolean  | 阶段 checklist 是否通过                                |
+
+**groupGates 子字段：**
+
+| 字段                   | 类型     | 说明                                                     |
+| ---------------------- | -------- | -------------------------------------------------------- |
+| `passed`               | boolean  | 分组门禁 5 项自动检查是否全部通过                        |
+| `userApproved`         | boolean  | 人工审查是否确认通过（AskUserQuestion 用户选择"审查通过"）|
+| `deviationsFound`      | number   | 发现的设计偏差数                                         |
+| `deviationsFixed`      | number   | 已修复的偏差数                                           |
+| `minorDeferred`        | number   | 标记为不可修复的 minor 偏差数                            |
+| `revisions`            | number   | 人工审查退回修订次数                                     |
+| `filesCreated`         | string[] | 本分组新增的文件路径列表                                 |
+| `filesModified`        | string[] | 本分组修改的文件路径列表                                 |
+| `completedFeatureIds`  | string[] | 本分组完成的功能点 ID                                    |
+
+> 中断恢复时检查 `groupGates[N].passed` 和 `groupGates[N].userApproved`。任一不为 true → 该分组必须重新过门禁。
 
 ### 3.8 verify
 
@@ -395,8 +440,10 @@
 
 ## 5. 状态迁移规则
 
+### 5.1 正常流程
+
 ```text
-[init] → analyze ──✅+确认──→ collect-materials ──✅+确认──→ feature-spec ──✅+确认──→ api-spec ──✅+确认──→ audit ──✅+确认──→ design ──✅+确认──→ build ──出口门禁──→ verify ──✅──→ done
+[init] → analyze ──✅+确认──→ collect-materials ──✅+确认──→ feature-spec ──✅+确认──→ api-spec（micro 模式走虚线：feature-spec → build） ──✅+确认──→ audit ──✅+确认──→ design ──✅+确认──→ build ──出口门禁──→ verify ──✅──→ done
 ```
 
 - 每个阶段必须 `checklistPassed === true` 才能推进
@@ -404,6 +451,62 @@
 - build 阶段还需 `exitGatePassed === true`
 - 任何阶段不满足条件 → 停止并告知用户
 - 用户提出修改时，从 done 或 verify 回退到 build，追加 changeLog 条目
+
+### 5.2 micro / quick 模式快捷路径
+
+**micro 模式**（极简路径）：
+```text
+feature-spec ──✅+确认──→ build（跳过 api-spec / audit / design）
+```
+
+当 `inputs.mode === "micro"` 时，feature-spec 确认后直接跳到 build。跳过三个阶段，build 从 features.md 的极简格式中消费 API 信息。
+
+**quick 模式**：
+
+```text
+feature-spec ──✅+确认──→ audit ──✅+确认──→ design ──→ (跳过 api-spec)
+```
+
+当 `inputs.mode === "quick"` 时，feature-spec 确认后直接跳到 audit，跳过 api-spec 阶段。`04-api-spec.md` 检测到 quick 模式后自动设置 `currentPhase = "audit"` 并 fallthrough。
+
+### 5.3 模式升级回退路径
+
+当 mode 在 build 阶段从 micro 升级到 quick/standard/full 时，需回退补全跳过的阶段：
+
+```text
+micro: build → (升级到 quick/standard/full)
+           ↓ 检测到缺少 ui-audit.md / tech-design.md（和 api-spec.md for standard/full）
+           ↓ 回退 currentPhase → "audit"（跳过了 audit + design）
+           → audit（生成 ui-audit.md + parsed-styles JSON）
+           → design（生成 tech-design.md + execution.md）
+           ↓ 若升级到 standard/full 还需补全 api-spec
+           → api-spec（生成 api-spec.md）
+           → 推进 currentPhase 回到 build
+```
+
+当 mode 在 audit 或 design 阶段从 quick 升级到 standard/full 时，需回退补全跳过的阶段：
+
+```text
+quick: audit → design → (升级到 standard/full)
+                        ↓ 检测到缺少 phaseOutputs.api-spec
+                        ↓ 回退 currentPhase → "api-spec"
+                        → api-spec（补全 api-spec.md + phaseOutputs.api-spec）
+                        → 推进 currentPhase 回到 design
+                        → 继续
+
+quick: build → (升级到 standard/full)
+              ↓ 检测到缺少 api-spec.md
+              ↓ 回退到 audit 后的流程（api-spec 已跳过但 audit 已生成 ui-audit.md）
+              ↓ 独立运行 api-spec 阶段（不重跑 audit）
+              ↓ 合并到已有 features.md
+              ↓ 推进 currentPhase 回到 build
+```
+
+**回退规则**：
+- 只回退到**第一个缺失产物的阶段**（quick → standard 时回退到 api-spec；standard → full 时在 feature-spec 内补齐状态矩阵即可）
+- 不重跑已完成的阶段（如 audit 已有 ui-audit.md 则不重跑）
+- 回退时在 changeLog 中记录 `{ type: "mode-upgrade", desc: "从 quick 升级到 standard，回退补全 api-spec" }`
+- 升级后 `modeHistory` 追加记录，`inputs.mode` 更新为新的 mode 值
 
 ---
 

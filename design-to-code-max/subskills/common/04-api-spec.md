@@ -8,6 +8,26 @@
 - `phaseOutputs.feature-spec.checklistPassed === true` 且 `phaseOutputs.feature-spec.userConfirmed === true`。
 - `currentPhase` 为 `api-spec`。
 
+**micro / quick 模式（自动跳过）**：若 `inputs.mode === "micro"` 或 `inputs.mode === "quick"` 或进入后检查到 micro/quick 模式 → 立即执行以下操作，不执行本阶段任何其他任务：
+1. 将 `currentPhase` 推进到 `audit`
+2. 更新 `.ai-wiki/.dtc-state.json`
+3. fallthrough 到 `subskills/{platform}/01-audit.md`（根据 `inputs.platform` 路由）
+4. 在 features.md 的性能计时日志中记录 `api-spec 跳过（quick 模式）: HH:MM`
+
+**standard / full 模式**：`inputs.mode !== "quick"` 时正常执行以下任务。
+
+## quick 模式裁剪指引
+
+当 `inputs.mode === "quick"` 时，跳过独立 api-spec 阶段。接口信息在 features.md 的「接口清单表」中简化记录：
+
+- 每个接口只保留：接口名、URL、用途
+- 不生成独立 `api-spec.md` 文件
+- 不生成详细的请求参数表和响应字段表
+- 不生成 mock 数据模板
+- audit 和 build 阶段消费 API 信息时直接读取 features.md 的接口清单表
+
+> 若后续升级到 standard/full → 回退到此阶段补全完整 api-spec.md。
+
 ## 阶段定位
 
 ```

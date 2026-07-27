@@ -15,8 +15,8 @@ description: >-
 2. **Token 唯一来源**：所有色值、字号、间距、圆角必须来自项目 token 系统；禁止硬编码 hex、magic number。各平台 token 系统参见对应平台的 guidelines。
 3. **必须消费输入材料才能写代码**：每个执行分组开始前必须已读取对应 UI 分析文档并记录日志；未读不得写代码。
 4. **黑盒组件先查差异**：使用封装组件前，必须先确认其默认渲染与目标差异，写入组件选择决策表。
-5. **阶段未 checkpoint 禁止推进**：每阶段结束后必须更新 `.ai-wiki/.dtc-state.json` 并通过本阶段 checklist。analyze / collect-materials / feature-spec / api-spec / audit / design 六阶段还需用户确认（`userConfirmed === true`）。
-6. **执行分组闭环**：每个分组完成后必须完成所有步骤（读设计 → 读样式 → 生成代码 → 编译抽检 → 更新文档 → 更新状态），缺一不可。
+5. **阶段未 checkpoint 禁止推进**：每阶段结束后必须更新 `.ai-wiki/.dtc-state.json` 并通过本阶段 checklist。analyze / collect-materials / feature-spec / api-spec / audit / design 六阶段还需阶段级用户确认（`userConfirmed === true`）。build 阶段不设阶段级 `userConfirmed`，但在每个分组内通过 `groupGates[N].userApproved` 实现逐分组人工审查门禁。
+6. **执行分组闭环**：每个分组完成后必须完成所有步骤（读设计 → 读样式 → 生成代码 → 分组门禁（含人工审查） → 更新文档 → 更新状态），缺一不可。分组门禁 5 项自动检查 + 人工审查全部通过才能进入下一分组。
 7. **样式合规是终检门禁**：先生成功能完整代码，所有分组完成后统一扫描修复样式问题。修复时禁止为改样式而简化功能。
 8. **平台约束隔离**：RN 流水线只能引用 `reference/rn/` 的规则，H5 流水线只能引用 `reference/h5/`，PC 流水线只能引用 `reference/pc/`，禁止跨平台引用。
 
@@ -50,8 +50,10 @@ description: >-
 | API 规格设计 | `subskills/common/04-api-spec.md`          | 是       |
 | UI 审计      | `subskills/{platform}/01-audit.md`         | 是       |
 | 技术设计     | `subskills/{platform}/02-design.md`        | 是       |
-| 代码生成     | `subskills/{platform}/03-build.md`         | 否       |
+| 代码生成     | `subskills/{platform}/03-build.md`         | 逐分组\*    |
 | 验证         | `subskills/{platform}/04-verify.md`        | 否       |
+
+> \* build 阶段不设阶段级 `userConfirmed`，但每个分组完成后必须通过 `AskUserQuestion` 人工审查（`groupGates[N].userApproved === true`）才能进入下一分组。
 
 ## 渐进式披露
 
@@ -97,7 +99,9 @@ description: >-
    - `currentPhase !== "done"` → 跳到对应阶段 subskill（根据 `inputs.platform` 路由到对应平台），从断点继续
    - `currentPhase === "done"` → 询问是否需要修改，小改追加 changeLog 回退 build，大改走新需求
 5. 用户选择新需求 → 走 init 流程（见 `subskills/common/01-analyze.md`）
-6. **build 阶段恢复额外检查**：检查上一个已完成分组的 `htmlReadLog` 或 `解析数据已读` 日志，缺失则提示重新读取 HTML 或解析数据
+6. **build 阶段恢复额外检查**：
+   - 检查 `build.groupGates[N]` 中上一分组的 `passed` 和 `userApproved`：`passed: false` → 重跑门禁；`userApproved: false` → 跳到人工审查；两者 true → 正常进入下一分组
+   - 检查上一分组的 `htmlReadLog` 或 `解析数据已读` 日志，缺失则提示重新读取 HTML 或解析数据
 
 ## 性能计时
 
@@ -138,11 +142,11 @@ description: >-
 | `reference/rn/icon-map.md`                | 图标名称映射                   | RN build 阶段                                  |
 | `reference/rn/token-map.json`             | CSS 变量 → theme token 映射    | RN build 阶段样式参考                          |
 | `reference/rn/style-scan-checklist.md`    | 样式合规扫描清单（终检）       | verify 阶段                                    |
-| `reference/common/state-schema.md`        | 状态机 Schema（v2.0）          | 所有阶段读写 state.json                        |
+| `reference/common/state-schema.md`        | 状态机 Schema（v2.3）          | 所有阶段读写 state.json                        |
 | `reference/common/deviation-db-schema.md` | 偏差持久化库 Schema            | audit / build / verify                         |
 | `reference/common/context-budget.md`      | 上下文预算规则                 | audit / design / build / verify                |
 | `scripts/dtc-artifacts.mjs`               | 产物完整性检查脚本             | verify 交付前强制执行                          |
-| `scripts/dtc-classify-mode.mjs`           | 复杂度分级脚本                 | analyze 阶段写入 inputs.mode                   |
+| `scripts/dtc-classify-mode.mjs`           | 复杂度分级脚本（两阶段：preliminary + confirm） | Phase 01 预判 → inputs.preliminaryMode；Phase 03 确认 → inputs.mode |
 | `scripts/dtc-metrics.mjs`                 | 指标收集脚本                   | 各阶段起止记录，verify 结束生成 run-metrics.md |
 | `reference/rn/gotchas/`                   | 已知问题库                     | build 阶段按需                                 |
 | H5 和 PC 的参考文件在各平台目录中声明     |                                |                                                |
