@@ -225,5 +225,28 @@
     ],
     "symptoms": "店铺说明文件上传更新后，切到员工健康证添加员工再切回，旧文件仍显示，需再切换一次才清空",
     "title": "API回填shuomingfiles未按certType条件化，导致切回店铺说明文件时旧文件残留"
+  },
+  {
+    "file": "2026-07-24-usewatch-unregistered-field-preserve.md",
+    "project": "remote-app-fsms",
+    "date": "2026-07-24",
+    "tags": [
+      "XlbForm",
+      "useWatch",
+      "preserve",
+      "rc-field-form",
+      "setFieldsValue",
+      "未注册字段",
+      "check_type"
+    ],
+    "files": [
+      "src/pages/storeHouseFsmsNative/BatchAdd/index.tsx",
+      "src/pages/storeHouseFsmsNative/Add/chunks/BaseInfoSection.tsx",
+      "src/pages/storeHouseFsmsNative/Add/chunks/CheckItemsSection.tsx",
+      "src/pages/storeHouseFsmsNative/Add/chunks/JudgeSection.tsx",
+      "src/pages/storeHouseFsmsNative/Add/chunks/ResultSection.tsx"
+    ],
+    "symptoms": "setFieldsValue 已把值写入 form store，但 useWatch 恒 undefined（批次质检页缺抽检明细 tab、只读行全显示-）",
+    "title": "rc-field-form useWatch 默认丢未注册字段值，需 preserve:true"
   }
 ]

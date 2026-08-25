@@ -64,14 +64,15 @@ constants.FONT 字段）
 > 重点关注「黑盒封装组件」（如 `CommonFormItem`、`XlbUploadFile`、`XlbCard`），它们的内部布局/间距/行高由组件库决定，使用者无法直接控制。
 > 参考 `reference/rn/gotchas/component-library/blackbox-wrapper-component.md` 识别风险。
 
-| UI 元素 | 候选组件库组件 | 默认渲染输出 | 与 HTML 目标的差异 | 是否需要额外定制 | 补偿方案 |
-|---------|---------------|------------|-------------------|----------------|---------|
-| {{表单字段行}} | {{CommonFormItem type="input"}} | {{XlbForm.Item 默认行布局}} | {{行高不可控、无分隔线、对齐方式取决于组件库}} | {{是}} |
-{{插入 Divider / 自定义 XlbForm.Item}} |
-| {{上传缩略图}} | {{XlbUploadFile}} | {{文件卡片列表}} | {{HTML 是 52px 缩略图 + 删除按钮}} | {{是}} | {{检查 props 或自定义渲染}} |
-| {{Tab 导航}} | {{XlbTabs}} | {{标准 Tab}} | {{无差异}} | {{否}} | {{直接使用}} |
-| {{选择器按钮组}} | {{CommonFormItem type="selector"}} | {{XlbSelector 2列}} | {{尺寸/间距与 HTML 不一致}} | {{是}} | {{自定义 itemStyle}}
-|
+| UI 元素 | 候选组件库组件 | 能力举证（需求 → 承接 prop/事件） | 默认渲染输出 | 与 HTML 目标的差异 | 是否需要额外定制 | 补偿方案 |
+|---------|---------------|--------------------------------|------------|-------------------|----------------|---------|
+| {{表单字段行}} | {{XlbForm.Item + XlbInput}} | {{输入 → Form 注入 value/onChange；清空 → ClearableInput 模式}} |
+{{XlbForm.Item 默认行布局}} | {{行高不可控、无分隔线}} | {{是}} | {{自定义 XlbForm.Item + 插入 Divider}} |
+| {{上传缩略图}} | {{XlbUploadFile}} | {{上传 → customUpload；删除/预览 → 组件自带}} | {{缩略图网格}} | {{无差异}} | {{否}} |
+{{按设计稿配 filesMax/uploadText}} |
+| {{Tab 导航}} | {{XlbTabs}} | {{切换 → activeKey/onChange}} | {{标准 Tab}} | {{无差异}} | {{否}} | {{直接使用}} |
+| {{选择器按钮组}} | {{XlbSelector}} | {{单选 → value[0]；联动 → useWatch（onChange 被 Form 覆盖）}} | {{XlbSelector 2列}} |
+{{尺寸/间距与 HTML 不一致}} | {{是}} | {{自定义 itemStyle}} |
 
 > 差异分析结果将作为 `tech-design.md` 「组件选择决策表」的输入。
 

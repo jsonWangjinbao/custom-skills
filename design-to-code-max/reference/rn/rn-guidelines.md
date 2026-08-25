@@ -206,6 +206,31 @@ child: { marginTop: SPACE.SPACE_8 },  // column 方向，非首子元素
 | `<img>`            | `<Image source={...} />` |
 | 包含文本的 `<div>` | `<Text>`                 |
 
+## 组件库使用清单
+
+**完整清单与逐组件能力卡**：`reference/rn/component-capabilities/_index.md`。
+
+> 能力卡由 `scripts/dtc-rn-component-cards.mjs` 从业务项目 `node_modules/@xlb/components-react-native` 源码提取生成（Props/默认值/说明均为源码实证）；**组件库升级后必须重跑该脚本刷新**。
+
+**选型规则（audit 阶段强制）：**
+
+1. **场景绑定优先**：能力卡「场景绑定」区命中设计稿特征 → 直接使用对应组件，禁止自由发挥
+2. **先读卡再选型**：候选组件必须读其能力卡的「Props 能力清单」「能力边界」「关联 Gotchas」后再写入决策表
+3. **能力举证**：设计稿要求的交互/功能，逐条标注由组件哪个 prop/事件承接；承接不上 → 换组件 / 组件组合 / 定制实现（进黑盒风险）
+4. **以源码为准**：组件 props 与记忆不符时，以 `node_modules/@xlb/components-react-native/src/components/` 源码为准，禁止凭记忆编写
+
+**高频组件速查**（能力边界与易混淆对比详见各卡片）：
+
+| 场景                     | 组件                       | 关键约束                                                              |
+| ------------------------ | -------------------------- | --------------------------------------------------------------------- |
+| 表单容器 / 表单行        | `XlbForm` + `XlbForm.Item` | 禁 dependencies/shouldUpdate/render prop；水平 padding 走 `cellTheme` |
+| 平铺选项选择组（选项少） | `XlbSelector`              | 单选也返回数组；Form 内 onChange 被覆盖，联动用 useWatch              |
+| 弹层选择（选项多）       | `XlbPicker`                | —                                                                     |
+| 单日选择行               | `XlbDatePicker`            | 必须 DatePickerField 包装拦截 onChange，`onConfirm` 回填              |
+| 照片/证件上传区          | `XlbUploadFile`            | 必传 filesMax/customUpload/uploadText；数组 name 用 SafeUploadFile    |
+| 文本输入行               | `XlbInput`                 | 数组 name 用 SafeInput；iOS 清空回退用 ClearableInput 模式            |
+| 图标                     | `XlbIcon`（@xlb/icon-rn）  | name 用 iconfontGlyphMap key，禁 `icon_` 前缀                         |
+
 ## fontFamily 显式传递
 
 `XlbText` 内置 fontFamily 注入，但 `<Text>` 和 `<XlbInput>` 底层使用系统默认字体。
