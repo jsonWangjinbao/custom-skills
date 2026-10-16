@@ -232,7 +232,7 @@ export type DnEventKey = keyof typeof DN_EVENTS;
 
 ## 公共字段（tracker 自动注入，调用方不传）
 
-event_id / event_ver、page_* 组（page_code/page_name/page_path/route_url/page_referrer）、用户组（company/store/user/supplier）、链条组（session_id/trace_id/page_event_seq/chain_id/chain_step/is_chain_start/is_chain_end）、单据组（order_type/order_fid/order_no/order_state/order_state_after/batch_count/order_fids/source_*）、结果组（action_result/fail_reason/validate_fail_fields/validate_fail_details）、接口组（api_url/api_code/api_msg/api_duration，trackAction 自动捕获；api_params/api_response 全环境截断附加）。
+event_id / event_ver、page_* 组（page_code/page_name/page_path/route_url/page_referrer）、用户组（company/store/user/supplier）、链条组（session_id/trace_id/page_event_seq/chain_id/chain_step/is_chain_start/is_chain_end）、单据组（order_type/order_fid/order_no/order_state/order_state_after/batch_count/order_fids/source_*）、结果组（action_result/fail_reason/validate_fail_fields/validate_fail_details）、接口组（api_url/api_code/api_msg/api_duration，trackAction 自动捕获；RN 端另带 api_start_time/api_end_time（ms 时间戳）与 api_trace_id（服务端响应头 traceid）；api_params/api_response 全环境截断附加）。
 
 调用方只关心 `def + order + result + stateAfter + extra`。
 

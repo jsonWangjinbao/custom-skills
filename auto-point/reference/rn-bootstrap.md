@@ -358,7 +358,7 @@ export const reportEvent = (
 ```ts
 /**
  * 操作类接口捕获：http 拦截器 + 白名单
- * 白名单内的接口调用自动捕获 url/params/耗时，trackAction 完成时按时间窗认领关联
+ * 白名单内的接口调用自动捕获 url/params/耗时/起止时间/响应头 traceid，trackAction 完成时按时间窗认领关联
  * 口径与 web 端一致：只收操作类（写）接口，查询接口不入列
  *
  * 【适配点 D】拦截器挂载：installApiCapture(axiosInstance)，在应用入口或首个
@@ -375,6 +375,12 @@ export interface CapturedApiCall {
   url: string;
   params?: any;
   duration?: number;
+  /** 请求发起时间（ms 时间戳） */
+  startTime?: number;
+  /** 响应返回时间（ms 时间戳） */
+  endTime?: number;
+  /** 服务端响应头 traceid，用于关联后端链路 */
+  traceId?: string;
   ts: number;
 }
 
@@ -391,18 +397,28 @@ const parseRequestData = (data: any): any => {
   }
 };
 
-const capture = (config: any): void => {
+const readTraceId = (headers: any): string | undefined => {
+  const value = headers?.get?.('traceid') ?? headers?.traceid;
+  return typeof value === 'string' && value ? value : undefined;
+};
+
+// source 为 axios response 或 AxiosError（部分封装请求库的错误拦截器会 resolve err，也会进成功分支）。
+const capture = (source: any): void => {
   try {
+    const config = source?.config;
     const url: string = config?.url ?? '';
     const path = url.split('?')[0];
     if (!API_CAPTURE_WHITELIST.includes(path)) return;
+    const startTime: number | undefined = config?.__captureStart;
+    const endTime = Date.now();
     buffer.push({
       url: path,
       params: parseRequestData(config?.data),
-      duration: config?.__captureStart
-        ? Date.now() - config.__captureStart
-        : undefined,
-      ts: Date.now(),
+      duration: startTime ? endTime - startTime : undefined,
+      startTime,
+      endTime,
+      traceId: readTraceId(source?.headers ?? source?.response?.headers),
+      ts: endTime,
     });
     if (buffer.length > BUFFER_LIMIT)
       buffer.splice(0, buffer.length - BUFFER_LIMIT);
@@ -424,11 +440,11 @@ export const installApiCapture = (http?: {
     });
     http.interceptors.response.use(
       (response: any) => {
-        capture(response?.config);
+        capture(response);
         return response;
       },
       (error: any) => {
-        capture(error?.config);
+        capture(error);
         return Promise.reject(error);
       },
     );
@@ -691,6 +707,7 @@ class BizTracker {
     const start = Date.now();
     try {
       const res: any = await options.action();
+      const end = Date.now();
       const captured = claimApiCapture(start, options.apiUrl);
       const success = isApiSuccess(res);
       this.track(def, {
@@ -702,14 +719,18 @@ class BizTracker {
           url: options.apiUrl ?? captured?.url,
           code: res?.code,
           msg: res?.msg,
-          duration: captured?.duration ?? Date.now() - start,
+          duration: captured?.duration ?? end - start,
+          startTime: captured?.startTime ?? start,
+          endTime: captured?.endTime ?? end,
           params: options.apiParams ?? captured?.params,
           response: res,
+          traceId: captured?.traceId,
         },
         extra: options.extra,
       });
       return res;
     } catch (e: any) {
+      const end = Date.now();
       const captured = claimApiCapture(start, options.apiUrl);
       this.track(def, {
         order: options.order,
@@ -718,8 +739,11 @@ class BizTracker {
         api: {
           url: options.apiUrl ?? captured?.url,
           msg: e?.message,
-          duration: captured?.duration ?? Date.now() - start,
+          duration: captured?.duration ?? end - start,
+          startTime: captured?.startTime ?? start,
+          endTime: captured?.endTime ?? end,
           params: options.apiParams ?? captured?.params,
+          traceId: captured?.traceId,
         },
         extra: options.extra,
       });
@@ -808,6 +832,9 @@ class BizTracker {
       api_code: options.api?.code,
       api_msg: options.api?.msg,
       api_duration: options.api?.duration,
+      api_start_time: options.api?.startTime,
+      api_end_time: options.api?.endTime,
+      api_trace_id: options.api?.traceId,
       api_params: truncatePayload(options.api?.params),
       api_response: truncatePayload(sanitizeApiResponse(options.api?.response)),
       // 环境组

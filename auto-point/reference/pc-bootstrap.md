@@ -2218,10 +2218,15 @@ export interface ApiOutcome {
   code?: number | string;
   msg?: string;
   duration?: number;
+  /** 接口开始/结束时间（ms 时间戳，当前仅 RN 端填充） */
+  startTime?: number;
+  endTime?: number;
   /** 入参快照（JSON 超 8KB 截断） */
   params?: any;
   /** 返回值快照（净化后仅留 code/msg/data，JSON 超 8KB 截断） */
   response?: any;
+  /** 服务端响应头 traceid（当前仅 RN 端填充） */
+  traceId?: string;
 }
 
 /** 业务埋点调用参数 */
