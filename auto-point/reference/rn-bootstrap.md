@@ -1,14 +1,15 @@
-# RN 端从零封装（无基建项目 bootstrap）
+# RN 端标准结构（bootstrap 与预改造的唯一对齐基准）
 
-> 目标项目**没有任何埋点封装**时使用。本文件内联全套可落位代码（提炼自生产验证过的 SCM RN 产线封装），按文件树落位 + 完成「适配点」改写后，事件即可真实上报。
-> 目标项目已有封装时**禁止使用本文件**，复用既有封装（见 02-survey 基建检查分岔）。
+> 本文件定义 RN 端 `src/tracking` 的**唯一标准结构**，内联全套可落位代码（提炼自生产验证过的 SCM RN 产线封装），按文件树落位 + 完成「适配点」改写后，事件即可真实上报。
+> 使用场景按 02-survey RN 分级：A 级全套落位；B/C 级作为 03b 预改造对齐基准；D 级用于核对。项目中已有的其他埋点（友盟/神策/自写 track 工具等）**不算已有封装**，不影响本文件的使用，原样保留即可（SKILL 铁律 6）。
 > 与 PC 端语义完全对齐：同一套 types、同一套 tracker 公共方法签名；`types.ts` 与 [pc-bootstrap.md](pc-bootstrap.md) 中的完全一致，原样落位即可（本文不重复贴出）。
 
 ## 前置检测（02-survey 阶段完成）
 
 | 检测项 | 方法 | 影响 |
 | --- | --- | --- |
-| 青鸟 SDK | 宿主 App 是否集成 `@xlb/react-native-qingniao-lib` | 未集成 → 优雅降级 no-op（代码能跑、事件不发），**人工依赖** |
+| 青鸟 SDK | 宿主 App 是否集成 `@xlb/react-native-qingniao-lib`（宿主 package.json 版本号） | 未集成 → 优雅降级 no-op（代码能跑、事件不发），**人工依赖** |
+| 环境标定 | 宿主 `initQNSDKWithDefaultConfig(appId, platform, env, ...)` 第三参来源（标准：`Config.ENV`，取自 `.env.dev/.env.test/.env.staging/.env.prod` 的 `ENV=DEV/TEST/STAGING/PROD`） | 第三参写死或缺失 → 全部事件 `app.env` 错标，**人工依赖**（宿主侧修复）；远程包不得自行判定 env |
 | 导航容器 | React Navigation 的 navigationRef 位置 | 【适配点 B】route_url/page_referrer 取数 |
 | 用户信息源 | 登录用户状态模型（authModel / store / context） | 【适配点 A】 |
 | http 客户端 | axios 实例 / 封装请求库 | 【适配点 D】apiCapture 拦截器挂载 |
@@ -206,7 +207,21 @@ export const traceManager = new TraceManager();
  * 上报通道：青鸟 RN SDK（@xlb/react-native-qingniao-lib）适配层
  *
  * 集成约束：整个 App 只初始化一次，由宿主 App 负责（initQNSDKWithDefaultConfig /
- * setGlobalInfo / registerNavigationContainer）；本层只消费 triggerEvent。
+ * setGlobalInfo / registerNavigationContainer）；本层只消费上报方法。
+ *
+ * 环境口径（SDK 1.1.6 源码核实）：
+ * - app.env 由宿主 init 第三参决定（标准传 Config.ENV：DEV/TEST/STAGING/PROD），
+ *   原生侧转小写写入事件 → dev/test/staging/prod，与 web 端 xlb-tracker 上报值一致
+ * - 所有环境写同一 logstore（tracking-point-project / prod_tracking_point_log），
+ *   测试与生产数据只能按 app.env 区分；远程包不得自行判定或覆盖 env
+ *
+ * 初始化时序：宿主登录后才异步 init（拉配置 + STS），init 前 triggerEvent 会被原生侧丢弃；
+ * 优先使用 triggerEventBeforeInit（init 前缓存、init 后等价 triggerEvent），旧版本 SDK 回退 triggerEvent。
+ *
+ * ⚠ Android 崩溃风险（SDK 1.1.6）：setTopic / getLogstore / isValid 等 config 类方法在 init 完成前
+ *   访问 null config 触发原生 NPE（经 bridge 异步执行，JS try/catch 接不住）；iOS 向 nil 发消息无影响。
+ *   本层只在确认宿主已调用 init 后才调 setTopic，并且不调用其他 config 类方法；
+ *   剩余窗口（已调 init、STS 未返回）需 SDK 方补判空后才能完全消除。
  *
  * 优雅降级：SDK 懒加载 + 调用全 try/catch——宿主未集成 / 原生侧未链接时
  * 静默降级为 no-op，绝不影响业务。
@@ -226,8 +241,12 @@ export interface QingniaoEventInfo {
 
 interface QingniaoSdk {
   triggerEvent: (info: QingniaoEventInfo, flush: boolean) => void;
-  /** SLS topic（看板按 __topic__ 拉取；SDK 缺省为空，需显式设置） */
+  /** init 前缓存、init 后等价 triggerEvent（SDK 1.1.x 起提供） */
+  triggerEventBeforeInit?: (info: QingniaoEventInfo, flush: boolean) => void;
+  /** SLS topic（看板按 __topic__ 拉取；SDK 缺省为空，需显式设置）；Android init 完成前调用会 NPE */
   setTopic?: (topic: string) => void;
+  /** 原生侧全局信息快照（含 app.id / app.env）；init 前调用安全，宿主调用 init 后即有 app 信息 */
+  getGlobalEventInfo?: () => Promise<Record<string, any>>;
 }
 
 /** undefined=未探测；null=不可用 */
@@ -245,21 +264,68 @@ const getSdk = (): QingniaoSdk | null => {
   return cached ?? null;
 };
 
-/** 通道是否可用（verify 阶段检测用：false 说明宿主未集成，事件不会发出） */
+/** 通道模块是否可用（false 说明宿主未集成，事件不会发出；true 不代表宿主已 init，见 getReporterDiagnostics） */
 export const isReporterReady = (): boolean => getSdk() !== null;
 
+export interface ReporterDiagnostics {
+  /** SDK 模块可加载 */
+  sdkLoaded: boolean;
+  /** 宿主已调用 init（原生侧已写入 app 信息；不代表 STS 已就绪，最终以 SLS 落库为准） */
+  initCalled: boolean;
+  /** 实际上报的 app.env（dev/test/staging/prod） */
+  env?: string;
+  appId?: string;
+}
+
+const readAppInfo = async (
+  sdk: QingniaoSdk,
+): Promise<Record<string, any> | undefined> => {
+  try {
+    const info = await sdk.getGlobalEventInfo?.();
+    return info?.app;
+  } catch {
+    return undefined;
+  }
+};
+
+/** 通道诊断（verify 阶段用）：确认宿主已 init 与实际上报环境；只调 init 前安全的接口 */
+export const getReporterDiagnostics = async (): Promise<ReporterDiagnostics> => {
+  const sdk = getSdk();
+  if (!sdk) return {sdkLoaded: false, initCalled: false};
+  const app = await readAppInfo(sdk);
+  return {
+    sdkLoaded: true,
+    initCalled: !!app?.id,
+    env: app?.env,
+    appId: app?.id,
+  };
+};
+
+let topicApplied = false;
+
 /**
- * 设置 SLS topic（全局单例，幂等）
+ * 设置 SLS topic（幂等，只生效一次）
  * 【适配点 E】topic 与 web 端同口径；不设置看板查不到 RN 事件
+ * 宿主未调用 init 时跳过（规避 Android NPE），下次 register 时重试
+ * ⚠ SDK 内 topic 为宿主全局单例：远程包设置后，宿主及其他远程包的事件（自动 PV、异常、TTI 6004）
+ *   均带该 topic；多业务域远程包接入时会互相覆盖。最终方案待与青鸟 SDK 方确认（按事件指定 topic /
+ *   改由 biz.biz_product 区分），确认前沿用本实现，并在 verify-report「风险与疑问」中登记。
  */
 export const setReporterTopic = (topic: string): void => {
-  try {
-    getSdk()?.setTopic?.(topic);
-  } catch (e) {
-    if (__DEV__) {
-      console.warn('[tracking] setTopic error', e);
+  if (topicApplied) return;
+  const sdk = getSdk();
+  if (!sdk?.setTopic) return;
+  readAppInfo(sdk).then(app => {
+    if (!app?.id || topicApplied) return;
+    try {
+      sdk.setTopic?.(topic);
+      topicApplied = true;
+    } catch (e) {
+      if (__DEV__) {
+        console.warn('[tracking] setTopic error', e);
+      }
     }
-  }
+  });
 };
 
 /**
@@ -271,7 +337,14 @@ export const reportEvent = (
   flush = false,
 ): void => {
   try {
-    getSdk()?.triggerEvent(info, flush);
+    const sdk = getSdk();
+    if (!sdk) return;
+    // init 前事件由 SDK 缓存，避免登录后首屏 PAGE_VIEW 丢失
+    if (typeof sdk.triggerEventBeforeInit === 'function') {
+      sdk.triggerEventBeforeInit(info, flush);
+    } else {
+      sdk.triggerEvent(info, flush);
+    }
   } catch (e) {
     if (__DEV__) {
       console.warn('[tracking] reportEvent error', e);
@@ -360,7 +433,9 @@ export const installApiCapture = (http?: {
       },
     );
   } catch (e) {
-    console.warn('[tracking] installApiCapture error', e);
+    if (__DEV__) {
+      console.warn('[tracking] installApiCapture error', e);
+    }
   }
 };
 
@@ -394,13 +469,15 @@ export const claimApiCapture = (
  * - 上报通道：青鸟 RN SDK（宿主 App 负责初始化，未集成时降级 no-op）
  * - route_url/page_referrer：无 location，取 React Navigation 当前/上一路由名
  * - 环境标识：is_wujie → client_platform: 'rn'
- * - dev 判定：__DEV__
+ * - 环境标定：app.env 由宿主 init 传入的 Config.ENV 决定（见 reporter.ts），本层不自行判定；
+ *   __DEV__ 只控制本地打印与告警，不参与上报口径
  * - tab 关闭兜底：beforeunload → AppState 进后台
  *
  * 防污染原则：所有 public 方法整体 try/catch，埋点异常绝不影响业务
  *
  * 【适配点 A】getTrackingUserInfo：改为目标项目的用户状态源（authModel / store / context）
  * 【适配点 B】navigationRef：改为目标项目的 React Navigation 容器 ref 来源
+ * 【适配点 F】BIZ_PRODUCT：业务域标识，与 web 端 XlbTrackerAdapter 同值
  */
 import {AppState} from 'react-native';
 import {claimApiCapture} from './apiCapture';
@@ -414,6 +491,31 @@ import type {
   TrackBizOptions,
   TrackEventDef,
 } from './types';
+
+/** 【适配点 F】业务域标识：进 biz.biz_product 归桶字段，按产线域名小写填（如 scm/fsms），与 web 端一致 */
+const BIZ_PRODUCT = '<产线域名>';
+
+/** dev 打印：与 web 端 XlbReportPlugin 同格式，仅本地可视化，不参与上报 */
+const devLog = (properties: Record<string, any>): void => {
+  if (!__DEV__) return;
+  try {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[track] ${properties.event_name ?? ''}`,
+      properties.event_code ?? '',
+      properties,
+    );
+  } catch {
+    // 打印异常静默
+  }
+};
+
+/** 内部异常告警：仅 dev 打印，release 包静默 */
+const warn = (msg: string, e: unknown): void => {
+  if (__DEV__) {
+    console.warn(msg, e);
+  }
+};
 
 interface RegisterOptions {
   page: PageDef;
@@ -459,19 +561,16 @@ const getRouteReferrer = (): string | undefined => {
 /** 业务侧 API 约定：code === 0 成功（按目标项目响应结构调整） */
 const isApiSuccess = (res: any): boolean => res?.code === 0;
 
-/** 仅 dev 环境附加 api_params/api_response/validate_fail_details */
-const IS_DEV = __DEV__;
-
-const DEV_PAYLOAD_LIMIT = 8192;
+const PAYLOAD_LIMIT = 8192;
 const TRUNC_MARK = '…[truncated]';
 
-const truncateDevPayload = (value: any): string | undefined => {
+const truncatePayload = (value: any): string | undefined => {
   if (value === undefined || value === null) return undefined;
   try {
     const text = JSON.stringify(value);
     if (!text) return undefined;
-    return text.length > DEV_PAYLOAD_LIMIT
-      ? `${text.slice(0, DEV_PAYLOAD_LIMIT)}${TRUNC_MARK}`
+    return text.length > PAYLOAD_LIMIT
+      ? `${text.slice(0, PAYLOAD_LIMIT)}${TRUNC_MARK}`
       : text;
   } catch {
     return undefined;
@@ -511,7 +610,7 @@ class BizTracker {
       if (expiredSummary) this.emitSummary(expiredSummary);
       this.track(this.pageViewDef, {extra: {is_chain_start: true}});
     } catch (e) {
-      console.warn('[tracking] pageEnter error', e);
+      warn('[tracking] pageEnter error', e);
     }
   }
 
@@ -524,7 +623,7 @@ class BizTracker {
       const summary = traceManager.close('leave');
       if (summary) this.emitSummary(summary);
     } catch (e) {
-      console.warn('[tracking] pageLeave error', e);
+      warn('[tracking] pageLeave error', e);
     }
   }
 
@@ -535,7 +634,7 @@ class BizTracker {
       const summary = traceManager.switchOrderIfNeeded(this.chain!, fid);
       if (summary) this.emitSummary(summary);
     } catch (e) {
-      console.warn('[tracking] switchOrder error', e);
+      warn('[tracking] switchOrder error', e);
     }
   }
 
@@ -570,7 +669,7 @@ class BizTracker {
         if (summary) this.emitSummary(summary);
       }
     } catch (e) {
-      console.warn('[tracking] track error', e);
+      warn('[tracking] track error', e);
     }
   }
 
@@ -703,16 +802,14 @@ class BizTracker {
       action_result: options.result,
       fail_reason: options.failReason,
       validate_fail_fields: options.validateFailFields,
-      validate_fail_details: IS_DEV ? options.validateFailDetails : undefined,
-      // 接口组（params/response 仅 dev 且截断）
+      validate_fail_details: options.validateFailDetails,
+      // 接口组（params/response 截断后全环境上报）
       api_url: options.api?.url,
       api_code: options.api?.code,
       api_msg: options.api?.msg,
       api_duration: options.api?.duration,
-      api_params: IS_DEV ? truncateDevPayload(options.api?.params) : undefined,
-      api_response: IS_DEV
-        ? truncateDevPayload(sanitizeApiResponse(options.api?.response))
-        : undefined,
+      api_params: truncatePayload(options.api?.params),
+      api_response: truncatePayload(sanitizeApiResponse(options.api?.response)),
       // 环境组
       client_platform: 'rn',
       // 自定义
@@ -756,6 +853,7 @@ class BizTracker {
     flush: boolean,
     isClick = false,
   ): void {
+    devLog(properties);
     reportEvent(
       {
         event_type: isClick ? 'CLICK' : 'CUSTOM',
@@ -765,7 +863,7 @@ class BizTracker {
           url: properties.route_url,
         },
         biz: {
-          biz_product: properties.page_code,
+          biz_product: BIZ_PRODUCT,
           biz_module: properties.page_code,
           biz_scene: properties.chain_step,
           biz_action: properties.event_code,
@@ -807,7 +905,12 @@ export const bizTracker = new BizTracker();
  * 页面侧只需要：import {bizTracker, XX_EVENTS, registerXxTracking} from 'src/tracking'
  */
 export {claimApiCapture, installApiCapture} from './apiCapture';
-export {isReporterReady, setReporterTopic} from './reporter';
+export {
+  getReporterDiagnostics,
+  isReporterReady,
+  setReporterTopic,
+} from './reporter';
+export type {ReporterDiagnostics} from './reporter';
 export {bizTracker} from './tracker';
 export * from './types';
 
@@ -846,28 +949,52 @@ export const registerXxTracking = (): void => {
 | --- | --- | --- | --- |
 | A | tracker.ts `getTrackingUserInfo` | 目标项目用户状态源 | 返回空对象，用户组字段为空 |
 | B | tracker.ts `getRouteUrl` / `getRouteReferrer` | 目标项目 navigationRef 来源 | 返回 undefined |
-| C | tracker.ts `IS_DEV` | dev 判定 | `__DEV__`（RN 通用，通常无需改） |
 | D | index.ts register 内 `installApiCapture(http)` | 目标项目 http 实例 | 不传则接口捕获不生效（事件照发，仅缺 api 自动关联） |
 | E | index.ts `SLS_TOPIC` | 平台侧登记的 topic | 占位 `xlb-xxx-web`，**必须改** |
+| F | tracker.ts `BIZ_PRODUCT` | 业务域标识（与 web 端同值，如 `scm`） | 占位 `<产线域名>`，**必须改** |
+
+## 环境口径（与 PC 对齐）
+
+| 项 | PC | RN |
+| --- | --- | --- |
+| env 来源 | `XLB_DEPLOY_ENV` 构建注入 `dev/test/stage/prod`，按前端连接的后端环境标定 | 宿主 `initQNSDKWithDefaultConfig` 第三参 `Config.ENV`（`DEV/TEST/STAGING/PROD`） |
+| SLS 中 `app.env` 取值 | `dev/test/staging/prod`（xlb-tracker 将 `stage` 映射为 `staging`） | `dev/test/staging/prod`（原生侧转小写） |
+| 落库位置 | `tracking-point-project / prod_tracking_point_log` | 同左（SDK 写死，所有环境同一 logstore） |
+| 本地调试 | `.umirc.dev.ts` 连测试后端 → `test`（调试打印跟随 `XLB_ENV=development`，不跟 env） | 默认 `.env` 为 `ENV=TEST` → 本地事件标 `test`；要标 `dev` 需切到 `.env.dev` |
+
+> 两端同口径：本地联调同一单据时 PC/App 均标 `test`，看板可按 `app.env` + `order_fid` 关联。
+
+> 测试与生产数据只能按 `app.env` 区分，看板与验证检索必须带 `app.env` 过滤。远程包不得自行判定或覆盖 env。
 
 ## 依赖与人工依赖
 
 **代码依赖**：`@xlb/react-native-qingniao-lib`（宿主 App 集成；远程包代码里懒加载，package.json 不强制声明）
 
-**人工依赖（必须列入方案并告知用户，skill 无法代劳）**：
+**人工依赖（必须列入方案并告知用户）**：以下事项归属宿主 App / 青鸟平台 / SDK 方，远程包代码改不到；skill 只做检测、兜底和登记待办，不得在远程包内绕过修复。
 
-- [ ] 宿主 App 集成青鸟 RN SDK（initQNSDKWithDefaultConfig 等初始化由宿主负责）——未集成时 `isReporterReady()` 返回 false，事件静默不发
-- [ ] 平台侧 topic 登记（与 web 端同口径）
-- [ ] 青鸟事件登记：需要 `qingniaoId` 的事件逐条登记
+| # | 人工依赖 | 归属 | skill 侧动作 |
+| --- | --- | --- | --- |
+| 1 | 宿主 App 集成青鸟 RN SDK（initQNSDKWithDefaultConfig 等初始化由宿主负责） | 宿主 App | 01-collect 检测宿主 SDK 版本；未集成时 `isReporterReady()` 返回 false，事件静默不发 |
+| 2 | 宿主 init 第三参传 `Config.ENV`，4 个 `.env.*` 的 `ENV` 取值正确，否则 `app.env` 错标 | 宿主 App | 01-collect 检测传参与 `.env.*`；verify 核对诊断 `env`；远程包不得自行判定 env |
+| 3 | 平台侧 topic 登记（与 web 端同口径） | 平台 | point-plan「人工依赖」列出待登记项 |
+| 4 | 青鸟事件登记：需要 `qingniaoId` 的事件逐条登记 | 青鸟平台 | point-list 设 `qingniaoId` 列，未登记留空回退 `event_code` |
+| 5 | 与青鸟 SDK 方确认：① topic 全局单例的多业务域方案；② Android `setTopic` 等 config 方法在 init 完成前访问 null config 的判空修复 | 青鸟 SDK 方 | verify 固定登记 ① 为风险项；② `setReporterTopic` 读到 app 信息后才调用，仅降低风险 |
+
+宿主仓库不在工作区时，第 1、2 项标「未检测」并转人工确认。第 1、2、3、5 项按宿主 App 一次性处理，后续业务域接入通常只剩第 4 项。
 
 ## 验证钩子
 
 verify 阶段在 RN debug 包中执行：
 
 ```ts
-import {isReporterReady} from 'src/tracking';
-console.log('[tracking] reporter ready:', isReporterReady());
+import {getReporterDiagnostics} from 'src/tracking';
+getReporterDiagnostics().then(d => console.log('[tracking] diagnostics:', d));
+// 预期：{sdkLoaded: true, initCalled: true, env: 'test', appId: 'xlb'}
 ```
 
-- `false` → 宿主未集成 SDK，标记「上报未验证」并提示人工依赖
-- `true` → 操作已埋点路径，观察 SDK 日志/看板落库
+| 结果 | 结论 |
+| --- | --- |
+| `sdkLoaded: false` | 宿主未集成 SDK，标记「上报未验证」并提示人工依赖 |
+| `initCalled: false` | 宿主未调用 init（未登录或初始化逻辑缺失），事件会缓存但不会发出 |
+| `env` 与当前包环境不符 | 宿主 `Config.ENV` 或 `.env.*` 配置错误，列为人工依赖 |
+| 以上均正常 | 操作已埋点路径：Metro 控制台应出现 `[track] <event_name> <event_code> {…}`；再到 SLS 按 `app.env` + `biz.page_code` 核对落库 |

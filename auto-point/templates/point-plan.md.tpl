@@ -3,17 +3,37 @@
 > 基于 point-list.md（门禁 1 已通过）｜ 端：PC/RN
 > 状态：待用户确认（门禁 2）
 
-## 零、基建封装（目标项目无埋点基建时必填；有则写「复用既有基建」）
+## 零、基建封装（按 survey.md 形态判定分支填写）
 
-| 落位文件 | 来源 | 适配点决策 |
+**A 级（无基建，全套落位）——PC**：
+
+| 落位文件 | 来源（pc-bootstrap §） | 适配点决策 |
 | --- | --- | --- |
-| src/tracking/types.ts | bootstrap 原样落位 | 无 |
-| src/tracking/context.ts | bootstrap 原样落位 | 无 |
-| src/tracking/reporter.ts | bootstrap | 通道选择 / env 判定：（填写） |
-| src/tracking/apiCapture.ts | bootstrap | http 实例：（填写目标项目请求库） |
-| src/tracking/tracker.ts | bootstrap | 用户信息源：（填写） |
-| src/tracking/index.ts | bootstrap 骨架 | 出口 + register |
-| 应用入口（文件:位置） | bootstrap 接线 | initReporter(appId) + installApiCapture |
+| src/tracking/types.ts / global.d.ts / index.ts | §1-§3 原样落位 | 无 |
+| src/tracking/lib/（tracking/queue/arms/factory/xlbTrackerAdapter） | §4-§8 原样落位 | 适配点 D：appId/appName/biz_product =（填入口收集值） |
+| src/tracking/plugins/ + utils/ | §9-§11 原样落位 | 无 |
+| src/tracking/business/（types/context/tracker/apiCapture/reportPlugin/index） | §12-§17 原样落位 | 适配点 A 用户源：（填）；B 微前端：（填）；C http 客户端：（填） |
+| src/utils/trackingTools.ts | §18 | 适配点 E：ARMS key 变量名/endpoint：（填） |
+| 各 .umirc.*.ts | §19 | XLB_DEPLOY_ENV 四态注入（逐配置列出） |
+| package.json | §前置检测 1 | npm i @xlb/xlb-tracker @xlb/utils @arms/rum-browser |
+
+**A 级（无标准结构，全套落位）——RN**（文件树以 rn-bootstrap 为准，不得删减或改名）：
+
+| 落位文件 | 来源（rn-bootstrap §） | 适配点决策 |
+| --- | --- | --- |
+| src/tracking/types.ts | pc-bootstrap types.ts 原样落位 | 无 |
+| src/tracking/context.ts | context.ts 原样落位 | 无 |
+| src/tracking/reporter.ts | reporter.ts | 无 |
+| src/tracking/apiCapture.ts | apiCapture.ts | 无 |
+| src/tracking/tracker.ts | tracker.ts | 适配点 A 用户源：（填）；B navigationRef：（填）；F BIZ_PRODUCT：（填） |
+| src/tracking/index.ts | index.ts | 适配点 D http 实例：（填）；E SLS_TOPIC：（填） |
+| src/tracking/chains.ts / events/ | 按本方案二、三节 | 无 |
+
+**其他埋点**（survey 盘点结果，无则写「无」）：原样保留，不迁移、不桥接、不复用。
+
+**B/C 级（预改造已完成）**：预改造项见 retrofit.md（门禁 1.5 已通过），本方案不再涉及基建结构，仅列 events/chains/页面接入。
+
+**D 级（样板一致）**：复用既有基建，本节写「复用既有基建」即可。
 
 ### 人工依赖（流程外事项，需用户跟进）
 
@@ -75,10 +95,11 @@
 ## 八、明确不做
 
 - 不改业务逻辑、不重构、不动清单外代码
+- 不动其他埋点（有则逐条列出）
 - （其他边界声明）
 
 ## 九、验证计划
 
 - 类型检查 / lint 命令：（目标项目实际命令）
 - grep 覆盖核对：每个事件 code ↔ 调用点
-- dev 环境手动验证路径：（列出操作路径，如「打开发货单列表 → 勾选 2 条 → 点击审核」）
+- 本地联调手动验证路径：（列出操作路径，如「打开发货单列表 → 勾选 2 条 → 点击审核」）

@@ -1,18 +1,22 @@
 # RN 端埋点模式
 
-> 与 PC 端语义完全对齐（同一套字段规范，见 [event-spec.md](event-spec.md)），仅基建与生命周期不同。全部示例已内联，不依赖任何外部仓库。目标项目已有基建时以目标项目为准。
+> 与 PC 端语义完全对齐（同一套字段规范，见 [event-spec.md](event-spec.md)），仅基建与生命周期不同。全部示例已内联，不依赖任何外部仓库。目录结构以 [rn-bootstrap.md](rn-bootstrap.md) 为唯一标准；项目中其他埋点不算基建，不得以其结构为准（SKILL 铁律 6）。
 
 ## 目录结构（基建形态）
 
 ```
 src/tracking/
+├── types.ts             # 与 web 端同一套类型
+├── context.ts           # session/trace 上下文
 ├── chains.ts            # 全部 chain 定义（chainId/orderType 与 web 端完全一致）
 ├── events/<page>.ts     # 事件字典，每页面一文件（与 web 同口径）
-├── tracker.ts           # bizTracker 门面（RN 版）
-├── qingniao.ts          # 青鸟 RN SDK 通道（sendQingniaoEvent / setQingniaoTopic）
-├── apiCapture.ts
-└── index.ts             # 统一出口 + register<X>Tracking()（内含 installApiCapture + setQingniaoTopic）
+├── tracker.ts           # bizTracker 门面（RN 版，含 BIZ_PRODUCT 与 dev 打印）
+├── reporter.ts          # 青鸟 RN SDK 通道（reportEvent / setReporterTopic / getReporterDiagnostics）
+├── apiCapture.ts        # installApiCapture(http) / claimApiCapture
+└── index.ts             # 统一出口 + register<X>Tracking()（内含 installApiCapture(http) + setReporterTopic）
 ```
+
+> 文件名与导出名以 [rn-bootstrap.md](rn-bootstrap.md) 为准。仅当既有 `src/tracking` 已判为 RN B/C/D 级（文件树与标准结构对应，只是上报通道另有命名，如 SCM RN 的 `qingniao.ts` / `setQingniaoTopic`）时，才沿用既有命名，不为改名而改名；口径仍须对齐 rn-bootstrap（triggerEventBeforeInit、BIZ_PRODUCT、setTopic 初始化守卫），不符合的按 C 级走预改造。A 级一律按 rn-bootstrap 命名落位。
 
 ## 事件字典（events/<page>.ts）
 
@@ -155,16 +159,17 @@ import {
   DN_PAGE,
   DN_PAGE_LEAVE,
 } from './events/deliveryNote';
-import {setQingniaoTopic} from './qingniao';
+import {setReporterTopic} from './reporter';
 import {bizTracker} from './tracker';
+import http from 'src/utils/request'; // 目标项目 axios 实例
 
 /** SLS topic：与 web 端同口径（看板按 topic 拉取；不设置看板查不到 RN 事件） */
 const SLS_TOPIC = 'xlb-scm-web';
 
 /** 发货单页面埋点注册（useFocusEffect 聚焦时调用一次） */
 export const registerDeliveryNoteTracking = (): void => {
-  installApiCapture();
-  setQingniaoTopic(SLS_TOPIC);
+  installApiCapture(http); // 必须传 http 实例，不传则接口捕获不生效
+  setReporterTopic(SLS_TOPIC);
   bizTracker.register({
     page: DN_PAGE,
     chain: DN_CHAIN,
@@ -175,7 +180,9 @@ export const registerDeliveryNoteTracking = (): void => {
 };
 ```
 
-> 与 PC 差异：RN 注册函数内封装 `installApiCapture() + setQingniaoTopic()`，页面无需关心；topic 与 web 端同口径（按目标项目实际 topic 调整）。
+> 与 PC 差异：RN 注册函数内封装 `installApiCapture(http) + setReporterTopic()`，页面无需关心；topic 与 web 端同口径（按目标项目实际 topic 调整）。`setReporterTopic` 内置初始化守卫与只生效一次的逻辑，重复调用安全。
+>
+> ⚠ topic 在 SDK 内是宿主全局单例，多业务域远程包接入时会互相覆盖；最终方案待与青鸟 SDK 方确认，确认前在方案与 verify-report 中登记该风险。业务域分析优先用 `biz.biz_product`。
 
 ## 页面接入模式（useFocusEffect）
 
@@ -227,10 +234,12 @@ const onConfirm = () => {
 | --- | --- | --- |
 | 生命周期 | useEffect / useActivate（KeepAlive） | useFocusEffect |
 | route_url / referrer | location / document.referrer | navigationRef 当前/上一路由名 |
-| dev 判定 | process.env.XLB_ENV | `__DEV__` |
+| 环境判定 | XLB_DEPLOY_ENV 构建注入（dev/test/stage/prod 四态） | 宿主 init 第三参 `Config.ENV`（DEV/TEST/STAGING/PROD），远程包不判定；`__DEV__` 只控制本地打印 |
+| SLS `app.env` | dev/test/staging/prod | dev/test/staging/prod（两端一致） |
 | 关闭兜底 | beforeunload | AppState 进后台 |
 | 环境标识 | is_wujie | client_platform: 'rn' |
-| 上报通道 | SDK 适配层 | 青鸟 RN SDK triggerEvent（宿主 App 初始化） |
+| 上报通道 | SDK 适配层 | 青鸟 RN SDK triggerEventBeforeInit（旧版回退 triggerEvent；宿主 App 初始化） |
+| 本地验证 | 控制台 `[track]` 打印 | Metro 控制台 `[track]` 打印 + `getReporterDiagnostics()` |
 
 ## 注意
 

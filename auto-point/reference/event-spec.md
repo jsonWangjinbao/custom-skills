@@ -4,7 +4,7 @@ PC 与 RN 业务埋点层语义完全一致（同一套字段规范），仅基�
 
 ## 核心类型（埋点层 types 口径）
 
-目标项目已有埋点基建时，以其 types 为准（命名可能略异，语义应对齐）；无基建时按以下口径出方案：
+目标项目已有标准结构埋点基建（B/C/D 级）时，以其 types 为准（命名可能略异，语义应对齐）；其他埋点的类型不作参考。无基建时按以下口径出方案：
 
 ```ts
 /** 链条环节（漏斗归桶维度） */
@@ -74,6 +74,9 @@ export interface TrackBizOptions {
   failReason?: string;
   /** 表单校验失败字段名列表（只报字段名，不报值） */
   validateFailFields?: string[];
+  /** 校验失败明细：字段语义 + 人类可读原因（看板「校验失败明细」直接展示；
+   *  表单校验取 errorFields 的 name/errors，前置拦截取被校验对象语义 + 页面提示文案） */
+  validateFailDetails?: { field: string; reason: string }[];
   /** 操作成功后的单据状态（链 B 状态迁移的 after 边） */
   stateAfter?: string;
   /** 额外自定义字段 */
@@ -218,7 +221,7 @@ export type DnEventKey = keyof typeof DN_EVENTS;
 | --- | --- | --- |
 | 操作触发 API 调用 | `await bizTracker.trackAction(def, { order, action, stateAfter?, apiUrl?, extra? })` | 自动捕获 success/fail 与接口状况；**异常原样抛出、返回值原样返回** |
 | 纯点击意图、无 API | `bizTracker.track(def, { order?, extra? })` | 如「发货预约」入口点击 |
-| 前置校验拦截（未发 API） | `bizTracker.track(def, { order?, result: 'validate_fail', failReason, validateFailFields? })` | 卡点信号；只报字段名，不报值 |
+| 前置校验拦截（未发 API） | `bizTracker.track(def, { order?, result: 'validate_fail', failReason, validateFailFields?, validateFailDetails? })` | 卡点信号；只报字段语义与原因，不报值；details 缺省时看板「校验失败明细」为空 |
 | 接口业务失败手动补报 | `bizTracker.track(def, { order?, result: 'fail', failReason: 'api_biz_fail', api })` | 仅限 trackAction 未覆盖的组装场景（如预检+确认两段式） |
 
 ## 单据快照（order，链 B 载体）
@@ -229,7 +232,7 @@ export type DnEventKey = keyof typeof DN_EVENTS;
 
 ## 公共字段（tracker 自动注入，调用方不传）
 
-event_id / event_ver、page_* 组（page_code/page_name/page_path/route_url/page_referrer）、用户组（company/store/user/supplier）、链条组（session_id/trace_id/page_event_seq/chain_id/chain_step/is_chain_start/is_chain_end）、单据组（order_type/order_fid/order_no/order_state/order_state_after/batch_count/order_fids/source_*）、结果组（action_result/fail_reason/validate_fail_fields）、接口组（api_url/api_code/api_msg/api_duration，trackAction 自动捕获；api_params/api_response 仅 dev 截断附加）。
+event_id / event_ver、page_* 组（page_code/page_name/page_path/route_url/page_referrer）、用户组（company/store/user/supplier）、链条组（session_id/trace_id/page_event_seq/chain_id/chain_step/is_chain_start/is_chain_end）、单据组（order_type/order_fid/order_no/order_state/order_state_after/batch_count/order_fids/source_*）、结果组（action_result/fail_reason/validate_fail_fields/validate_fail_details）、接口组（api_url/api_code/api_msg/api_duration，trackAction 自动捕获；api_params/api_response 全环境截断附加）。
 
 调用方只关心 `def + order + result + stateAfter + extra`。
 
