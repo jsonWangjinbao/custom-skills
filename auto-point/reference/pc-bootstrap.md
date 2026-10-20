@@ -3,30 +3,54 @@
 本文件是「XLB PC 业务埋点」的**唯一标准形态**，内联自生产验证过的 SCM 产线（xlb_scm_web/src/tracking）全套源码。
 原则：**照抄落位，不即兴设计**。字段口径与链路行为见 event-spec.md；页面调用模式见 pc-patterns.md。
 
+## 通道形态（先定形态，再落位）
+
+| 形态 | 适用条件 | 通道 |
+| --- | --- | --- |
+| **仅 SLS（默认）** | 目标项目 `src/tracking` 内原本没有 ARMS 适配器/插件（含 A 级无 `src/tracking`） | `XlbTrackerAdapter` → `@xlb/xlb-tracker` → SLS |
+| **双通道** | 目标项目 `src/tracking` 内原本已有 ARMS 适配器/插件（如 `lib/arms.ts`、`ARMSInitPlugin`） | SLS 主通道 + ARMS RUM 兜底 fan-out |
+
+- 形态由 01-collect 自动检测，在第二拍「检测结论确认」卡片回显，用户可用 Other 纠正；结论写入 survey.md。
+- 目标项目在 `src/tracking` 之外自行接入的 ARMS（如 `app.tsx` / `index.html` 直接初始化）按铁律 6 视为其他监控，原样保留；埋点仍按「仅 SLS」落位，不得再接一份 ARMS。
+- **区域标记**：下文代码块中 `// #region ARMS` 至 `// #endregion ARMS`（含这两行标记）为双通道专属代码。仅 SLS 形态整段删除；双通道形态保留区块内容（标记行可一并删除）。标题注明「【仅双通道】」的整节文件，仅 SLS 形态不落位。
+- **仅 SLS 形态删除清单**（落位后逐项核对；`grep -rn "ARMS\|_arms\|@arms\|TRACKING_KEY" src/tracking src/utils/trackingTools.ts package.json .umirc*.ts` 应无结果）：
+
+| 文件 | 仅 SLS 形态处理 |
+| --- | --- |
+| §6 `lib/arms.ts`、§9 `plugins/ARMSInitPlugin.ts` | 不落位 |
+| §1 `types.ts` | 删 ARMS 区块：`ARMSConfig`、`TrackingConfig.arms`、`TrackingConfigFile.main.arms`、`CreateTrackingOptions.arms/enableArms`、`InitTrackingOptions.enableArms/armsInitConfig/config` |
+| §2 `global.d.ts` | 删 ARMS 区块（`__ARMS_*` / `_arms` / `__armsPageTracker` / parentWindow 的 `__ARMS_CONFIG__`），保留 `$wujie` |
+| §3 `index.ts`、§10 `plugins/index.ts` | 删 ARMS 导出区块 |
+| §7 `lib/factory.ts` | 删 ARMS 区块：`ARMSInitPlugin` / `ARMSAdapter` 的引入与注册，`adapters` 仅 `[XlbTrackerAdapter]` |
+| §11 `utils/index.ts` | 删 `getAppName` 中 `window._arms` 区块 |
+| §18 `src/utils/trackingTools.ts` | 删 ARMS 区块（`TRACKING_KEY` / `enableArms` / ARMS config） |
+| §19 构建配置、前置检测 1 | 不注入任何 ARMS key；依赖只装 `@xlb/xlb-tracker`、`@xlb/utils` |
+
 ## 适用范围（先判定再使用）
 
 | 目标项目形态（02-survey 判定） | 使用方式 |
 | --- | --- |
-| **A 级：无 `src/tracking`** | 本文件全套落位（SDK 骨架 + business 层 + 入口接线） |
+| **A 级：无 `src/tracking`** | 本文件全套落位（通道形态固定「仅 SLS」：SDK 骨架 + business 层 + 入口接线，按删除清单去掉 ARMS 区块） |
 | **B/C 级：有 `src/tracking` 但偏离样板** | **禁用本文件**，走 subskills/03b-retrofit.md 预改造（差异项补齐，不整体覆盖） |
 | **D 级：与样板一致** | 跳过本文件，直接用 pc-patterns.md 加 events/chains/页面接入 |
 
 ## 架构口径（拍板固化，不得偏离）
 
 1. **业务事件统一经 `XlbTrackerAdapter` 走 `@xlb/xlb-tracker` 上报公司统一 BI（SLS）**；禁止自造 reporter/initTracker 通道。
-2. **双发保持**：业务事件同时 fan-out 到 ARMSAdapter（ARMS RUM 侧保留自定义事件，作 RUM 上下文兜底）与 XlbTrackerAdapter（SLS 主通道）。不裁剪任一通道。
-3. **ARMS 通道标准修正项**（样板遗留问题，落位时即修正，不照抄 SCM 的旧值）：ARMS config 的 `env` 用 XLB_DEPLOY_ENV 四态映射；`debug` 与打印插件跟随本地开发模式（`XLB_ENV === 'development'`），不跟 env；`sessionConfig.sampleRate` 为 **1**（0.2 是 ARMS 会话级采样，会让 80% 会话整体不上报，业务埋点场景必须调 1）。
+2. **通道形态按项目原状**（见「通道形态」节）：仅 SLS 为默认，原项目没有 ARMS 的不得新增 ARMS 代码与依赖；原项目 `src/tracking` 已有 ARMS 的保持双发——业务事件同时 fan-out 到 ARMSAdapter（ARMS RUM 自定义事件兜底）与 XlbTrackerAdapter（SLS 主通道），不裁剪。
+3. **ARMS 通道标准修正项**（仅双通道；样板遗留问题，落位/预改造时即修正，不照抄 SCM 的旧值）：ARMS config 的 `env` 用 XLB_DEPLOY_ENV 四态映射；`debug` 与打印插件跟随本地开发模式（`XLB_ENV === 'development'`），不跟 env；`sessionConfig.sampleRate` 为 **1**（0.2 是 ARMS 会话级采样，会让 80% 会话整体不上报，业务埋点场景必须调 1）；**ARMS 不得阻塞 SLS**——`ARMSAdapter.init` 不轮询等待、factory 不重复调用 `armsAdapter.init()`，某环境缺 ARMS key 时 `enableArms=false` 跳过 ARMS 插件与适配器、SLS 照常初始化（不设兜底占位 key）。
 4. `qingniao` 页面登记拉取显式关闭（`qingniao: false`），page_code/page_name 由 biz 自含。
+5. `installApiCapture()` 只依赖 http 客户端，在 `initTracking` 之前安装，SDK 初始化期间的 trackAction 也能关联接口信息。
 
 ## 前置检测（落位前逐项确认；检测不到的在入口提问阶段已收集）
 
 | # | 检测项 | 检测方式 | 不满足的处置 |
 | --- | --- | --- | --- |
-| 1 | 私有源依赖可装：`@xlb/xlb-tracker`、`@xlb/utils`、`@arms/rum-browser` | `cat package.json` + `npm view @xlb/xlb-tracker version`（私有源） | 缺依赖先 `npm i`；装不上→报告用户 |
+| 1 | 私有源依赖可装：`@xlb/xlb-tracker`、`@xlb/utils`；`@arms/rum-browser` 仅双通道形态需要 | `cat package.json` + `npm view @xlb/xlb-tracker version`（私有源） | 缺依赖先 `npm i`；装不上→报告用户 |
 | 2 | 用户信息工具（`getUserInfo()`，返回 id/name/company_id/company_name/store_id/store_name/user_type/org_ids/supplier 等） | `grep -rn "getUserInfo" src/utils src/services` | 找不到→按入口收集的用户源路径改适配点 A |
 | 3 | 微前端标识（wujie 判断函数） | `grep -rn "isWUJIE" src/` | 非 wujie 项目→适配点 B 返回 false |
 | 4 | http 客户端为 XlbFetch（apiCapture 挂拦截器用） | `grep -rn "XlbFetch" src/services src/utils package.json` | axios 实例→apiCapture 改用 axios 版（见 pc-patterns.md 附录）；其他→人工指定拦截点 |
-| 5 | ARMS key 环境变量名（如 `TRACKING_KEY` / `SCM_TRACKING_KEY`）与各 umirc 配置的 define 注入 | `grep -rn "TRACKING_KEY" .umirc*.ts` | 全配置补齐 define；缺失时入口兜底值必须保留（SCM 同款 `'37f23f543e4cb3b984ea1'` 仅为 SCM 值，新项目按产线实际 key 填） |
+| 5 | （仅双通道）ARMS key 环境变量名（如 `TRACKING_KEY` / `SCM_TRACKING_KEY`）与各 umirc 配置的 define 注入 | `grep -rn "TRACKING_KEY" .umirc*.ts` | 已有 key 的配置保持注入；某环境缺 key → 该环境运行时 `enableArms=false` 仅走 SLS（不设兜底占位 key），并在 survey「风险与疑问」登记 |
 | 6 | `XLB_DEPLOY_ENV` 四态注入，按前端连接的后端环境标定（与 App `Config.ENV` 同口径）：本地 start 连测试后端=test、测试=test、staging=stage、生产=prod；仅连 dev 后端时才标 dev | `grep -n "XLB_DEPLOY_ENV" .umirc*.ts` | 逐配置补 define（映射见「入口接线」节）；缺了 env 标定全错 |
 | 7 | 入口已收集：appId（SLS topic 登记值或占位）、appName、青鸟 event_id 登记情况 | 无（入口提问产物） | appId 未登记→占位 `xlb-<域>-web` 并在 verify-report 记人工依赖 |
 
@@ -34,17 +58,17 @@
 
 ```
 src/tracking/
-├── types.ts                  # SDK 统一类型（含 ARMSConfig.sessionConfig/filters 完整声明）
-├── global.d.ts               # Window 全局类型扩展（__ARMS_* / $wujie）
+├── types.ts                  # SDK 统一类型（ARMSConfig 等 ARMS 类型仅双通道）
+├── global.d.ts               # Window 全局类型扩展（$wujie；__ARMS_* 仅双通道）
 ├── index.ts                  # SDK 统一出口
 ├── lib/
 │   ├── tracking.ts           # TrackingSDK 核心（fan-out 多适配器 + 插件管线）
 │   ├── queue.ts              # 初始化前调用队列
-│   ├── factory.ts            # initTracking/createTracking + 双适配器注册
-│   ├── arms.ts               # ARMS RUM 适配器
+│   ├── factory.ts            # initTracking/createTracking + 适配器注册（仅 SLS 1 个 / 双通道 2 个）
+│   ├── arms.ts               # 【仅双通道】ARMS RUM 适配器
 │   └── xlbTrackerAdapter.ts  # 官方 @xlb/xlb-tracker 适配器（业务事件 → SLS 主通道）
 ├── plugins/
-│   ├── ARMSInitPlugin.ts     # ARMS 实例初始化（main/sub/single 三形态）
+│   ├── ARMSInitPlugin.ts     # 【仅双通道】ARMS 实例初始化（main/sub/single 三形态）
 │   ├── FilterPlugin.ts       # 敏感字段/URL 过滤
 │   └── index.ts              # 插件出口 + PLUGIN_REGISTRY
 ├── utils/
@@ -58,10 +82,10 @@ src/tracking/
     ├── index.ts              # business 统一出口 + registerXxxTracking
     ├── chains/<chain>.ts     # 链条定义（每需求新增）
     └── events/<page>.ts      # 事件字典（每需求新增）
-src/utils/trackingTools.ts    # 入口接线（initTracking + installApiCapture + ARMS config）
+src/utils/trackingTools.ts    # 入口接线（installApiCapture + initTracking；ARMS config 仅双通道）
 ```
 
-## 适配点总表（落位时只改这些，其余逐字照抄）
+## 适配点总表（落位时只改这些，其余逐字照抄；ARMS 区块按通道形态取舍）
 
 | 适配点 | 位置 | 改动 |
 | --- | --- | --- |
@@ -69,7 +93,7 @@ src/utils/trackingTools.ts    # 入口接线（initTracking + installApiCapture 
 | B 微前端标识 | business/tracker.ts 顶部 import `isWUJIE` | 非 wujie 项目改为 `() => false` |
 | C http 客户端 | business/apiCapture.ts 顶部 import `XlbFetch` | axios 项目换拦截器实现（pc-patterns.md 附录） |
 | D 应用标识 | lib/xlbTrackerAdapter.ts 顶部 `APP_ID` / `APP_NAME` 常量 | 入口收集值替换占位 |
-| E ARMS key 变量名 | src/utils/trackingTools.ts `process.env.<KEY>` | 按前置检测 5 的实际变量名替换 |
+| E ARMS key 变量名（仅双通道） | src/utils/trackingTools.ts ARMS 区块 `process.env.<KEY>` | 按前置检测 5 的实际变量名替换；缺 key 的环境自动降级仅 SLS |
 | F umirc 四态注入 | 各 .umirc*.ts `define` | 补 `'process.env.XLB_DEPLOY_ENV'` |
 
 ---
@@ -200,6 +224,7 @@ export interface TrackingPlugin {
   afterTrack?: (event: BaseEvent) => void;
 }
 
+// #region ARMS
 /**
  * ARMS 配置
  */
@@ -237,6 +262,7 @@ export interface ARMSConfig {
     resource?: string[];
   };
 }
+// #endregion ARMS
 
 /**
  * 子应用控制配置
@@ -258,8 +284,10 @@ export interface SubAppControl {
 export interface TrackingConfig {
   /** 应用信息 */
   app: AppInfo;
+  // #region ARMS
   /** ARMS 配置 */
   arms?: ARMSConfig;
+  // #endregion ARMS
   /** 适配器列表 */
   adapters?: TrackingAdapter[];
   /** 插件列表 */
@@ -283,7 +311,9 @@ export interface TrackingConfigFile {
     enabled: boolean;
     debug?: boolean;
     sampleRate?: number;
+    // #region ARMS
     arms?: ARMSConfig;
+    // #endregion ARMS
   };
   /** 子应用控制配置 */
   subApps: Record<string, SubAppControl>;
@@ -294,7 +324,11 @@ export interface TrackingConfigFile {
  */
 export interface CreateTrackingOptions {
   app: AppInfo;
+  // #region ARMS
   arms: ARMSConfig;
+  /** 是否启用 ARMS 通道（缺 ARMS key 时为 false，不注册 ARMS 适配器） */
+  enableArms?: boolean;
+  // #endregion ARMS
   enabled?: boolean;
   debug?: boolean;
   sampleRate?: number;
@@ -332,8 +366,12 @@ export interface InitTrackingOptions {
     store_name?: string;
     user_type?: string;
   };
-  /** 插件列表（可选，默认包含 ARMSInitPlugin） */
+  /** 插件列表（可选） */
   plugins?: any[];
+  // #region ARMS
+  // 双通道形态：initTracking 会在 plugins 最前面自动追加 ARMS 初始化插件
+  /** 是否启用 ARMS 通道（默认 true；缺 ARMS key 时传 false，跳过 ARMS 插件与适配器） */
+  enableArms?: boolean;
   /** ARMS 初始化插件配置（可选） */
   armsInitConfig?: {
     debug?: boolean;
@@ -342,6 +380,7 @@ export interface InitTrackingOptions {
   };
   /** ARMS 配置（用于 single 类型） */
   config?: ARMSConfig;
+  // #endregion ARMS
   /** 子应用控制配置 */
   subApps?: SubAppControl[];
 }
@@ -357,6 +396,7 @@ export interface InitTrackingOptions {
 
 declare global {
   interface Window {
+    // #region ARMS
     /** ARMS 配置 */
     __ARMS_CONFIG__?: any;
     /** ARMS 实例（单例） */
@@ -387,11 +427,14 @@ declare global {
       /** 重置当前页面 */
       reset: () => void;
     };
+    // #endregion ARMS
     /** Wujie 微前端相关 */
     $wujie?: {
       props?: {
         parentWindow?: Window & {
+          // #region ARMS
           __ARMS_CONFIG__?: any;
+          // #endregion ARMS
         };
       };
     };
@@ -409,7 +452,9 @@ export * from './types';
 
 // 导出核心库
 export * from './lib/tracking';
+// #region ARMS
 export * from './lib/arms';
+// #endregion ARMS
 
 // 导出工厂方法和工具
 export * from './lib/factory';
@@ -935,7 +980,7 @@ export class TrackingQueue implements Partial<TrackingSDK> {
 }
 ```
 
-## 六、src/tracking/lib/arms.ts（ARMS 适配器，逐字落位）
+## 六、src/tracking/lib/arms.ts（ARMS 适配器，【仅双通道】，逐字落位）
 
 ```typescript
 /**
@@ -972,39 +1017,15 @@ export class ARMSAdapter implements TrackingAdapter {
     // 创建日志管理器
     this.logger = createLogger('ARMSAdapter', this.debug);
 
-    // 等待 ARMS 实例就绪
-    await this.waitForARMSInstance();
+    // ARMSInitPlugin.beforeInit 已在适配器初始化前 await 完成：实例要么已就绪，要么已失败。
+    // 不轮询等待，避免 ARMS 不可用时阻塞后续 SLS 适配器初始化；实例晚到时由 ensureInstance() 懒取
+    this.armsInstance = this.getARMSInstance();
+    if (!this.armsInstance) {
+      this.logger.warn('ARMS 实例未就绪，ARMS 通道暂不可用（不阻塞其他通道）');
+      return;
+    }
 
     this.logger.log(`适配器初始化成功，使用应用: ${this.appName || '当前应用'}`);
-  }
-
-  /**
-   * 等待 ARMS 实例初始化完成
-   */
-  private async waitForARMSInstance(timeout = 10000): Promise<void> {
-    const startTime = Date.now();
-    const checkInterval = 100;
-
-    return new Promise((resolve, reject) => {
-      const check = () => {
-        // 获取 ARMS 实例
-        this.armsInstance = this.getARMSInstance();
-
-        if (this.armsInstance) {
-          resolve();
-          return;
-        }
-
-        if (Date.now() - startTime >= timeout) {
-          reject(new Error('[ARMSAdapter] 等待 ARMS 实例超时'));
-          return;
-        }
-
-        setTimeout(check, checkInterval);
-      };
-
-      check();
-    });
   }
 
   /**
@@ -1145,21 +1166,26 @@ export class ARMSAdapter implements TrackingAdapter {
 }
 ```
 
-## 七、src/tracking/lib/factory.ts（工厂 + 双适配器注册，逐字落位）
+## 七、src/tracking/lib/factory.ts（工厂 + 适配器注册，逐字落位）
 
 ```typescript
 /**
  * SDK 工厂方法
  */
+// #region ARMS
 import { ARMSInitPlugin } from '../plugins';
+// #endregion ARMS
 import type {
   CreateTrackingOptions,
   InitTrackingOptions,
+  TrackingAdapter,
   TrackingConfig,
   TrackingPlugin,
 } from '../types';
 import { createLogger, getAppName, normalizePlugins } from '../utils';
+// #region ARMS
 import { ARMSAdapter } from './arms';
+// #endregion ARMS
 import { TrackingQueue } from './queue';
 import { TrackingSDK } from './tracking';
 import { XlbTrackerAdapter } from './xlbTrackerAdapter';
@@ -1278,14 +1304,22 @@ export async function createTracking(
     }
   }
 
-  const armsAdapter = new ARMSAdapter();
+  const adapters: TrackingAdapter[] = [];
+  // #region ARMS
+  // ARMS 通道：缺 ARMS key（enableArms=false）时不注册，避免空等阻塞 SLS
+  if (options.enableArms !== false) {
+    adapters.push(new ARMSAdapter());
+  }
+  // #endregion ARMS
   // 官方埋点 SDK 适配器：业务事件经协议映射后上报 SLS（公司统一 BI）
-  const xlbTrackerAdapter = new XlbTrackerAdapter();
+  adapters.push(new XlbTrackerAdapter());
 
   const config: TrackingConfig = {
     app: options.app,
+    // #region ARMS
     arms: options.arms,
-    adapters: [armsAdapter, xlbTrackerAdapter],
+    // #endregion ARMS
+    adapters,
     plugins: normalizedPlugins,
     enabled: options.enabled ?? true,
     debug: options.debug ?? false,
@@ -1293,17 +1327,7 @@ export async function createTracking(
     subApps: options.subApps || [],
   };
 
-  // 初始化 ARMS 适配器
-  try {
-    await armsAdapter.init({
-      ...options.arms,
-      debug: options.debug ?? false,
-    });
-  } catch (error) {
-    logger.warn('ARMS 适配器初始化失败:', error);
-  }
-
-  // 实例化 TrackingSDK
+  // 实例化 TrackingSDK；适配器统一由 sdk.init() 初始化（每个只初始化一次，不在此重复调用）
   const sdk = new TrackingSDK(config);
   await sdk.init();
 
@@ -1330,8 +1354,11 @@ export async function initTracking(
     sampleRate = 1,
     userInfo,
     plugins: customPlugins,
+    // #region ARMS
+    enableArms = true,
     armsInitConfig = {},
     config,
+    // #endregion ARMS
     subApps = [],
   } = options;
 
@@ -1344,23 +1371,26 @@ export async function initTracking(
 
   try {
     // 构建插件列表
-    const armsInitPlugin = new ARMSInitPlugin({
-      debug,
-      timeout: 5000,
-      autoRegister: true,
-      appType,
-      config,
-      ...armsInitConfig,
-    });
-
     const normalizedCustomPlugins = normalizePlugins(
       customPlugins || [],
       debug,
     );
-    const plugins: TrackingPlugin[] = [
-      armsInitPlugin,
-      ...normalizedCustomPlugins,
-    ];
+    const plugins: TrackingPlugin[] = [...normalizedCustomPlugins];
+    // #region ARMS
+    // ARMS 实例初始化插件（缺 ARMS key 时跳过）
+    if (enableArms) {
+      plugins.unshift(
+        new ARMSInitPlugin({
+          debug,
+          timeout: 5000,
+          autoRegister: true,
+          appType,
+          config,
+          ...armsInitConfig,
+        }),
+      );
+    }
+    // #endregion ARMS
 
     // 创建统一埋点实例
     const tracking = await createTracking({
@@ -1370,7 +1400,10 @@ export async function initTracking(
         env,
         appType,
       },
+      // #region ARMS
       arms: {} as any,
+      enableArms,
+      // #endregion ARMS
       enabled,
       debug,
       sampleRate,
@@ -1470,7 +1503,7 @@ export class XlbTrackerAdapter implements TrackingAdapter {
         },
         // 页面未在青鸟登记，biz 自含 page_code/page_name，显式关闭页面登记拉取
         qingniao: false,
-        // collectors 缺省全关：性能/异常等自动采集由 ARMS 通道负责，避免重复采集
+        // collectors 缺省全关：只上报业务事件，不开启性能/异常等自动采集（双通道形态下由 RUM 通道负责，避免重复采集）
       });
       this.logger.log('官方埋点 SDK 初始化完成, env:', resolveEnv());
     } catch (error) {
@@ -1578,7 +1611,7 @@ export class XlbTrackerAdapter implements TrackingAdapter {
 }
 ```
 
-## 九、src/tracking/plugins/ARMSInitPlugin.ts（逐字落位）
+## 九、src/tracking/plugins/ARMSInitPlugin.ts（【仅双通道】，逐字落位）
 
 ```typescript
 /**
@@ -1999,10 +2032,12 @@ export class FilterPlugin implements TrackingPlugin {
 // ── plugins/index.ts ──
 /**
  * 插件导出
- * - ARMSInitPlugin: ARMS 初始化插件
  * - FilterPlugin: 过滤插件
  */
+// #region ARMS
+// - ARMSInitPlugin: ARMS 初始化插件（仅双通道形态）
 export * from './ARMSInitPlugin';
+// #endregion ARMS
 export * from './FilterPlugin';
 
 // 导入所有插件类
@@ -2138,11 +2173,13 @@ export function normalizePlugins(
 export function getAppName(appName?: string): string {
   if (appName) return appName;
 
+  // #region ARMS
   if (typeof window !== 'undefined' &&
       window._arms &&
       typeof window._arms.getCurrentAppName === 'function') {
     return window._arms.getCurrentAppName();
   }
+  // #endregion ARMS
 
   return 'react_web';
 }
@@ -3120,8 +3157,9 @@ export * from './types';
 
 ## 十八、入口接线：src/utils/trackingTools.ts
 
-已含 ARMS 三件套标准修正（env 四态 / debug 跟随本地开发模式 / 会话采样 1），**不要照抄 SCM 旧值**。
-【适配点 E】ARMS key 变量名按前置检测 5 替换；endpoint 的 workspace/service_id 按产线 ARMS 应用实际值替换。
+`installApiCapture()` 在 SDK 初始化之前安装（只依赖 http 客户端）；`resolveSdkEnv` 两种形态都需要（SDK `app.env`）。
+ARMS 区块（仅双通道）已含 ARMS 标准修正（env 四态 / debug 跟随本地开发模式 / 会话采样 1 / 缺 key 降级仅 SLS），**不要照抄 SCM 旧值**；【适配点 E】ARMS key 变量名按前置检测 5 替换，endpoint 的 workspace/service_id 按产线 ARMS 应用实际值替换。
+仅 SLS 形态删除 ARMS 区块后，`initTracking` 入参只剩 appType / env / debug / userInfo / plugins。
 layouts/app 入口调用一次 `initTracking()`（SCM 在 `src/layouts/index.tsx` 顶层调用）。
 
 ```typescript
@@ -3130,8 +3168,8 @@ import { installApiCapture, XlbReportPlugin } from '@/tracking/business';
 // 【适配点 A 同款】用户信息源
 import { getUserInfo } from '@/utils/user';
 
-/** 部署环境 → ARMS env 四态（XLB_DEPLOY_ENV 由各 .umirc.* define 注入） */
-const resolveArmsEnv = (): 'dev' | 'daily' | 'pre' | 'production' => {
+/** 部署环境 → SDK env 四态（XLB_DEPLOY_ENV 由各 .umirc.* define 注入） */
+const resolveSdkEnv = (): 'dev' | 'daily' | 'pre' | 'production' => {
   const e = process.env.XLB_DEPLOY_ENV;
   if (e === 'dev') return 'dev';
   if (e === 'test') return 'daily';
@@ -3141,6 +3179,9 @@ const resolveArmsEnv = (): 'dev' | 'daily' | 'pre' | 'production' => {
 };
 
 export const initTracking = () => {
+  // 操作类接口白名单捕获（XlbFetch 拦截器，幂等）：只依赖 http 客户端，先于 SDK 初始化安装，
+  // 初始化期间的 trackAction 也能关联 api 信息
+  installApiCapture();
   setTimeout(() => {
     const userInfo = getUserInfo();
     import('@/tracking')
@@ -3148,15 +3189,17 @@ export const initTracking = () => {
         const { initTracking } = trackingModule;
 
         try {
-          // 【适配点 E】ARMS key 变量名按产线实际替换；兜底 key 按产线 ARMS 应用填
-          const keyId = process.env.TRACKING_KEY || '<产线 ARMS 兜底 key>';
-          if (!keyId) {
-            console.error('[Tracking] 未配置 TRACKING_KEY');
-            return;
-          }
-          const env = resolveArmsEnv();
+          const env = resolveSdkEnv();
           // 标准修正：调试开关跟随本地开发模式，不跟 env（本地 env 按后端标 test）
           const isLocalDev = process.env.XLB_ENV === 'development';
+          // #region ARMS
+          // 【适配点 E】ARMS key 变量名按产线实际替换；某环境缺 key → 该环境跳过 ARMS，SLS 照常初始化
+          const keyId = process.env.TRACKING_KEY;
+          const enableArms = !!keyId;
+          if (!enableArms) {
+            console.warn('[Tracking] 未配置 TRACKING_KEY，跳过 ARMS 通道，业务事件仅走 SLS');
+          }
+          // #endregion ARMS
           await initTracking({
             appType: 'single' as any,
             env,
@@ -3164,6 +3207,9 @@ export const initTracking = () => {
             userInfo: userInfo,
             // 本地开发注册打印插件，事件 console 可见
             plugins: isLocalDev ? [new XlbReportPlugin()] : [],
+            // #region ARMS
+            // enableArms=false 时不创建 ARMS 插件与适配器，下方 config 不生效
+            enableArms,
             config: {
               // 【适配点 E 同款】workspace/service_id 按产线 ARMS 应用实际值替换
               endpoint: `https://proj-xtrace-e0d25e6b3c77bf580c51f53825e14be-cn-hangzhou.cn-hangzhou.log.aliyuncs.com/rum/web/v2?workspace=default-cms-1443729372068605-cn-hangzhou&service_id=e7rc4853wd@${keyId}`,
@@ -3188,10 +3234,8 @@ export const initTracking = () => {
                 resource: ['https://example.com/', '/localhost/i'],
               },
             },
+            // #endregion ARMS
           });
-
-          // 操作类接口白名单捕获（XlbFetch 拦截器，幂等；供 trackAction 自动关联 api 信息）
-          installApiCapture();
 
           console.log('[Tracking] 统一埋点 SDK 初始化完成');
         } catch (error) {
@@ -3219,12 +3263,17 @@ env 按前端连接的后端环境标定，与 App 端 `Config.ENV` 同口径，
 | `.umirc.prod.ts`（build，生产） | prod | `'process.env.XLB_DEPLOY_ENV': 'prod'` |
 
 配置文件名与后端地址以目标仓库实际为准（先 `ls .umirc*` / config 目录确认映射关系，并核对各配置的后端域名再注入）。
-缺任何一档，该环境 env 标定即错（XlbTrackerAdapter 与 ARMS config 都依赖它）。
+缺任何一档，该环境 env 标定即错（XlbTrackerAdapter 依赖它；双通道时 ARMS config 同样依赖）。
+
+双通道形态：已有的 ARMS key define（如 `TRACKING_KEY`）原样保留；仅 SLS 形态不注入任何 ARMS key。
 
 ## 二十、落位后自检（必做）
 
 1. `npx tsc --noEmit` 过滤 tracking 相关文件 0 错误（全仓既有错误需 grep 过滤后判断）；
 2. `npx eslint` 全部新文件 0 错误（console 语句告警按仓库既有风格处理）；
-3. `grep -rn "initTracker\|XlbTrackerAdapter" src/tracking` 确认适配器落位且 factory 注册双适配器；
+3. `grep -rn "initTracker\|XlbTrackerAdapter" src/tracking` 确认适配器落位；factory 注册的适配器与通道形态一致（仅 SLS 1 个 / 双通道 2 个）；
 4. `grep -n "XLB_DEPLOY_ENV" .umirc*.ts` 四态齐全；
 5. 本地 start 后 console 可见 `[track]` 打印与 `[Tracking] 统一埋点 SDK 初始化完成`；SLS 中本地事件 `app.env` 为 test（与 App 同口径）。
+6. SLS 就绪时间：页面加载后 `[XlbTrackerAdapter] 官方埋点 SDK 初始化完成` 应在数秒内出现，不得出现 10s 级等待；
+7. 仅 SLS 形态：`grep -rn "ARMS\|_arms\|@arms\|TRACKING_KEY" src/tracking src/utils/trackingTools.ts package.json .umirc*.ts` 无结果；
+8. 双通道形态：临时去掉 ARMS key 启动，console 出现「跳过 ARMS 通道」提示，SLS 仍正常上报、无 ARMS 请求、无 10s 级等待（验证后恢复 key）。

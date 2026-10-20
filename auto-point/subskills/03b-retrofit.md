@@ -25,10 +25,12 @@
    | 4 | src/tracking/business/ | 不存在或为 reporter 桥接版 | 按 §12-§17 落位/替换（reporter.ts 删除，发送改走 getGlobalTracking） | §12-§17 | 中：既有事件上报路径切换 |
    | 5 | src/utils/trackingTools.ts | env 硬编码/sampleRate 0.2 | 按 §18 修正（env 四态/debug 跟随本地开发模式/采样 1/installApiCapture） | §18 | 低 |
    | 6 | .umirc.*.ts | 缺 XLB_DEPLOY_ENV | 按 §19 逐配置注入四态 | §19 | 低 |
+   | 7 | src/tracking/lib/factory.ts、lib/arms.ts、src/utils/trackingTools.ts（仅双通道） | 重复 init / 轮询等待 / 缺 key 整体 return / installApiCapture 晚装 | 按 §6/§7/§18 修正：去掉重复 init、ARMSAdapter 不等待、`enableArms` 缺 key 降级仅 SLS、`installApiCapture` 前移 | §6 §7 §18 | 低 |
 
    ## 明确不做（红线）
 
-   - 不改 SDK 公共语义（TrackingSDK/queue/plugins 行为保持不变）
+   - 不改 SDK 公共语义（TrackingSDK/queue/plugins 行为保持不变；§6/§7/§18 的「ARMS 不阻塞 SLS」修正除外）
+   - 原骨架没有 ARMS 时不新增 ARMS 代码与依赖（通道形态「仅 SLS」）
    - 不动既有业务事件的既有上报路径与事件字典条目（event_ver 不因此次预改造递增）
    - 不动清单外任何业务代码
    - 不动其他埋点（铁律 6）
@@ -51,9 +53,9 @@
 5. **预改造验证**（写进 retrofit.md 验证节）：
    - `npx tsc --noEmit` 过滤 tracking 相关文件 0 错误；eslint 改动文件 0 错误
    - PC：
-     - `grep -rn "XlbTrackerAdapter" src/tracking/lib/factory.ts` 确认双适配器注册
+     - `grep -rn "XlbTrackerAdapter" src/tracking/lib/factory.ts` 确认适配器注册与通道形态一致（仅 SLS 1 个 / 双通道 2 个）
      - `grep -n "XLB_DEPLOY_ENV" .umirc*.ts` 四态齐全
-     - 本地启动冒烟：启动后 console 可见 `[Tracking] 统一埋点 SDK 初始化完成`；触发任一既有事件确认 SLS 通道（Network 里官方 SDK 上报请求）与 ARMS 通道双发
+     - 本地启动冒烟：启动后 console 可见 `[Tracking] 统一埋点 SDK 初始化完成`；触发任一既有事件确认 SLS 通道（Network 里官方 SDK 上报请求）；双通道形态同时确认 ARMS 通道双发，且 SLS 就绪无 10s 级等待
      - 已存在的业务事件（若有）回归：事件字段口径不变（event_code/六组字段），仅通道增加
    - RN：
      - `ls src/tracking` 与 rn-bootstrap 文件树逐项一致；`grep -n "triggerEventBeforeInit" src/tracking/reporter.ts`（或等价文件）命中

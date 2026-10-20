@@ -7,7 +7,7 @@
 ## 任务
 
 1. 按 [../templates/point-plan.md.tpl](../templates/point-plan.md.tpl) 生成 `.ai-point/【需求名】/point-plan.md`：
-   - **基建封装（按 survey 形态判定分支）**：A 级按对应端 bootstrap 列落位文件清单 + 适配点决策表（PC：用户源/http 客户端/ARMS key/应用标识；RN：用户源/navigationRef/http 实例/SLS_TOPIC/BIZ_PRODUCT）+ 入口接线位置 + 人工依赖清单；B/C 级引用 retrofit.md（门禁 1.5 已过，本方案只列 events/chains/页面接入）；D 级写「复用既有基建」
+   - **基建封装（按 survey 形态判定分支）**：A 级按对应端 bootstrap 列落位文件清单 + 适配点决策表（PC：通道形态「仅 SLS / 双通道」/用户源/http 客户端/ARMS key（仅双通道）/应用标识；RN：用户源/navigationRef/http 实例/SLS_TOPIC/BIZ_PRODUCT）+ 入口接线位置 + 人工依赖清单；B/C 级引用 retrofit.md（门禁 1.5 已过，本方案只列 events/chains/页面接入）；D 级写「复用既有基建」
    - **事件字典改动**：新增/修改的文件清单 + 每个事件定义完整代码块 + event_ver 版本决策（新字典从 `1.0.0` 起；改既有字典必须递增并写变更注释）
    - **链条定义**：新增 chain（chainId/orderType/idleTimeout）或「复用既有 XX_CHAIN」说明；跨页面/跨端共用同一单据池时 chainId 必须与既有保持一致
    - **注册函数与出口**：`register<X>Tracking()` 定义位置与代码块 + 统一出口导出改动

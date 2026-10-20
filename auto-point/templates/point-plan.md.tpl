@@ -5,17 +5,17 @@
 
 ## 零、基建封装（按 survey.md 形态判定分支填写）
 
-**A 级（无基建，全套落位）——PC**：
+**A 级（无基建，全套落位）——PC**（通道形态固定「仅 SLS」，按 pc-bootstrap「通道形态」节删除 ARMS 区块）：
 
 | 落位文件 | 来源（pc-bootstrap §） | 适配点决策 |
 | --- | --- | --- |
-| src/tracking/types.ts / global.d.ts / index.ts | §1-§3 原样落位 | 无 |
-| src/tracking/lib/（tracking/queue/arms/factory/xlbTrackerAdapter） | §4-§8 原样落位 | 适配点 D：appId/appName/biz_product =（填入口收集值） |
-| src/tracking/plugins/ + utils/ | §9-§11 原样落位 | 无 |
+| src/tracking/types.ts / global.d.ts / index.ts | §1-§3 落位（删 ARMS 区块） | 无 |
+| src/tracking/lib/（tracking/queue/factory/xlbTrackerAdapter；不含 arms） | §4、§5、§7、§8 落位（§7 删 ARMS 区块） | 适配点 D：appId/appName/biz_product =（填入口收集值） |
+| src/tracking/plugins/（不含 ARMSInitPlugin）+ utils/ | §10-§11 落位（删 ARMS 区块） | 无 |
 | src/tracking/business/（types/context/tracker/apiCapture/reportPlugin/index） | §12-§17 原样落位 | 适配点 A 用户源：（填）；B 微前端：（填）；C http 客户端：（填） |
-| src/utils/trackingTools.ts | §18 | 适配点 E：ARMS key 变量名/endpoint：（填） |
+| src/utils/trackingTools.ts | §18（删 ARMS 区块） | 无 |
 | 各 .umirc.*.ts | §19 | XLB_DEPLOY_ENV 四态注入（逐配置列出） |
-| package.json | §前置检测 1 | npm i @xlb/xlb-tracker @xlb/utils @arms/rum-browser |
+| package.json | §前置检测 1 | npm i @xlb/xlb-tracker @xlb/utils |
 
 **A 级（无标准结构，全套落位）——RN**（文件树以 rn-bootstrap 为准，不得删减或改名）：
 

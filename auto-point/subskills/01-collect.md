@@ -30,10 +30,10 @@
    | # | 检测项 | 检测方式 |
    | --- | --- | --- |
    | 1 | `@xlb/xlb-tracker`、`@xlb/utils`、`@arms/rum-browser` 依赖 | `cat package.json` |
-   | 2 | `src/tracking` 形态：是否存在；lib/business 分层；有无 `lib/xlbTrackerAdapter.ts`、`business/` | `ls src/tracking` + Glob |
+   | 2 | `src/tracking` 形态：是否存在；lib/business 分层；有无 `lib/xlbTrackerAdapter.ts`、`business/`；**ARMS 现状**：`src/tracking` 内有无 ARMS 适配器/插件（`lib/arms.ts`、`ARMSInitPlugin` 等）→ 有则通道形态「双通道」，无则「仅 SLS」（`src/tracking` 之外自行接入的 ARMS 按铁律 6 保留，不计入） | `ls src/tracking` + Glob + `grep -rln "ARMS" src/tracking` |
    | 3 | http 客户端（XlbFetch / axios 实例 / 其他） | `grep -rn "XlbFetch" src/ package.json` |
    | 4 | 用户信息源（getUserInfo 类工具及返回字段） | `grep -rn "getUserInfo" src/utils src/services` |
-   | 5 | ARMS key 变量名与各 umirc define 注入 | `grep -rn "TRACKING_KEY" .umirc*.ts config/` |
+   | 5 | （仅双通道）ARMS key 变量名与各 umirc define 注入；缺 key 的环境记入风险（运行时降级仅 SLS） | `grep -rn "TRACKING_KEY" .umirc*.ts config/` |
    | 6 | XLB_DEPLOY_ENV 四态注入情况 | `grep -n "XLB_DEPLOY_ENV" .umirc*.ts` |
    | 7 | 既有业务埋点调用（bizTracker/trackAction/trackBoard 等） | `grep -rn "bizTracker\|trackAction" src/pages` 抽样 |
 
@@ -53,8 +53,8 @@
 6. **批次 2（AskUserQuestion，≤3 张卡片）**：
    - **应用标识确认**：默认占位 appId=`xlb-<域>-web`（按项目目录名推导，如 fsms_web → xlb-fsms-web）、appName=项目名——未登记也可先用，正式登记后替换并在 verify-report 记人工依赖；选 Other 填正式登记值
    - **青鸟登记**：清单是否已含 event_id 列（含→逐事件填 qingniaoId；不含→留空回退 event_code）
-   - **检测结论确认**：回显第 5 步检测结论（形态预判 A/B/C/D + 关键项），用户确认或 Other 纠正；B/C 级一并授权「允许预改造既有埋点代码 / 仅新增不动既有」。检测到其他埋点时必须在该卡片显式写明：「检测到其他埋点 X（位置），将原样保留不动；本次新事件按标准结构落位 `src/tracking`」
-   - 上报通道不问用户：PC 一律按 SCM 样板双发（SLS 主通道 + ARMS 兜底）；RN 一律走青鸟 RN SDK（rn-bootstrap reporter）
+   - **检测结论确认**：回显第 5 步检测结论（形态预判 A/B/C/D + 通道形态「仅 SLS / 双通道」+ 关键项），用户确认或 Other 纠正；B/C 级一并授权「允许预改造既有埋点代码 / 仅新增不动既有」。检测到其他埋点时必须在该卡片显式写明：「检测到其他埋点 X（位置），将原样保留不动；本次新事件按标准结构落位 `src/tracking`」
+   - 上报通道不单独提问：PC 通道形态按检测结论（默认仅 SLS；`src/tracking` 原有 ARMS 则双通道），用户可在检测结论卡片纠正；RN 一律走青鸟 RN SDK（rn-bootstrap reporter）
 7. 在目标项目创建 `.ai-point/【需求名】/`（不存在则新建），把解析出的原始清单**照抄原文**落盘为 `source-list.md`（AI 自动识别分支落范围来源标记，不加解读、不改字段名）；检测结论与两拍答案追加到 `source-list.md` 末尾「入口收集与检测结论」一节
 
 ## 输出要求

@@ -7,14 +7,14 @@ description: 自动埋点 — 当用户提供埋点范围清单/文档/截图并
 
 业务埋点工作流：收集材料 → 梳理代码 →（B/C 级时【门禁1.5】预改造）→ 【门禁1】埋点清单 → 【门禁2】埋点方案 → 实施 → 验证。支持 PC / RN 两端。
 
-**标准形态**：PC 端以 SCM 产线（xlb_scm_web/src/tracking）为唯一样板——业务事件经统一 SDK fan-out 双适配器（ARMS RUM 兜底 + XlbTrackerAdapter 走 @xlb/xlb-tracker 上报公司统一 BI/SLS 主通道）。RN 端以 reference/rn-bootstrap.md 的 `src/tracking` 文件树为唯一标准结构（青鸟 RN SDK 通道），所有 RN 项目跑完后的结构必须与之一致。
+**标准形态**：PC 端以 SCM 产线（xlb_scm_web/src/tracking）为唯一样板——业务事件经统一 SDK 由 XlbTrackerAdapter 走 @xlb/xlb-tracker 上报公司统一 BI/SLS（默认「仅 SLS」；目标项目 `src/tracking` 原本已有 ARMS 通道时为「双通道」，保留 ARMS RUM 兜底 fan-out）。RN 端以 reference/rn-bootstrap.md 的 `src/tracking` 文件树为唯一标准结构（青鸟 RN SDK 通道），所有 RN 项目跑完后的结构必须与之一致。
 
 ## 铁律（不可违反）
 
 1. **门禁不可跳过**：埋点清单（门禁1）、埋点方案（门禁2）必须经用户通过 AskUserQuestion 明确确认后才可推进；目标项目基建判定为 B/C 级时，预改造清单（门禁1.5）同样必须确认后才可动手。用户要求调整则改完重新确认。确认前不得写任何业务代码。
 2. **埋点不侵入业务**：不得为埋点改变业务逻辑、增删功能、调整交互；trackAction 包装必须原样透传返回值并原样抛出异常。
 3. **标准结构唯一、上报通道统一**：
-   - PC：业务事件统一经 XlbTrackerAdapter 走 `@xlb/xlb-tracker` 上报 SLS，禁止自造 reporter/initTracker 通道、禁止绕过 bizTracker 直调通道 SDK；ARMS 仅作 RUM 通道保留（双发不裁剪）。
+   - PC：业务事件统一经 XlbTrackerAdapter 走 `@xlb/xlb-tracker` 上报 SLS，禁止自造 reporter/initTracker 通道、禁止绕过 bizTracker 直调通道 SDK；ARMS 只在原项目 `src/tracking` 已有 ARMS 通道时保留（双发不裁剪，且不得阻塞 SLS），原项目没有 ARMS 的不得新增 ARMS 代码与依赖。
    - RN：业务事件统一经 `src/tracking` 的 bizTracker → reporter（青鸟 RN SDK）上报，文件树与导出以 rn-bootstrap.md 为准，禁止另造门面或绕过 bizTracker 直调青鸟 SDK。
    - 按基建分级执行（两端各有判定标准，见 02-survey）：A 级 → 按对应端 bootstrap 全套落位并接通；B/C 级（有基建但偏离标准结构/口径）→ 先走 03b-retrofit 预改造对齐再埋点；D 级（与标准一致）→ 复用既有封装直接加 events/chains/页面接入。任何分支都不得只落事件定义与调用点、留下无法上报的空壳。
 4. **event_ver 变更必递增**：修改既有事件字典任意条目（含新增事件），必须递增对应 `XXX_EVENT_VER` 并在注释中记录变更。
@@ -33,9 +33,9 @@ description: 自动埋点 — 当用户提供埋点范围清单/文档/截图并
 2. 需求名：短中文名。用途 = `.ai-point/【需求名】/` 产物目录名 + 中断恢复锚点；落盘前检测目录是否已存在——存在则先问「继续该需求（按中断恢复续跑）/ 换个新需求名」；
 3. 埋点范围：`提供清单材料（飞书/截图/md 文档等）` / `AI 自动识别埋点范围`（选后者则跳过材料解析，02 代码盘点产出清单草案，经门禁 1 确认后成为正式清单）。
 
-**自动检测（不问，结论回显）**：PC——`@xlb/xlb-tracker` 依赖、`src/tracking` 形态（lib/business 分层、有无 XlbTrackerAdapter）、http 客户端（XlbFetch/axios）、用户信息源、TRACKING_KEY 类 ARMS key 变量名、XLB_DEPLOY_ENV 注入情况；RN——宿主青鸟 SDK 版本、宿主 init 是否传 `Config.ENV`、`.env.*` 四态是否齐全、`src/tracking` 是否为标准结构及上报口径、项目内其他埋点（铁律 6）。详见 01-collect。
+**自动检测（不问，结论回显）**：PC——`@xlb/xlb-tracker` 依赖、`src/tracking` 形态（lib/business 分层、有无 XlbTrackerAdapter）、http 客户端（XlbFetch/axios）、用户信息源、ARMS 现状（`src/tracking` 内有无 ARMS 适配器/插件 → 通道形态「仅 SLS / 双通道」）与 TRACKING_KEY 类 ARMS key 变量名、XLB_DEPLOY_ENV 注入情况；RN——宿主青鸟 SDK 版本、宿主 init 是否传 `Config.ENV`、`.env.*` 四态是否齐全、`src/tracking` 是否为标准结构及上报口径、项目内其他埋点（铁律 6）。详见 01-collect。
 
-**第二拍（AskUserQuestion 批次 2，≤3 张卡片）**：应用标识确认（默认占位 appId=`xlb-<域>-web`、appName=项目名，未登记也可先用，正式登记后替换并记人工依赖；选 Other 填正式值）、青鸟 event_id 登记情况（清单是否含 event_id 列）、基建形态确认 + 预改造授权（B/C 级时）。**上报通道不问用户**：PC 一律按 SCM 样板双发（SLS 主通道 + ARMS 兜底）；RN 一律走青鸟 RN SDK（rn-bootstrap reporter）。此后除门禁外不再提问。
+**第二拍（AskUserQuestion 批次 2，≤3 张卡片）**：应用标识确认（默认占位 appId=`xlb-<域>-web`、appName=项目名，未登记也可先用，正式登记后替换并记人工依赖；选 Other 填正式值）、青鸟 event_id 登记情况（清单是否含 event_id 列）、基建形态确认 + 预改造授权（B/C 级时）。**上报通道不单独提问**：PC 通道形态由自动检测决定（默认仅 SLS；原项目 `src/tracking` 已有 ARMS 则双通道），在「检测结论确认」卡片回显，用户可用 Other 纠正；RN 一律走青鸟 RN SDK（rn-bootstrap reporter）。此后除门禁外不再提问。
 
 ## 工作流
 
@@ -68,7 +68,7 @@ description: 自动埋点 — 当用户提供埋点范围清单/文档/截图并
 | [reference/event-spec.md](reference/event-spec.md) | 事件/页面/链条定义口径、track vs trackAction 判定（两端通用，类型定义已内联） | 阶段 3/4/5 |
 | [reference/pc-patterns.md](reference/pc-patterns.md) | PC 端目录结构、接入与调用模式（完整示例已内联） | 端=PC 时，阶段 2~6 |
 | [reference/rn-patterns.md](reference/rn-patterns.md) | RN 端目录结构、接入与调用模式（完整示例已内联） | 端=RN 时，阶段 2~6 |
-| [reference/pc-bootstrap.md](reference/pc-bootstrap.md) | PC 端 SCM 样板全套内联（SDK 骨架 + XlbTrackerAdapter + business 层 + 入口接线 + umirc 四态注入） | 端=PC 且基建 A 级时，阶段 2~6 |
+| [reference/pc-bootstrap.md](reference/pc-bootstrap.md) | PC 端 SCM 样板全套内联（SDK 骨架 + XlbTrackerAdapter + business 层 + 入口接线 + umirc 四态注入；「仅 SLS / 双通道」两种形态，ARMS 代码以区域标记区分） | 端=PC 且基建 A 级时，阶段 2~6 |
 | [reference/rn-bootstrap.md](reference/rn-bootstrap.md) | RN 端标准结构完整模板（同上 + 青鸟通道降级与验证钩子）；RN 唯一对齐基准 | 端=RN 且基建 A/B/C 级时，阶段 2~6 |
 | [templates/point-list.md.tpl](templates/point-list.md.tpl) | 埋点清单模板 | 阶段 3 |
 | [templates/point-plan.md.tpl](templates/point-plan.md.tpl) | 埋点方案模板 | 阶段 4 |

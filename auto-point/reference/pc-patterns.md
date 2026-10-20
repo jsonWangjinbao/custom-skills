@@ -7,7 +7,7 @@
 ```
 src/tracking/                      # SCM 样板根目录（已有则复用，禁另起目录）
 ├── lib/
-│   ├── tracking.ts / queue.ts / factory.ts / arms.ts   # SDK 核心（pc-bootstrap.md §4-§7）
+│   ├── tracking.ts / queue.ts / factory.ts / arms.ts   # SDK 核心（pc-bootstrap.md §4-§7；arms.ts 仅双通道）
 │   └── xlbTrackerAdapter.ts     # 官方 @xlb/xlb-tracker 适配器，SLS 主通道（§8）
 ├── plugins/ utils/ types.ts global.d.ts index.ts       # SDK 骨架（§9-§11）
 ├── business/
@@ -20,7 +20,7 @@ src/tracking/                      # SCM 样板根目录（已有则复用，禁
 src/utils/trackingTools.ts         # 入口接线：initTracking + installApiCapture（§18）
 ```
 
-**通道口径（拍板固化）**：事件流 `bizTracker → getGlobalTracking().track()` → 双适配器 fan-out——ARMSAdapter（ARMS RUM 自定义事件兜底）+ XlbTrackerAdapter（`@xlb/xlb-tracker` → SLS 公司统一 BI 主通道，chain_summary 走 sendCritical）。业务埋点禁止绕过 bizTracker 直调任一通道 SDK，禁止自造 reporter/initTracker 通道。
+**通道口径（拍板固化）**：事件流 `bizTracker → getGlobalTracking().track()` → XlbTrackerAdapter（`@xlb/xlb-tracker` → SLS 公司统一 BI 主通道，chain_summary 走 sendCritical）；仅当原项目 `src/tracking` 已有 ARMS 通道时同时 fan-out 到 ARMSAdapter（ARMS RUM 自定义事件兜底，不得阻塞 SLS）。业务埋点禁止绕过 bizTracker 直调任一通道 SDK，禁止自造 reporter/initTracker 通道。
 
 ## 事件字典（events/<page>.ts）
 

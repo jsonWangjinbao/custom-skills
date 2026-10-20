@@ -14,10 +14,10 @@
 
    | 级 | 判定标准 | 后续走向 |
    | --- | --- | --- |
-   | A | 无 `src/tracking` 目录 | 全套 bootstrap：加载 [../reference/pc-bootstrap.md](../reference/pc-bootstrap.md)，按其「前置检测」表逐项确认，把「从零落位」纳入后续方案与实施 |
-   | B | 有 `src/tracking` SDK 骨架（lib/plugins），但缺 `lib/xlbTrackerAdapter.ts` 或缺 `business/` 层，或无 `@xlb/xlb-tracker` 依赖 | **预改造**：进入 [03b-retrofit.md](03b-retrofit.md)（门禁 1.5） |
-   | C | 骨架与适配器都有，但口径偏离：env 两态塌缩 / XLB_DEPLOY_ENV 缺注入 / sessionConfig.sampleRate < 1 / appId 占位或他域 / debug 硬编码 true / business 事件只进 ARMS 不进 SLS | **预改造**：进入 [03b-retrofit.md](03b-retrofit.md)（门禁 1.5），仅修口径项不动结构 |
-   | D | 与 SCM 样板一致（双适配器注册 + business 层 + 四态注入 + 通道口径正确） | 复用既有封装，直接加 events/chains/页面接入 |
+   | A | 无 `src/tracking` 目录 | 全套 bootstrap：加载 [../reference/pc-bootstrap.md](../reference/pc-bootstrap.md)，按其「前置检测」表逐项确认，把「从零落位」纳入后续方案与实施；通道形态固定「仅 SLS」，按 pc-bootstrap「通道形态」节删除 ARMS 区块 |
+   | B | 有 `src/tracking` SDK 骨架（lib/plugins），但缺 `lib/xlbTrackerAdapter.ts` 或缺 `business/` 层，或无 `@xlb/xlb-tracker` 依赖 | **预改造**：进入 [03b-retrofit.md](03b-retrofit.md)（门禁 1.5）；原骨架带 ARMS → 双通道，不带 → 仅 SLS |
+   | C | 骨架与适配器都有，但口径偏离：env 两态塌缩 / XLB_DEPLOY_ENV 缺注入 / sessionConfig.sampleRate < 1 / appId 占位或他域 / debug 硬编码 true / business 事件只进 ARMS 不进 SLS / 缺 ARMS key 时整体 return（SLS 被连带停用）/ factory 重复调用 `armsAdapter.init()` 或 `ARMSAdapter.init` 轮询等待（ARMS 不可用时阻塞 SLS 约 20s）/ `installApiCapture` 在 initTracking 之后才安装 | **预改造**：进入 [03b-retrofit.md](03b-retrofit.md)（门禁 1.5），仅修口径项不动结构 |
+   | D | 与 pc-bootstrap 一致（适配器注册与通道形态相符：仅 SLS 1 个 / 双通道 2 个 + business 层 + 四态注入 + 通道口径正确，含 ARMS 不阻塞 SLS） | 复用既有封装，直接加 events/chains/页面接入 |
 
    **RN**（对齐基准 rn-bootstrap.md「文件树」；上报通道文件名 `reporter.ts` 与 SCM RN 的 `qingniao.ts` 视为等价）：
 
