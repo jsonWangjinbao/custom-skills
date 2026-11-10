@@ -10,7 +10,7 @@
 
 ```bash
 node "$SKILL_DIR/scripts/submit.mjs" dry-run \
-  --payload "$REQ_DIR/board-sync/payload.json"
+  --payload "$SYNC_DIR/payload.json"
 ```
 
 用户显式指定本地或 URL 时追加：
@@ -64,7 +64,7 @@ Read `dry-run.json`，检查：
 
 ```bash
 node "$SKILL_DIR/scripts/submit.mjs" submit \
-  --payload "$REQ_DIR/board-sync/payload.json"
+  --payload "$SYNC_DIR/payload.json"
 ```
 
 - 脚本强制沿用 dry-run 锁定的地址；不重新自动选址。
@@ -90,7 +90,7 @@ node "$SKILL_DIR/scripts/submit.mjs" submit \
 
 ```bash
 node "$SKILL_DIR/scripts/submit.mjs" status \
-  --record "$REQ_DIR/board-sync/submission.json"
+  --record "$SYNC_DIR/submission.json"
 ```
 
 处理：

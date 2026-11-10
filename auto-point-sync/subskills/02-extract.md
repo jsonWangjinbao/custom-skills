@@ -11,11 +11,11 @@
 ### 1. 创建输出目录并提取
 
 ```bash
-mkdir -p "$REQ_DIR/board-sync"
+mkdir -p "$SYNC_DIR"
 npx -y tsx "$SKILL_DIR/scripts/extract.mjs" \
   --root "$PROJECT_ROOT" \
   --platform rn \
-  --out "$REQ_DIR/board-sync/extract.json"
+  --out "$SYNC_DIR/extract.json"
 ```
 
 - PC 把 `rn` 改为 `pc`。
@@ -43,10 +43,10 @@ npx -y tsx "$SKILL_DIR/scripts/extract.mjs" \
 
 - `nodeKey`
 - `node.name`、`node.category`（新节点必填；已有节点也建议提供，服务端更新时不会覆盖库内标题分类）
-- `requirement`
+- `requirement`（可选；有 `.ai-point` 需求目录时用目录名，没有时缺省由脚本回退为 `nodeKey`）
 - 每个终态事件的 `terminalKinds`
 
-字段来源与口径见 field-mapping。特别注意：
+字段来源与口径见 field-mapping；有 point-list 就用 point-list，没有就按代码与上下文补。特别注意：
 
 - `terminalKind` 能从已确认 point-list 明确判定时直接填写，并回显证据；例如「任务达成终态」= fulfill，「删除/作废」= close。
 - 不能明确判定时，按终态事件分组通过 AskUserQuestion 询问；每题选项：`履约完成 fulfill` / `终结未履约 close`。不得把 terminal 改成 false 来绕过。
@@ -57,10 +57,12 @@ npx -y tsx "$SKILL_DIR/scripts/extract.mjs" \
 
 ```bash
 node "$SKILL_DIR/scripts/payload.mjs" \
-  --extract "$REQ_DIR/board-sync/extract.json" \
-  --supplement "$REQ_DIR/board-sync/supplement.json" \
-  --out "$REQ_DIR/board-sync/payload.json"
+  --extract "$SYNC_DIR/extract.json" \
+  --supplement "$SYNC_DIR/supplement.json" \
+  --out "$SYNC_DIR/payload.json"
 ```
+
+一次同步多个 nodeKey 时，extract 共享顶层一份，supplement/payload 改用 `$SYNC_DIR/<nodeKey>/` 子目录（见 SKILL.md 输出目录），每个 nodeKey 各跑一次本命令；implAt 缺省时脚本会从 `--out` 目录向上逐级探测 verify-report.md，子目录布局也能命中需求目录。
 
 失败时只修改 supplement.json 后重跑；不得手改 payload.json。
 

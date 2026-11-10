@@ -6,7 +6,8 @@
 // - 事件字段只来自 extract；supplement 只能补 terminalKind / remark / 节点信息 / 页面标识 / 分析口径覆盖
 // - 每个终态事件必须在 terminalKinds 中给出 fulfill|close；给了非终态事件的 terminalKind 视为过期，报错
 // - 分析口径默认值：stepOrder = 环节全集顺序 ∩ 已用环节（abort/leave 不进漏斗）；intentSteps = 含 handle 时 ["handle"]
-// - source：git 仓库/分支/commit（工作区有未提交改动时 commit 加 -dirty）/ user.name / user.email；implAt 缺省取 verify-report.md 修改时间
+// - source：git 仓库/分支/commit（工作区有未提交改动时 commit 加 -dirty）/ user.name / user.email
+// - implAt：supplement.implAt → verify-report.md mtime（从 out 目录向上逐级探测，兼容多 nodeKey 子目录布局；若存在）→ 当前时间；requirement 缺省回退 nodeKey
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -149,18 +150,30 @@ const remote = git('config', '--get', 'remote.origin.url');
 const repo = (remote ? path.basename(remote).replace(/\.git$/, '') : '') || path.basename(root);
 const commit = git('rev-parse', '--short', 'HEAD');
 const dirty = git('status', '--porcelain') !== '';
-const verifyReport = path.join(path.dirname(path.dirname(path.resolve(args.out))), 'verify-report.md');
+// verify-report.md 探测：从 out 目录逐级向上找（最多 6 层，到文件系统根止），
+// 兼容单 nodeKey 布局（board-sync/payload.json）与多 nodeKey 布局（board-sync/<nodeKey>/payload.json）
+const findVerifyReport = (startDir) => {
+  let dir = startDir;
+  for (let i = 0; i < 6; i++) {
+    const cand = path.join(dir, 'verify-report.md');
+    if (fs.existsSync(cand)) return cand;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+};
 let implAt = sup.implAt;
 if (!implAt) {
-  if (fs.existsSync(verifyReport)) implAt = fs.statSync(verifyReport).mtime.toISOString();
-  else errors.push(`未找到 ${verifyReport}，请在 supplement.implAt 指定实施完成时间`);
+  const verifyReport = findVerifyReport(path.dirname(path.resolve(args.out)));
+  implAt = verifyReport ? fs.statSync(verifyReport).mtime.toISOString() : new Date().toISOString();
 }
 const email = git('config', 'user.email');
 const source = {
   repo,
   ...(git('rev-parse', '--abbrev-ref', 'HEAD') ? { branch: git('rev-parse', '--abbrev-ref', 'HEAD') } : {}),
   ...(commit ? { commit: dirty ? `${commit}-dirty` : commit } : {}),
-  ...(sup.requirement ? { requirement: sup.requirement } : {}),
+  requirement: sup.requirement || nodeKey,
   submitter: {
     ...(git('config', 'user.name') ? { name: git('config', 'user.name') } : {}),
     ...(email ? { email } : {}),

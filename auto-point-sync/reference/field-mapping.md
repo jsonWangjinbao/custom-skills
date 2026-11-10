@@ -1,6 +1,6 @@
 # 字段映射与提取口径
 
-本文件定义「目标项目代码 / `.ai-point` 产物 → supplement.json → 看板 payload」的唯一映射。事件基础字段只能来自脚本提取；模型不能重写 code/name/type/step 等代码事实。
+本文件定义「目标项目代码 / 可选的 `.ai-point` 产物 → supplement.json → 看板 payload」的唯一映射。只有埋点代码、没有 `.ai-point` 目录时也可以提交。事件基础字段只能来自脚本提取；模型不能重写 code/name/type/step 等代码事实。
 
 ## 一、脚本提取规则
 
@@ -46,8 +46,8 @@
 | remarks | point-list 备注 | 可选，key 用 `pageCode.eventCode`；code 跨页面唯一时可简写 eventCode |
 | analysis.stateNames | survey 中已确认状态枚举 | 无可靠来源为 null |
 | analysis.stepOrder/stepNames/intentSteps | 通常让脚本默认生成 | 有明确业务口径才覆盖 |
-| requirement | 需求目录名 | 用于待办来源与飞书通知 |
-| implAt | verify-report 通过时间 | 缺省由脚本取 verify-report.md mtime；无法定位时必须填写 |
+| requirement | 需求目录名 | 可选，用于待办来源与飞书通知；缺省由脚本回退为 nodeKey |
+| implAt | 实施完成时间 | 缺省取值顺序：verify-report.md mtime（从 out 目录向上逐级探测，兼容多 nodeKey 子目录布局；若存在）→ 当前时间 |
 
 ## 三、终态语义
 
@@ -86,6 +86,7 @@ payload.mjs 自动读取：
 - commit：短 hash；工作区有改动时后缀 `-dirty`。
 - submitter：git user.name / user.email。
 - skill：auto-point-sync@版本。
-- implAt：supplement.implAt 或 verify-report.md mtime。
+- requirement：supplement.requirement，缺省回退为 nodeKey。
+- implAt：supplement.implAt → verify-report.md mtime（若存在）→ 当前时间。
 
 提交人 email 缺失不阻断提交，但合入/驳回后飞书通知会 skipped。

@@ -1,0 +1,36 @@
+{
+  "target": "发货单",
+  "boardUrl": "https://xlb-chain-board--scm.ali-dev.xlbsoft.com",
+  "configFingerprint": "generated-from-discover",
+  "nodeConfig": {
+    "nodeKey": "delivery_note",
+    "name": "发货单",
+    "stepOrder": [],
+    "stepNames": {},
+    "regressiveCodes": [],
+    "fulfillCodes": [],
+    "closeCodes": [],
+    "intentSteps": []
+  },
+  "step": null,
+  "env": "prod",
+  "from": "2026-09-21T00:00:00+08:00",
+  "to": "2026-09-28T00:00:00+08:00",
+  "timezone": "Asia/Shanghai",
+  "appName": "xlb-scm-web",
+  "nodeKeys": ["delivery_note"],
+  "sls": {
+    "project": "replace-with-configured-project",
+    "logstore": "replace-with-configured-logstore",
+    "topic": "replace-with-configured-topic"
+  },
+  "eventCodes": [],
+  "pageIds": [],
+  "businessPageIds": [],
+  "orderFids": [],
+  "orderNos": [],
+  "includeIp": false,
+  "events": [],
+  "fields": ["event_code", "event_id", "order_type", "order_fid", "action_result", "trace_id"],
+  "budget": {"requests": 1000, "rows": 1000000, "bytes": 1073741824, "seconds": 1800}
+}

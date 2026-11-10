@@ -5,7 +5,7 @@
 
 ## 一、定位与范围
 
-- 用途：auto-point 埋点验证通过后，把目标项目的事件字典作为「节点配置提交」推送到 xlb-chain-board。
+- 用途：目标项目已有埋点代码（不要求 `.ai-point` 产物或验证报告）时，把事件字典作为「节点配置提交」推送到 xlb-chain-board。
 - 生效方式：提交只进入待办，不改动 `doc_nodes`；owner / admin 在待办页审核合入后才生效。
 - 范围：只处理节点配置（`doc_nodes`），不处理链条挂载、通用配置。
 - 使用者：任意开发在自己的业务仓库执行，不需要 clone 或启动看板，也不需要数据库凭据。
@@ -60,10 +60,10 @@
     "repo": "remote-app-fsms",
     "branch": "feature-xxx",
     "commit": "a1b2c3d",
-    "requirement": "仓库商品抽检埋点",  // .ai-point 需求名
+    "requirement": "仓库商品抽检埋点",  // .ai-point 需求名，缺省回退 nodeKey
     "submitter": { "name": "张三", "email": "zhangsan@xlb.com" },
     "skill": "auto-point-sync@1.0.0",
-    "implAt": "2026-10-13T10:00:00.000Z" // verify-report 通过时间
+    "implAt": "2026-10-13T10:00:00.000Z" // 实施完成时间；缺省取 verify-report mtime（若存在），否则当前时间
   }
 }
 ```
@@ -216,7 +216,7 @@
 auto-point-sync/
 ├── SKILL.md                 # 触发条件、铁律、流程骨架、阶段路由（常驻，约 70 行）
 ├── subskills/               # 按阶段 Read
-│   ├── 01-collect.md        # 定位 .ai-point 产物、校验 verify 通过、识别端与 nodeKey
+│   ├── 01-collect.md        # 定位埋点代码、识别端与输出目录（.ai-point 可选）
 │   ├── 02-extract.md        # 跑提取脚本，补齐人工字段，生成 payload
 │   └── 03-submit.md         # dry-run → 【门禁】→ 正式提交 → 报告
 ├── reference/               # 按需 Read
@@ -238,9 +238,10 @@ auto-point-sync/
 ### 5.2 阶段说明
 
 **01-collect**
-1. 定位 `.ai-point/【需求名】/`；`verify-report.md` 不存在或未通过则停止。
+1. 定位埋点代码；没有 events / chains 代码才停止，不要求 `.ai-point` 或验证报告。
 2. 识别端与事件字典目录：PC 为 `src/tracking/business/events/`，RN 为 `src/tracking/events/`。
 3. 从 `chains.ts` 取 `orderType ?? chainId` 作为 nodeKey。
+4. 输出目录：有唯一 `.ai-point/*/` 用其 `board-sync/`，没有则项目根 `.board-sync/`。
 
 **02-extract**
 1. `extract.mjs` 按导出值形状提取 PageDef、EVENT_VER、含 PAGE_VIEW 的主字典，以及 EXTRA/REPORT 等其他事件字典；其他字典统一并入 extraEvents，PAGE_LEAVE 不提交。
@@ -256,7 +257,7 @@ auto-point-sync/
 | analysis.stepOrder / stepNames | 事件 step + 默认环节全集 | 按环节全集顺序排列，abort / leave 不进漏斗 |
 | analysis.stateNames | survey.md 状态枚举 | 无来源置 null |
 | analysis.intentSteps | 事件 step | 含 handle 时为 `["handle"]` |
-| source.* | git 与 .ai-point | branch / commit / submitter 取自 git；implAt 取 verify-report 时间 |
+| source.* | git 与可选 .ai-point | branch / commit / submitter 取自 git；requirement 缺省回退 nodeKey；implAt 缺省取 verify-report mtime（若存在），否则当前时间 |
 
 **03-submit【门禁】**
 1. `submit.mjs dry-run --payload ...`，展示服务端返回的 diff 摘要与告警。

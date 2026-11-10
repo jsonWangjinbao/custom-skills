@@ -1,0 +1,14 @@
+interface:
+  display_name: brand visual generator
+  short_description: 面向非设计人员的企业品牌轮播图/封面图/通知图生成 Skill。根据业务主题自动生成统一风格的背景与右侧主视觉，同时严格固定
+    552×326 px 画布、万辰集团 Logo 位置与尺寸、左文右图版式，并保持品牌色、文字层级和视觉语言一致。适用于门户公约、通知、安全、系统升级、数据、AI
+    等数字化中心视觉。
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

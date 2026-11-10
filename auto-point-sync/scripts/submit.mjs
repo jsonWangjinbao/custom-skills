@@ -62,7 +62,7 @@ function loadConfig() {
   else if (file.XLB_CHAIN_BOARD_URL) explicit = { url: file.XLB_CHAIN_BOARD_URL, source: `配置文件 ${CONFIG_FILE}` };
   else if (process.env.XLB_CHAIN_BOARD_URL) explicit = { url: process.env.XLB_CHAIN_BOARD_URL, source: '环境变量 XLB_CHAIN_BOARD_URL' };
   if (explicit) explicit.url = explicit.url.replace(/\/+$/, '');
-  return { token: FIXED_SYNC_TOKEN, explicit };
+  return { bearer: FIXED_SYNC_TOKEN, explicit };
 }
 
 async function request(baseUrl, token, method, apiPath, body) {
@@ -103,15 +103,15 @@ async function ping(url, token) {
   return { kind: 'unavailable', reason: `${url} 不可用：${r.error}` };
 }
 
-async function resolveBoard({ token, explicit }) {
+async function resolveBoard({ bearer, explicit }) {
   if (explicit) {
-    const p = await ping(explicit.url, token);
+    const p = await ping(explicit.url, bearer);
     if (p.kind !== 'ok') fail(`${p.reason}\n（地址来自${explicit.source}，显式指定时不回退）`);
     return { url: explicit.url, source: explicit.source };
   }
   const tried = [];
   for (const url of [ONLINE_URL, LOCAL_URL]) {
-    const p = await ping(url, token);
+    const p = await ping(url, bearer);
     if (p.kind === 'ok') {
       return { url, source: tried.length ? `自动判断（${tried.join('；')}，已回退本地）` : '自动判断（线上）' };
     }
@@ -173,7 +173,7 @@ async function dryRun() {
   const payload = readJson(args.payload);
   const cfg = loadConfig();
   const board = await resolveBoard(cfg);
-  const r = await request(board.url, cfg.token, 'POST', '/api/sync/node-submissions', { ...payload, dryRun: true });
+  const r = await request(board.url, cfg.bearer, 'POST', '/api/sync/node-submissions', { ...payload, dryRun: true });
   if (!r.ok) printFailure('预检', r);
   const out = path.join(path.dirname(path.resolve(args.payload)), 'dry-run.json');
   writeJson(out, { boardUrl: board.url, boardSource: board.source, payloadHash: hashOf(payload), at: new Date().toISOString(), result: r.data });
@@ -189,8 +189,8 @@ async function submit() {
   if (!fs.existsSync(dryFile)) fail('未找到 dry-run.json，请先执行 dry-run 并经用户确认');
   const dry = readJson(dryFile);
   if (dry.payloadHash !== hashOf(payload)) fail('payload 在预检后被修改，请重新 dry-run 并确认');
-  const { token } = loadConfig();
-  const r = await request(dry.boardUrl, token, 'POST', '/api/sync/node-submissions', { ...payload, dryRun: false });
+  const { bearer } = loadConfig();
+  const r = await request(dry.boardUrl, bearer, 'POST', '/api/sync/node-submissions', { ...payload, dryRun: false });
   if (!r.ok) printFailure('提交', r);
   const record = {
     id: r.data.id,
@@ -212,8 +212,8 @@ async function submit() {
 async function status() {
   if (!args.record) fail('用法：node submit.mjs status --record <submission.json>');
   const record = readJson(args.record);
-  const { token } = loadConfig();
-  const r = await request(record.boardUrl, token, 'GET', `/api/sync/node-submissions/${record.id}`);
+  const { bearer } = loadConfig();
+  const r = await request(record.boardUrl, bearer, 'GET', `/api/sync/node-submissions/${record.id}`);
   if (!r.ok) printFailure('查询', r);
   const LABEL = { pending: '待审核', merged: '已合入（已生效）', rejected: '已驳回', superseded: '已被新提交替代' };
   const d = r.data;

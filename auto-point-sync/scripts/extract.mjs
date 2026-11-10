@@ -4,7 +4,7 @@
 // 可选：--tracking-dir <相对路径>（默认 PC=src/tracking/business，RN=src/tracking）
 //
 // 识别规则（按导出值形状，不依赖命名）：
-// - 页面：含 pageCode/pageName/pagePath 的对象（每个字典文件恰好 1 个）
+// - 页面：含 pageCode/pageName/pagePath 的对象；单页面文件全部导出归该页，多页面文件按导出名前缀（*_PAGE 去掉 _PAGE 后缀）分组
 // - 字典版本：名称以 EVENT_VER 结尾的 semver 字符串
 // - 事件字典：值全部为 TrackEventDef 的对象；含 view+enter 事件的为清单事件，其余字典（EXTRA/REPORT 等）并入清单外补充
 // - 单个 TrackEventDef 导出（PAGE_LEAVE）跳过：看板侧派生，不入配置
@@ -99,47 +99,65 @@ for (const file of fs.readdirSync(eventsDir).map((f) => path.join(eventsDir, f))
   const mod = await load(file);
   const entries = Object.entries(mod);
   const pageExports = entries.filter(([, v]) => isPage(v));
-  if (pageExports.length !== 1) {
-    warnings.push(`${rel(file)}：页面定义导出 ${pageExports.length} 个（应为 1），已跳过该文件`);
+  if (!pageExports.length) {
+    warnings.push(`${rel(file)}：未找到页面定义导出（含 pageCode/pageName/pagePath 的对象），已跳过该文件`);
     continue;
   }
-  const [pageExport, page] = pageExports[0];
-  const verExport = entries.find(([k, v]) => /EVENT_VER$/.test(k) && typeof v === 'string');
-  if (!verExport || !SEMVER.test(verExport[1])) fail(`${rel(file)}：缺少 semver 格式的 *_EVENT_VER 导出`);
-
-  const dicts = entries.filter(([, v]) => isEventDict(v));
-  const hasPageView = ([, v]) => Object.values(v).some((e) => e.type === 'view' && e.step === 'enter');
-  const primary = dicts.filter(hasPageView);
-  if (primary.length > 1) fail(`${rel(file)}：多个事件字典含 PAGE_VIEW（${primary.map(([k]) => k).join('、')}），无法判定清单事件`);
-  const extras = dicts.filter((d) => d !== primary[0]);
-  const folded = extras.map(([k]) => k).filter((k) => !/EXTRA/.test(k));
-  if (folded.length) warnings.push(`${rel(file)}：${folded.join('、')} 并入清单外补充（extraEvents）`);
-  if (!primary.length) warnings.push(`${rel(file)}：无含 PAGE_VIEW 的字典，看板合入时将自动补 view 事件`);
-
-  const events = primary.length ? Object.values(primary[0][1]).map(pickEvent) : [];
-  const extraEvents = extras.flatMap(([, v]) => Object.values(v).map(pickEvent));
-  const seen = new Set();
-  for (const e of [...events, ...extraEvents]) {
-    if (seen.has(e.code)) fail(`${rel(file)}：页面内事件码重复 ${e.code}`);
-    seen.add(e.code);
+  const prefixes = pageExports.map(([k]) => (k.endsWith('_PAGE') ? k.slice(0, -'_PAGE'.length) : null));
+  if (prefixes.some((p) => p === null)) {
+    if (pageExports.length > 1) fail(`${rel(file)}：多页面文件的页面导出必须以 _PAGE 结尾（用于按前缀分组），异常：${pageExports.filter(([k]) => !k.endsWith('_PAGE')).map(([k]) => k).join('、')}`);
+    prefixes[0] = '';
   }
+  const allDicts = entries.filter(([, v]) => isEventDict(v));
+  const hasPageView = ([, v]) => Object.values(v).some((e) => e.type === 'view' && e.step === 'enter');
+  const usedDicts = new Set();
+  for (let i = 0; i < pageExports.length; i++) {
+    const [pageExport, page] = pageExports[i];
+    const prefix = prefixes[i];
+    const own = (k) => !prefix || k.startsWith(`${prefix}_`);
+    const verExport = entries.find(([k, v]) => own(k) && /EVENT_VER$/.test(k) && typeof v === 'string');
+    if (!verExport || !SEMVER.test(verExport[1])) fail(`${rel(file)}：${pageExport} 缺少 semver 格式的 *_EVENT_VER 导出`);
 
-  const chainExport = chains.length === 1 ? chains[0].exportName : (pageChain.get(pageExport) ?? null);
-  const chain = chains.find((c) => c.exportName === chainExport) ?? null;
-  if (!chain) warnings.push(`${rel(file)}：未能确定 ${pageExport} 归属的链条，需人工指定`);
+    let dicts = allDicts.filter(([k]) => own(k) && !usedDicts.has(k));
+    if (!prefix && pageExports.length === 1) {
+      // 单页面文件：兼容无前缀命名，未认领的字典全部归该页
+      dicts = allDicts.filter((d) => !usedDicts.has(d));
+    }
+    dicts.forEach(([k]) => usedDicts.add(k));
+    const primary = dicts.filter(hasPageView);
+    if (primary.length > 1) fail(`${rel(file)}：${pageExport} 有多个事件字典含 PAGE_VIEW（${primary.map(([k]) => k).join('、')}），无法判定清单事件`);
+    const extras = dicts.filter((d) => d !== primary[0]);
+    const folded = extras.map(([k]) => k).filter((k) => !/EXTRA/.test(k));
+    if (folded.length) warnings.push(`${rel(file)}：${folded.join('、')} 并入 ${page.pageCode} 清单外补充（extraEvents）`);
+    if (!primary.length) warnings.push(`${rel(file)}：${pageExport} 无含 PAGE_VIEW 的字典，看板合入时将自动补 view 事件`);
 
-  pages.push({
-    file: rel(file),
-    pageExport,
-    pageCode: page.pageCode,
-    pageName: page.pageName,
-    pagePath: page.pagePath,
-    eventVer: verExport[1],
-    nodeKey: chain?.nodeKey ?? null,
-    events,
-    extraEvents,
-    terminalEvents: [...events, ...extraEvents].filter((e) => e.terminal).map((e) => e.code),
-  });
+    const events = primary.length ? Object.values(primary[0][1]).map(pickEvent) : [];
+    const extraEvents = extras.flatMap(([, v]) => Object.values(v).map(pickEvent));
+    const seen = new Set();
+    for (const e of [...events, ...extraEvents]) {
+      if (seen.has(e.code)) fail(`${rel(file)}：页面 ${page.pageCode} 内事件码重复 ${e.code}`);
+      seen.add(e.code);
+    }
+
+    const chainExport = chains.length === 1 ? chains[0].exportName : (pageChain.get(pageExport) ?? null);
+    const chain = chains.find((c) => c.exportName === chainExport) ?? null;
+    if (!chain) warnings.push(`${rel(file)}：未能确定 ${pageExport} 归属的链条，需人工指定`);
+
+    pages.push({
+      file: rel(file),
+      pageExport,
+      pageCode: page.pageCode,
+      pageName: page.pageName,
+      pagePath: page.pagePath,
+      eventVer: verExport[1],
+      nodeKey: chain?.nodeKey ?? null,
+      events,
+      extraEvents,
+      terminalEvents: [...events, ...extraEvents].filter((e) => e.terminal).map((e) => e.code),
+    });
+  }
+  const orphanDicts = allDicts.filter(([k]) => !usedDicts.has(k)).map(([k]) => k);
+  if (orphanDicts.length) warnings.push(`${rel(file)}：${orphanDicts.join('、')} 未匹配任何页面前缀，已忽略`);
 }
 if (!pages.length) fail(`${rel(eventsDir)} 下未提取到任何页面字典`);
 
